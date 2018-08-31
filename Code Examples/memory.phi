@@ -1,0 +1,76 @@
+module Memory<memoryWidth: Int>(): Slave {
+namespace AddressPhase {
+        Register HSEL = 1b0
+        Register HWRITE = 1b0
+        Register[1:0] HTRANS = 2b0
+        Register[31:0] HADDR = 32b0
+        Register[2:0] HSIZE =  3b0 
+    }
+    
+    Var memorySize = Math.pow(2, memoryWidth - 2)
+
+    Register[31:0] storage[0:memorySize - 1] = [memorySize[32b0]] 
+
+    when HCLK.posedge {
+        if HREADY | WAIT {
+            AddressPhase.HSEL.next = HSEL;
+            AddressPhase.HWRITE.next = HWRITE;
+            AddressPhase.HTRANS.next = HTRANS;
+            AddressPhase.HADDR.next = HADDR;
+            AddressPhase.HSIZE.next = HSIZE;
+        }
+    }
+
+    //Byte lane decoding
+    Wire byteTransaction = ~AddressPhase.HSIZE[1] & ~AddressPhase.HSIZE[0];
+    Wire halfTransaction = ~AddressPhase.HSIZE[1] & AddressPhase.HSIZE[0];
+    Wire wordTransaction = ~AddressPhase.HSIZE[1];
+
+    Wire byte_at_00 = byteTransaction & ~AddressPhase.HADDR[1] & ~AddressPhase.HADDR[0];
+    Wire byte_at_01 = byteTransaction & ~AddressPhase.HADDR[1] &  AddressPhase.HADDR[0];
+    Wire byte_at_10 = byteTransaction &  AddressPhase.HADDR[1] & ~AddressPhase.HADDR[0];
+    Wire byte_at_11 = byteTransaction &  AddressPhase.HADDR[1] &  AddressPhase.HADDR[0];
+
+    Wire half_at_00 = halfTransaction & ~AddressPhase.HADDR[1];
+    Wire half_at_10 = halfTransaction &  AddressPhase.HADDR[1];
+
+    Wire word_at_00 = wordTransaction;
+
+    Wire byte0 = word_at_00 | half_at_00 | byte_at_00;
+    Wire byte1 = word_at_00 | half_at_00 | byte_at_01;
+    Wire byte2 = word_at_00 | half_at_10 | byte_at_10;
+    Wire byte3 = word_at_00 | half_at_10 | byte_at_11;
+
+    Wire effectiveAddress = AddressPhase.HADDR[memoryWidth-1:2];
+
+    Register[31:0] readOut;
+
+    when HCLK.posedge {
+        if AddressPhase.HSEL & AddressPhase.HWRITE & AddressPhase.HTRANS[1] {
+            if (byte0) {
+                memory[effectiveAddress][7:0].next = HWDATA[7:0];
+            }
+            if (byte1) {
+                memory[effectiveAddress][15:8].next = HWDATA[15:8];
+            }
+            if (byte2) {
+                memory[effectiveAddress][23:16].next = HWDATA[23:16];
+            }
+            if (byte3) {
+                memory[effectiveAddress][31:24].next = HWDATA[31:24];
+            }
+        }
+        readOut.next = memory[effectiveAddress];
+    }
+
+    Wire CEWR = AddressPhase.HWRITE & AddressPhase.HSEL; // Expect a write
+    Wire CERD = HSEL & ~HWRITE;
+
+    Wire MUTEX = CERD ^ CEWR;
+    Wire WAIT = CERD & CEWR;
+
+    Wire CE = MUTEX ? 1b1 : WAIT ? CEWR : 1b0
+
+    HREADYOUT = ~WAIT;
+    HRDATA = readOut;
+}

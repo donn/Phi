@@ -1,0 +1,44 @@
+module ALU<width: Int = 32>(
+    a: Input[width - 1:0],
+    b: Input[width - 1:0],
+    switch: Input,
+    operation: Input[2:0],
+    output: Output[width - 1:0]
+)
+    Var bits = Math.log2(width)
+    Wire[width - 1:0] add, and, or, xor, not, slt, shift
+    Wire[width - 1:0] result
+    Wire[width:0] altA, altB
+    
+    add = switch ? a &- b : a &+ b
+    slt = switch ? a < b ? 32b1 : 32b0 : a &< b ? 32b1 : 32b0
+
+    // sll = s << b[bits - 1:0]
+    // srl = s >>> b[bits - 1:0]
+    // sra = s >> b[bits - 1:0]
+    Generic.BarrelShifter bs<width: width> (
+        left: operation[0],
+        arithmetic: switch,
+        input: a,
+        shift: b[bits - 1:0]
+    );
+    
+    switch (operation) {
+        case 3b11*:
+            result = shift
+        case 3b101:
+            result = slt
+        case 3b100:
+            result = ~a
+        case 3b011:
+            result = a ^ b
+        case 3b010:
+            result = a | b
+        case 3b001:
+            result = a & b
+        case 3b000:
+            result = add
+    }
+
+    output = result
+}
