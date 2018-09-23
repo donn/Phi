@@ -16,7 +16,7 @@ All code written for this project should be be compiled with **c++14** and **ped
 
 As inferable, Phi will be implemented in Lex, Yacc and C++.
 
-By the end of June 2018, we hope to present a working prototype of a monolithic parser and simulator.
+By the end of June 2018, we hope to present a working prototype of a Verilog translator.
 
 # License
 Phi is available under the Apache 2.0 license, available at the root of this project under 'License'.
