@@ -5,28 +5,51 @@
 
     void yyerror(char *);
     int yylex();
+
+    extern struct Node* head;
 %}
 
 %union {
     struct Node* node;
-    char* numeric;
+    char* text;
 }
 
-%token NUMERIC_TOKEN
+%token KEYWORD_MODULE
+%token KEYWORD_INTERFACE
+%token NUMERIC
+%token IDENTIFIER
 %token SEMICOLON
 
 %type<node> integer
-%type<numeric> NUMERIC_TOKEN
+%type<text> NUMERIC IDENTIFIER
 %type<semicolon> SEMICOLON
 %%
 
 description:
-        description integer { traverse($2); }
+        declaration description
         |
         ;
 
+declaration:
+        KEYWORD_MODULE IDENTIFIER inheritance block
+        | KEYWORD_INTERFACE IDENTIFIER inheritance block
+        ;
+
+inheritance:
+        ':' inheritance_list
+        |
+        ;
+
+inheritance_list:
+        IDENTIFIER ',' inheritance_list
+        | IDENTIFIER
+        ;
+
+block:
+    ;
+
 integer:
-        NUMERIC_TOKEN {
+        NUMERIC {
             $$ = makeNode(NODE_TYPE_INT, &(struct Int){NODE_INT_DEFAULT_WIDTH,$1}, NULL, NULL);
         }
         ;

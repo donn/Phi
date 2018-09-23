@@ -23,8 +23,8 @@ module ALU<width: Int = 32>(
         shift: b[bits - 1:0]
     );
     
-    switch (operation) {
-        case 3b11*:
+    mux (operation) {
+        case 3b11x:
             result = shift
         case 3b101:
             result = slt

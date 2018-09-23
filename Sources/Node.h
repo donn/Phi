@@ -25,7 +25,7 @@ struct Node {
     enum NodeType type;
     union {
         struct Int integer;
-        struct Operator operator;
+        struct Operator op;
         struct Identifier identifier;
     } content;
     struct Node* left;
@@ -33,5 +33,5 @@ struct Node {
 };
 
 struct Node* makeNode(enum NodeType type, void* target, struct Node* left, struct Node* right);
-int traverse(struct Node* head);
+struct Node* traverse(struct Node* head);
 #endif

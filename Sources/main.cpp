@@ -4,7 +4,10 @@
 extern "C" {
     #include <phi.l.h>
     #include <phi.y.h>
+    #include "Node.h"
+    
     int yyparse();
+    struct Node* head;
 }
 
 
@@ -20,4 +23,6 @@ int main(int argc, const char* argv[]) {
 
     yy_scan_string(input.c_str());
     yyparse();
+    traverse(head);
+    
 }

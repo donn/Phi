@@ -10,7 +10,7 @@ struct Node* makeNode(enum NodeType type, void* target, struct Node* left, struc
     node->type = type;
 
     struct Identifier* identifier = (struct Identifier*)target;
-    struct Operator* operator = (struct Operator*)target;
+    struct Operator* op = (struct Operator*)target;
     struct Int* integer = (struct Int*)target;
     switch(type) {
         case NODE_TYPE_IDENTIFIER:
@@ -18,8 +18,8 @@ struct Node* makeNode(enum NodeType type, void* target, struct Node* left, struc
             strcpy(node->content.identifier.string, identifier->string);
             break;
         case NODE_TYPE_OPERATOR:
-            node->content.operator.string = malloc(strlen(operator->string));
-            strcpy(node->content.operator.string, operator->string);
+            node->content.op.string = malloc(strlen(op->string));
+            strcpy(node->content.op.string, op->string);
             break;
         case NODE_TYPE_INT:
             node->content.integer.width = integer->width;
@@ -34,14 +34,14 @@ struct Node* makeNode(enum NodeType type, void* target, struct Node* left, struc
     return node;
 }
 
-int traverse(struct Node* node) {
+struct Node* traverse(struct Node* node) {
     if (node == NULL) {
-        return 0;
+        return node;
     }
     traverse(node->left);
     switch(node->type) {
         case NODE_TYPE_IDENTIFIER:
-            printf("%s", node->content.operator.string);
+            printf("%s", node->content.op.string);
             break;
         case NODE_TYPE_OPERATOR:
             printf("%s", node->content.identifier.string);
@@ -53,5 +53,5 @@ int traverse(struct Node* node) {
             ;
     }
     traverse(node->right);
-    return 0;
+    return node;
 }
