@@ -1,4 +1,0 @@
-
-        integer description { $$ = $1; $$->right = $2; head = $$; }
-        | { $$ = NULL; }
-        ;

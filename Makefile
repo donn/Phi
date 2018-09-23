@@ -32,7 +32,7 @@ debug: $(BINARY)
 
 $(YACC_OUT): $(YACC)
 	mkdir -p $(@D)
-	yacc -o $@ -d $^
+	yacc --verbose -o $@ -d $^
 
 $(LEX_OUT): $(LEX) $(YACC_OUT)
 	mkdir -p $(@D)
