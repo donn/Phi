@@ -42,13 +42,17 @@
     return KEYWORD_REGISTER;
 }
 
-[_A-Za-z][_A-Za-z0-9]+ {
-    yylval.text = yytext;
-    return IDENTIFIER;
-}
 [0-9]+ {
     yylval.text = yytext;
     return NUMERIC;
+}
+[0-9]+[bodx][0-9]+ {
+    yylval.text = yytext;
+    return FW_NUMERIC;
+}
+[_A-Za-z][_A-Za-z0-9]+ {
+    yylval.text = yytext;
+    return IDENTIFIER;
 }
 
 [\{] {
@@ -103,7 +107,7 @@
     return OP_UNSIGNED_SUB;
 }
 
-[!~+\-*<>/\|&^\?:;,] {
+[!~+\-*<>/%\|&^\?:;,=] {
     return yytext[0];
 }
 

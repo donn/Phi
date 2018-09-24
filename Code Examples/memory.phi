@@ -45,7 +45,7 @@ namespace AddressPhase {
 
     Register[31:0] readOut;
 
-    when HCLK.posedge {
+    @ HCLK.posedge {
         if AddressPhase.HSEL & AddressPhase.HWRITE & AddressPhase.HTRANS[1] {
             if (byte0) {
                 memory[effectiveAddress][7:0].next = HWDATA[7:0];

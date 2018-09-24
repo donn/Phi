@@ -1,3 +1,4 @@
+.DS_Store
 Intermediates/
 phi
-.DS_Store
+*.vcd

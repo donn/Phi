@@ -28,6 +28,7 @@
 %token KEYWORD_REGISTER
 
 %token NUMERIC
+%token FW_NUMERIC
 %token IDENTIFIER
 
 %token LBRACE
@@ -49,11 +50,19 @@
 %token OP_UNSIGNED_ADD
 %token OP_UNSIGNED_SUB
 
+%left OP_LOGIC_OR
+%left OP_LOGIC_AND
+%left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>'
+%left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '~' '|' '&' '^'
+%left  '*' '/' '%'
+%left OP_SRL OP_SRA OP_SLL
+%left ':'
+
 %type<text> NUMERIC IDENTIFIER
 %%
 
 description:
-        declaration description
+        declaration ';' description
         |
         ;
 
@@ -77,9 +86,10 @@ block:
     ;
 
 statement:
-    declaration
-    | subdeclaration
-    | if
+    declaration statement ';'
+    | subdeclaration ';' statement
+    | if statement
+    |
     ;
 
 if:
@@ -94,14 +104,22 @@ elif:
 
 
 subdeclaration:
-    IDENTIFIER IDENTIFIER arraysubscript call
-    | IDENTIFIER IDENTIFIER arraysubscript
-    | declarables IDENTIFIER arraysubscript '=' expression
+    IDENTIFIER subscriptable call
+    | IDENTIFIER subscriptable
+    | declarables subscriptable '=' expression
     ;
 declarables:
-    KEYWORD_SW_VAR
+    KEYWORD_SW_VAR arraysubscript
     | KEYWORD_WIRE arraysubscript
     | KEYWORD_REGISTER arraysubscript
+    | KEYWORD_SW_VAR
+    | KEYWORD_WIRE
+    | KEYWORD_REGISTER
+    ;
+
+subscriptable:
+    IDENTIFIER arraysubscript
+    | IDENTIFIER
     ;
 
 call:
@@ -114,52 +132,39 @@ call_list:
     ;
 
 expression:
-    expression_logic_or
+    | number
+    | expression OP_LOGIC_OR expression
+    | expression OP_LOGIC_AND expression
+    | expression OP_EQ expression
+    | expression OP_NEQ expression
+    | expression '>' expression
+    | expression '<' expression
+    | expression OP_GTE expression
+    | expression OP_LTE expression
+    | expression '+' expression
+    | expression '-' expression
+    | expression OP_UNSIGNED_ADD expression
+    | expression OP_UNSIGNED_SUB expression
+    | expression '|' expression
+    | expression '&' expression
+    | expression '^' expression
+    | expression '*' expression
+    | expression '/' expression
+    | expression '%' expression
+    | expression OP_SLL expression
+    | expression OP_SRL expression
+    | expression OP_SRA expression
+    | expression ':' expression
+    | IDENTIFIER
     ;
 
-expression_logic_or:
-    expression_logic_and
-    | expression_logic_or OP_LOGIC_OR expression_logic_and
+number:
+    NUMERIC
+    | FW_NUMERIC
     ;
 
-expression_logic_and:
-    expression_comparison
-    | expression_logic_and OP_LOGIC_AND expression_comparison
-    ;
-
-expression_comparison:
-    expression_addition
-    | expression_comparison OP_EQ expression_addition
-    | expression_comparison OP_NEQ expression_addition
-    | expression_comparison '>' expression_addition
-    | expression_comparison '<' expression_addition
-    | expression_comparison OP_GTE expression_addition
-    | expression_comparison OP_LTE expression_addition
-    ;
-
-expression_addition:
-    expression_multiplication
-    | expression_addition '+' expression_multiplication
-    | expression_addition '-' expression_multiplication
-    | expression_addition OP_UNSIGNED_ADD expression_multiplication
-    | expression_addition OP_UNSIGNED_SUB expression_multiplication
-    | expression_addition '|' expression_multiplication
-    | expression_addition '&' expression_multiplication
-    | expression_addition '^' expression_multiplication
-    ;
-
-expression_multiplication:
-    expression_shift
-    | expression_multiplication '*' expression_shift
-    | expression_multiplication '/' expression_shift
-    ;
-
-expression_shift:
-    ;
-    
 arraysubscript:
     LBRACKET expression RBRACKET
-    |
     ;
 %%
 

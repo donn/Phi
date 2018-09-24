@@ -1,9 +1,9 @@
-module phi {
-    if {
+module Counter {
+    Var up = 4b210;
+    if up {
+        when clock {
 
-    } else if {
-        
-    } else {
-        
+        }
     }
+
 }
