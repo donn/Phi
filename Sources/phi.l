@@ -6,9 +6,12 @@
 %}
 
 %%
-[ \t]+ {}
+[ \t]+ {
+    return WHITESPACE;
+}
 [\n] { 
     yylineno += 1;
+    return NEWLINE;
 }
 
 (module) {

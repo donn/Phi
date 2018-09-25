@@ -24,11 +24,13 @@ LY_OBJECTS = $(patsubst %.c,%.o,$(LY_SOURCES))
 
 BINARY = phi
 
+# Products
+
+all: CPP_FLAGS += -g
+all: C_FLAGS += -g
 all: $(BINARY)
 
-debug: CPP_FLAGS += -g
-debug: C_FLAGS += -g
-debug: $(BINARY)
+release: $(BINARY)
 
 $(YACC_OUT): $(YACC)
 	mkdir -p $(@D)

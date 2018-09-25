@@ -16,6 +16,11 @@
     char* text;
 }
 
+%token ASSIGNMENT
+
+%token WHITESPACE
+%token NEWLINE
+
 %token KEYWORD_MODULE
 %token KEYWORD_INTERFACE
 %token KEYWORD_IF
@@ -50,6 +55,7 @@
 %token OP_UNSIGNED_ADD
 %token OP_UNSIGNED_SUB
 
+%right '='
 %left OP_LOGIC_OR
 %left OP_LOGIC_AND
 %left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>'
@@ -62,78 +68,58 @@
 %%
 
 description:
-        declaration ';' description
+        declaration statement_delimiter description
         |
         ;
 
 declaration:
-        KEYWORD_MODULE IDENTIFIER inheritance block
-        | KEYWORD_INTERFACE IDENTIFIER inheritance block
+        KEYWORD_MODULE _ IDENTIFIER _ inheritance block
+        | KEYWORD_INTERFACE _ IDENTIFIER _ inheritance block
         ;
 
 inheritance:
-        ':' inheritance_list
+        ':' _ inheritance_list
         |
         ;
 
 inheritance_list:
-        IDENTIFIER ',' inheritance_list 
+        IDENTIFIER _ ',' _ inheritance_list 
         | IDENTIFIER
         ;
 
 block:
-    LBRACE statement RBRACE
+    LBRACE _ statement _ RBRACE
     ;
 
 statement:
-    declaration statement ';'
-    | subdeclaration ';' statement
-    | if statement
-    |
+    subdeclaration WHITESPACE statement_delimiter
     ;
-
-if:
-    KEYWORD_IF expression block elif
-    ;
-
-elif:
-    KEYWORD_ELSE block
-    | KEYWORD_ELSE if
-    |
-    ;
-
 
 subdeclaration:
-    IDENTIFIER subscriptable call
-    | IDENTIFIER subscriptable
-    | declarables subscriptable '=' expression
+    dynamic_width _ array_subscript _ probable_array optional_assignment
     ;
-declarables:
-    KEYWORD_SW_VAR arraysubscript
-    | KEYWORD_WIRE arraysubscript
-    | KEYWORD_REGISTER arraysubscript
-    | KEYWORD_SW_VAR
-    | KEYWORD_WIRE
+
+dynamic_width:
+    KEYWORD_SW_VAR
+    | KEYWORD_WIRE 
     | KEYWORD_REGISTER
     ;
-
-subscriptable:
-    IDENTIFIER arraysubscript
-    | IDENTIFIER
+optional_assignment:
+    _ '=' _ expression
+    |
     ;
-
-call:
-    LPAREN call_list RPAREN
-    | LPAREN RPAREN
+optional_call:
+    _ LPAREN _ call_list RPAREN
+    | _ LPAREN _ RPAREN
+    |
     ;
 call_list:
-    IDENTIFIER ':' IDENTIFIER ',' call_list
-    | IDENTIFIER ':' IDENTIFIER
+    IDENTIFIER _ ':' _ IDENTIFIER _ ',' call_list
+    | IDENTIFIER _ ':' _ IDENTIFIER
     ;
 
 expression:
-    | number
-    | expression OP_LOGIC_OR expression
+    expression OP_LOGIC_OR expression
     | expression OP_LOGIC_AND expression
     | expression OP_EQ expression
     | expression OP_NEQ expression
@@ -155,16 +141,29 @@ expression:
     | expression OP_SRL expression
     | expression OP_SRA expression
     | expression ':' expression
-    | IDENTIFIER
+    | probable_array
+    | number
     ;
 
 number:
     NUMERIC
     | FW_NUMERIC
     ;
+probable_array:
+    IDENTIFIER 
+    ;
+array_subscript:
+    LBRACKET _ expression _ RBRACKET
+    ;
 
-arraysubscript:
-    LBRACKET expression RBRACKET
+_:
+    WHITESPACE _
+    | NEWLINE _
+    |
+    ;
+statement_delimiter:
+    NEWLINE
+    | ';'
     ;
 %%
 
