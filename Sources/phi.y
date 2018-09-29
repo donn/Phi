@@ -23,11 +23,14 @@
 
 %token KEYWORD_MODULE
 %token KEYWORD_INTERFACE
+%token KEYWORD_NAMESPACE
 %token KEYWORD_IF
 %token KEYWORD_ELSE
 %token KEYWORD_WHILE
 %token KEYWORD_WHEN
+%token KEYWORD_SWITCH
 %token KEYWORD_MUX
+%token KEYWORD_CASE
 %token KEYWORD_SW_VAR
 %token KEYWORD_WIRE
 %token KEYWORD_REGISTER
@@ -35,13 +38,6 @@
 %token NUMERIC
 %token FW_NUMERIC
 %token IDENTIFIER
-
-%token LBRACE
-%token RBRACE
-%token LBRACKET
-%token RBRACKET
-%token LPAREN
-%token RPAREN
 
 %token OP_SRL
 %token OP_SRA
@@ -56,47 +52,61 @@
 %token OP_UNSIGNED_SUB
 
 %right '='
+
 %left OP_LOGIC_OR
 %left OP_LOGIC_AND
 %left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>'
 %left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '~' '|' '&' '^'
 %left  '*' '/' '%'
 %left OP_SRL OP_SRA OP_SLL
-%left ':'
+%left ':' '.'
 
 %type<text> NUMERIC IDENTIFIER
 %%
 
 description:
-        declaration statement_delimiter description
-        |
-        ;
+    | declaration description
+    ;
 
 declaration:
-        KEYWORD_MODULE _ IDENTIFIER _ inheritance block
-        | KEYWORD_INTERFACE _ IDENTIFIER _ inheritance block
-        ;
+    KEYWORD_MODULE probable_template call inheritance block
+    | KEYWORD_INTERFACE probable_template call inheritance ';'
+    ;
 
 inheritance:
-        ':' _ inheritance_list
-        |
-        ;
-
-inheritance_list:
-        IDENTIFIER _ ',' _ inheritance_list 
-        | IDENTIFIER
-        ;
+    | ':' unlabeled_list
+    ;
 
 block:
-    LBRACE _ statement _ RBRACE
+    '{' statement_list '}'
+    ;
+switch_block:
+    '{' labeled_statement_list '}'
+    ;
+
+statement_list:
+    | statement_list statement
+    ;
+labeled_statement_list:
+    | KEYWORD_CASE number ':' statement_list switch_block
     ;
 
 statement:
-    subdeclaration WHITESPACE statement_delimiter
+    subdeclaration ';'
+    | nondeclarative_statement ';'
+    | KEYWORD_NAMESPACE IDENTIFIER block
+    | '@' expression block
+    | KEYWORD_IF expression block
+    | KEYWORD_SWITCH expression switch_block
+    | KEYWORD_MUX expression switch_block
     ;
-
 subdeclaration:
-    dynamic_width _ array_subscript _ probable_array optional_assignment
+    dynamic_width array_subscript probable_array optional_assignment
+    | dynamic_width probable_array optional_assignment
+    | probable_template probable_array optional_call
+    ;
+nondeclarative_statement:
+    lhexpression '=' expression
     ;
 
 dynamic_width:
@@ -105,17 +115,26 @@ dynamic_width:
     | KEYWORD_REGISTER
     ;
 optional_assignment:
-    _ '=' _ expression
-    |
+    | '=' expression
     ;
 optional_call:
-    _ LPAREN _ call_list RPAREN
-    | _ LPAREN _ RPAREN
-    |
+    | call
     ;
-call_list:
-    IDENTIFIER _ ':' _ IDENTIFIER _ ',' call_list
-    | IDENTIFIER _ ':' _ IDENTIFIER
+call:
+    '(' labeled_list ')'
+    ;
+
+unlabeled_list:
+    unlabeled_list ',' IDENTIFIER
+    | IDENTIFIER
+    ;
+unlabeled_expression_list:
+    unlabeled_list ',' expression
+    | expression
+    ;
+labeled_list:
+    | IDENTIFIER ':' expression ',' labeled_list
+    | IDENTIFIER ':' expression
     ;
 
 expression:
@@ -141,30 +160,34 @@ expression:
     | expression OP_SRL expression
     | expression OP_SRA expression
     | expression ':' expression
-    | probable_array
+    | lhexpression optional_call
+    | '$' IDENTIFIER '(' unlabeled_expression_list ')'
     | number
     ;
+lhexpression:
+    | lhexpression '.' lhexpression
+    | probable_array
+    ;
+
 
 number:
     NUMERIC
     | FW_NUMERIC
     ;
-probable_array:
-    IDENTIFIER 
+
+probable_template:
+    IDENTIFIER
+    | IDENTIFIER '<' unlabeled_list '>'
     ;
-array_subscript:
-    LBRACKET _ expression _ RBRACKET
+probable_array:
+    IDENTIFIER
+    | IDENTIFIER '[' expression ']'
     ;
 
-_:
-    WHITESPACE _
-    | NEWLINE _
-    |
+array_subscript:
+    '[' expression ']'
     ;
-statement_delimiter:
-    NEWLINE
-    | ';'
-    ;
+
 %%
 
 void yyerror(char *error) {

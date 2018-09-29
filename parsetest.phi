@@ -1,9 +1,0 @@
-module Counter {
-    Var up = 4b210;
-    if up {
-        when clock {
-
-        }
-    }
-
-}

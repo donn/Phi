@@ -24,5 +24,6 @@ int main(int argc, const char* argv[]) {
     yy_scan_string(input.c_str());
     yyparse();
     traverse(head);
+    printf("\n");
     
 }

@@ -6,12 +6,8 @@
 %}
 
 %%
-[ \t]+ {
-    return WHITESPACE;
-}
 [\n] { 
     yylineno += 1;
-    return NEWLINE;
 }
 
 (module) {
@@ -19,6 +15,9 @@
 }
 (interface) {
     return KEYWORD_INTERFACE;
+}
+(namespace) {
+    return KEYWORD_NAMESPACE;
 }
 (if) {
     return KEYWORD_IF;
@@ -29,11 +28,14 @@
 (while) {
     return KEYWORD_WHILE;
 }
-(mux) {
-    return KEYWORD_WHILE;
+(switch) {
+    return KEYWORD_SWITCH;
 }
-(when) {
-    return KEYWORD_WHEN;
+(mux) {
+    return KEYWORD_MUX;
+}
+(case) {
+    return KEYWORD_CASE;
 }
 (Var) {
     return KEYWORD_SW_VAR;
@@ -56,25 +58,6 @@
 [_A-Za-z][_A-Za-z0-9]+ {
     yylval.text = yytext;
     return IDENTIFIER;
-}
-
-[\{] {
-    return LBRACE;
-}
-[\}] {
-    return RBRACE;
-}
-[\[] {
-    return LBRACKET;
-}
-[\]] {
-    return RBRACKET;
-}
-[\(] {
-    return LPAREN;
-}
-[\)] {
-    return RPAREN;
 }
 
 (>>>) {
@@ -110,7 +93,7 @@
     return OP_UNSIGNED_SUB;
 }
 
-[!~+\-*<>/%\|&^\?:;,=] {
+[@\$!~+\-*<>/%\|&^\?:;,=\.\{\}\[\]\(\)] {
     return yytext[0];
 }
 
