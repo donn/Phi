@@ -39,6 +39,7 @@
 %token FW_NUMERIC
 %token IDENTIFIER
 
+%token OP_RANGE
 %token OP_SRL
 %token OP_SRA
 %token OP_SLL
@@ -51,15 +52,17 @@
 %token OP_UNSIGNED_ADD
 %token OP_UNSIGNED_SUB
 
-%right '='
+%right '=' ':'
 
+%right '?'
+%left OP_RANGE
 %left OP_LOGIC_OR
 %left OP_LOGIC_AND
 %left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>'
 %left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '~' '|' '&' '^'
 %left  '*' '/' '%'
 %left OP_SRL OP_SRA OP_SLL
-%left ':' '.'
+%left '.' '['
 
 %type<text> NUMERIC IDENTIFIER
 %%
@@ -129,7 +132,7 @@ unlabeled_list:
     | IDENTIFIER
     ;
 unlabeled_expression_list:
-    unlabeled_list ',' expression
+    expression ',' unlabeled_expression_list
     | expression
     ;
 labeled_list:
@@ -138,7 +141,8 @@ labeled_list:
     ;
 
 expression:
-    expression OP_LOGIC_OR expression
+    expression '?' expression ':' expression
+    | expression OP_LOGIC_OR expression
     | expression OP_LOGIC_AND expression
     | expression OP_EQ expression
     | expression OP_NEQ expression
@@ -159,16 +163,24 @@ expression:
     | expression OP_SLL expression
     | expression OP_SRL expression
     | expression OP_SRA expression
-    | expression ':' expression
+    | expression OP_RANGE expression
+    | '~' expression
+    | '[' concatenation ']'
     | lhexpression optional_call
     | '$' IDENTIFIER '(' unlabeled_expression_list ')'
+    | '(' expression ')'
     | number
     ;
 lhexpression:
+    IDENTIFIER
+    | lhexpression '[' expression ']'
     | lhexpression '.' lhexpression
-    | probable_array
     ;
-
+concatenation:
+    expression ',' concatenation
+    | expression '{' expression '}'
+    | expression
+    ;
 
 number:
     NUMERIC

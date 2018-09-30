@@ -3,13 +3,25 @@
     #include <stdlib.h>
 
     void yyerror(char *);
+    int cCommentNesting = 0;
 %}
 
+
+%x C_COMMENT
 %%
+(\/\*) { cCommentNesting += 1 ; BEGIN(C_COMMENT); }
+<C_COMMENT>(\/\*) { cCommentNesting += 1 ; }
+<C_COMMENT>(\*\/) { cCommentNesting -= 1 ; if (!cCommentNesting) { BEGIN(INITIAL); } }
+<C_COMMENT>\n   { yylineno += 1; } 
+<C_COMMENT>. { }
+
+(\/\/.*) { 
+    // C99/C++-style comments
+}
+
 [\n] { 
     yylineno += 1;
 }
-
 (module) {
     return KEYWORD_MODULE;
 }
@@ -58,6 +70,10 @@
 [_A-Za-z][_A-Za-z0-9]+ {
     yylval.text = yytext;
     return IDENTIFIER;
+}
+
+(\.\.) {
+    return OP_RANGE;
 }
 
 (>>>) {

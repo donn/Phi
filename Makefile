@@ -26,8 +26,8 @@ BINARY = phi
 
 # Products
 
-all: CPP_FLAGS += -g
-all: C_FLAGS += -g
+all: CPP_FLAGS += -g -D _DEBUG
+all: C_FLAGS += -g -D _DEBUG
 all: $(BINARY)
 
 release: $(BINARY)

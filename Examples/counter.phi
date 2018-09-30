@@ -1,5 +1,5 @@
-module Counter<width>(clock: Clock, reset: ResetAsyncLow, output: Output[31:0]) {
-    Register[width - 1:0] store = 32b0;
+module Counter<width>(clock: Clock, reset: ResetAsyncLow, output: Output[31..0]) {
+    Register[width - 1..0] store = 32b0;
 
     @ clock.posedge {
         store.next = store + 1;
