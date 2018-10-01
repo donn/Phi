@@ -129,6 +129,8 @@
 * *expression* **>>>** *expression*
 * *expression* **>>** *expression*
 * *expression* **..** *expression*
+* **&** *expression*
+* **|** *expression*
 * **~** *expression*
 * **[** *concatenation* **]**
 * *lhexpression*
