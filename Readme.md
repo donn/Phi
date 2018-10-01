@@ -8,15 +8,21 @@ It is our goal to design a well-defined language with:
 
 One that is unsurprising to newcomers yet one that is close enough to Verilog to not be as shocking to veteran engineers as languages such as MyHDL and Scala.
 
-# Targets
-Phi should compile on all major desktop operating systems: Windows, macOS and GNU/Linux. 
+# Dependencies and dependency guidelines
+Phi requires a POSIX-compliant system and a competent C++14-compatible compiler. The ultimate goal is portability between different operating systems and Lex/Yacc tools.
 
-All code written for this project should be be compiled with **c++14** and **pedantic** flags
-* i.e. MinGW should be used on Windows and no GCC or Clang specific code should be used.
+All C++ code written for this project should be be compiled with **c++14** and **pedantic** flags.
+* i.e. MinGW should be used on Windows and no GCC or Clang specific extensions can be used.
 
-As inferable, Phi will be implemented in Lex, Yacc and C++.
+## Installation
+### macOS
+Install Xcode from the App Store. At the time of writing, you do not need a later version of bison than the one that is provided with Xcode.
 
-By the end of June 2018, we hope to present a working prototype of a Verilog translator.
+### GNU/Linux
+Install Flex/Bison or some other Lex/Yacc compatible toolchain other using your software repository.
+
+### Windows
+To-do.
 
 # License
 Phi is available under the Apache 2.0 license, available at the root of this project under 'License'.

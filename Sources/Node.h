@@ -1,6 +1,10 @@
 #ifndef _node_h
 #define _node_h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum NodeType {
     NODE_TYPE_INT = 1024,
     NODE_TYPE_IDENTIFIER,
@@ -34,4 +38,10 @@ struct Node {
 
 struct Node* makeNode(enum NodeType type, void* target, struct Node* left, struct Node* right);
 struct Node* traverse(struct Node* head);
+
+struct Node* head;
+
+#ifdef __cplusplus
+}
 #endif
+#endif // _node_h

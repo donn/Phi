@@ -1,7 +1,6 @@
 %{
     #include "phi.y.h"
     #include <stdlib.h>
-
     void yyerror(char *);
     int cCommentNesting = 0;
 %}
@@ -19,7 +18,10 @@
     // C99/C++-style comments
 }
 
-[\n] { 
+[ \t]+ {
+    // Ignore whitespace
+}
+\n { 
     yylineno += 1;
 }
 (module) {
@@ -59,17 +61,17 @@
     return KEYWORD_REGISTER;
 }
 
-[0-9]+ {
+[_A-Za-z][_A-Za-z0-9]* {
     yylval.text = yytext;
-    return NUMERIC;
+    return IDENTIFIER;
 }
-[0-9]+[bodx][0-9]+ {
+[0-9]+[bodx][0-9zx]+ {
     yylval.text = yytext;
     return FW_NUMERIC;
 }
-[_A-Za-z][_A-Za-z0-9]+ {
+[0-9]+ {
     yylval.text = yytext;
-    return IDENTIFIER;
+    return NUMERIC;
 }
 
 (\.\.) {
@@ -108,11 +110,22 @@
 (&\-) {
     return OP_UNSIGNED_SUB;
 }
+(&<) {
+    return OP_UNSIGNED_LT;
+}
+(&<=) {
+    return OP_UNSIGNED_LTE;
+}
+(&>) {
+    return OP_UNSIGNED_GT;
+}
+(&>=) {
+    return OP_UNSIGNED_LTE;
+}
 
 [@\$!~+\-*<>/%\|&^\?:;,=\.\{\}\[\]\(\)] {
     return yytext[0];
 }
-
 
 %%
 

@@ -1,44 +1,44 @@
-module ALU<width: Int = 32>(
-    a: Input[width - 1:0],
-    b: Input[width - 1:0],
-    switch: Input,
-    operation: Input[2:0],
-    output: Output[width - 1:0]
-)
-    Var bits = Math.log2(width)
-    Wire[width - 1:0] add, and, or, xor, not, slt, shift
-    Wire[width - 1:0] result
-    Wire[width:0] altA, altB
+module ALU<width>(
+    a: Input[width - 1..0],
+    b: Input[width - 1..0],
+    allPurposeSwitch: Input,
+    operation: Input[2..0],
+    output: Output[width - 1..0]
+) {
+    Var bits = log(width);
+    Wire[width - 1..0] add, and, or, xor, not, slt, shift;
+    Wire[width - 1..0] result;
+    Wire[width..0] altA, altB;
     
-    add = switch ? a &- b : a &+ b
-    slt = switch ? a < b ? 32b1 : 32b0 : a &< b ? 32b1 : 32b0
+    a$dd = allPurposeSwitch ? a &- b : a &+ b;
+    slt = allPurposeSwitch ? a < b ? 32b1 : 32b0 : a &< b ? 32b1 : 32b0;
 
     // sll = s << b[bits - 1:0]
     // srl = s >>> b[bits - 1:0]
     // sra = s >> b[bits - 1:0]
-    Generic.BarrelShifter bs<width: width> (
+    Generic.BarrelShifter<width: (width)> bs (
         left: operation[0],
-        arithmetic: switch,
+        arithmetic: allPurposeSwitch,
         input: a,
-        shift: b[bits - 1:0]
+        shift: b[bits - 1..0]
     );
     
     mux (operation) {
         case 3b11x:
-            result = shift
+            result = shift;
         case 3b101:
-            result = slt
+            result = slt;
         case 3b100:
-            result = ~a
+            result = ~a;
         case 3b011:
-            result = a ^ b
+            result = a ^ b;
         case 3b010:
-            result = a | b
+            result = a | b;
         case 3b001:
-            result = a & b
+            result = a & b;
         case 3b000:
-            result = add
+            result = add;
     }
 
-    output = result
+    output = result;
 }

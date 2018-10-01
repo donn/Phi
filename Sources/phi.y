@@ -1,10 +1,16 @@
 %{
+    // C STD
     #include <stdio.h>
     #include <stdlib.h>
+    #include <string.h>
+
+    // Project Headers
     #include "Node.h"
+    #include "Errors.h"
 
     void yyerror(char *);
     int yylex();
+    int yydebug=1;
 
     extern struct Node* head;
     extern int yylineno;
@@ -51,14 +57,18 @@
 %token OP_LOGIC_AND
 %token OP_UNSIGNED_ADD
 %token OP_UNSIGNED_SUB
+%token OP_UNSIGNED_LT
+%token OP_UNSIGNED_LTE
+%token OP_UNSIGNED_GT
+%token OP_UNSIGNED_GTE
 
-%right '=' ':'
+%right '=' ':' 
 
 %right '?'
 %left OP_RANGE
 %left OP_LOGIC_OR
 %left OP_LOGIC_AND
-%left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>'
+%left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>' OP_UNSIGNED_LT OP_UNSIGNED_LTE OP_UNSIGNED_GT OP_UNSIGNED_GTE
 %left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '~' '|' '&' '^'
 %left  '*' '/' '%'
 %left OP_SRL OP_SRA OP_SLL
@@ -72,26 +82,48 @@ description:
     ;
 
 declaration:
-    KEYWORD_MODULE probable_template call inheritance block
-    | KEYWORD_INTERFACE probable_template call inheritance ';'
+    KEYWORD_MODULE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance block
+    | KEYWORD_MODULE error '}'
+    | KEYWORD_INTERFACE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance ';'
+    | KEYWORD_INTERFACE error ';'
+    ;
+
+port_declaration_list:
+    | populated_port_declaration_list
+    ;
+populated_port_declaration_list:
+    IDENTIFIER ':' lhexpression ',' populated_port_declaration_list
+    | IDENTIFIER ':' lhexpression
+    ;
+
+template_declaration:
+    | '<' template_declaration_list '>'
+    ;
+template_declaration_list:
+    IDENTIFIER '=' number
+    | IDENTIFIER
     ;
 
 inheritance:
-    | ':' unlabeled_list
+    | ':' inheritance_list
+    ;
+inheritance_list:
+    IDENTIFIER '.' inheritance_list
+    | IDENTIFIER
     ;
 
 block:
     '{' statement_list '}'
     ;
-switch_block:
-    '{' labeled_statement_list '}'
-    ;
-
 statement_list:
     | statement_list statement
     ;
+
+switch_block:
+    '{' labeled_statement_list '}'
+    ;
 labeled_statement_list:
-    | KEYWORD_CASE number ':' statement_list switch_block
+    | KEYWORD_CASE number ':' statement_list labeled_statement_list
     ;
 
 statement:
@@ -102,42 +134,52 @@ statement:
     | KEYWORD_IF expression block
     | KEYWORD_SWITCH expression switch_block
     | KEYWORD_MUX expression switch_block
-    ;
-subdeclaration:
-    dynamic_width array_subscript probable_array optional_assignment
-    | dynamic_width probable_array optional_assignment
-    | probable_template probable_array optional_call
-    ;
-nondeclarative_statement:
-    lhexpression '=' expression
+    | error ';'
+    | error '}'
     ;
 
+subdeclaration:
+    subscriptable_dynamic_width declaration_list
+    | probable_template IDENTIFIER ports
+    ;
+
+subscriptable_dynamic_width:
+    dynamic_width
+    | dynamic_width array_subscript
+    ;
 dynamic_width:
     KEYWORD_SW_VAR
     | KEYWORD_WIRE 
     | KEYWORD_REGISTER
     ;
+declaration_list:
+    lhexpression optional_assignment ',' declaration_list
+    | lhexpression optional_assignment
+    ;
 optional_assignment:
     | '=' expression
     ;
-optional_call:
-    | call
-    ;
-call:
-    '(' labeled_list ')'
-    ;
 
-unlabeled_list:
-    unlabeled_list ',' IDENTIFIER
-    | IDENTIFIER
+probable_template:
+    lhexpression
+    | lhexpression '<' template_list '>' %prec OP_SRL
     ;
-unlabeled_expression_list:
-    expression ',' unlabeled_expression_list
-    | expression
+template_list:
+    | IDENTIFIER ':' '(' expression ')' ',' template_list
+    | IDENTIFIER ':' '(' expression ')'
     ;
-labeled_list:
-    | IDENTIFIER ':' expression ',' labeled_list
+ports:
+    '(' ')'
+    | '(' port_list ')'
+    ;
+    
+port_list:
+    IDENTIFIER ':' expression ',' port_list
     | IDENTIFIER ':' expression
+    ;
+    
+nondeclarative_statement:
+    lhexpression '=' expression
     ;
 
 expression:
@@ -150,6 +192,10 @@ expression:
     | expression '<' expression
     | expression OP_GTE expression
     | expression OP_LTE expression
+    | expression OP_UNSIGNED_LT expression
+    | expression OP_UNSIGNED_GT  expression
+    | expression OP_UNSIGNED_LTE expression
+    | expression OP_UNSIGNED_GTE expression
     | expression '+' expression
     | expression '-' expression
     | expression OP_UNSIGNED_ADD expression
@@ -166,20 +212,34 @@ expression:
     | expression OP_RANGE expression
     | '~' expression
     | '[' concatenation ']'
-    | lhexpression optional_call
-    | '$' IDENTIFIER '(' unlabeled_expression_list ')'
+    | lhexpression
+    | '$' IDENTIFIER '(' procedural_call ')'
     | '(' expression ')'
     | number
     ;
-lhexpression:
-    IDENTIFIER
-    | lhexpression '[' expression ']'
-    | lhexpression '.' lhexpression
-    ;
+
 concatenation:
     expression ',' concatenation
     | expression '{' expression '}'
     | expression
+    ;
+
+procedural_call:
+    | procedural_call_list
+    ;
+procedural_call_list:
+    expression ',' procedural_call_list
+    | expression
+    ;
+
+lhexpression:
+    lhexpression '.' lhexpression
+    | lhexpression '[' expression ']'
+    | IDENTIFIER
+    ;
+    
+array_subscript:
+    '[' expression ']'
     ;
 
 number:
@@ -187,21 +247,8 @@ number:
     | FW_NUMERIC
     ;
 
-probable_template:
-    IDENTIFIER
-    | IDENTIFIER '<' unlabeled_list '>'
-    ;
-probable_array:
-    IDENTIFIER
-    | IDENTIFIER '[' expression ']'
-    ;
-
-array_subscript:
-    '[' expression ']'
-    ;
-
 %%
 
 void yyerror(char *error) {
-    fprintf(stderr, "Line %d: %s: '%s'\n", yylineno, error, yytext);
+    Phi_appendError(yylineno, -1, error, yytext);
 }

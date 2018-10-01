@@ -1,3 +1,5 @@
+export POSIXLY_CORRECT = 1
+
 SOURCE_DIR = Sources
 BUILD_DIR = Intermediates
 
@@ -7,13 +9,14 @@ LEX_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.c,$(LEX)))
 LEX_HEADER = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.h,$(LEX)))
 YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.c,$(YACC)))
 
-C_FLAGS = 
+YACC_FLAGS = --verbose
+C_FLAGS = -pedantic
 CPP_FLAGS = -pedantic -std=c++14
 
 SOURCES = $(SOURCE_DIR)/Node.c
 HEADERS = $(SOURCE_DIR)/Node.h
 
-CPP_SOURCES = $(SOURCE_DIR)/main.cpp
+CPP_SOURCES = $(SOURCE_DIR)/main.cpp $(SOURCE_DIR)/Errors.cpp
 CPP_HEADERS = 
 
 LY_SOURCES = $(LEX_OUT) $(YACC_OUT)
@@ -26,15 +29,18 @@ BINARY = phi
 
 # Products
 
-all: CPP_FLAGS += -g -D _DEBUG
-all: C_FLAGS += -g -D _DEBUG
+all: CPP_FLAGS += -g -D_DEBUG
+all: C_FLAGS += -g -D_DEBUG -DYY_DEBUG=1
 all: $(BINARY)
+
+deep: YACC_FLAGS += -t
+deep: all
 
 release: $(BINARY)
 
 $(YACC_OUT): $(YACC)
 	mkdir -p $(@D)
-	yacc --verbose -o $@ -d $^
+	yacc $(YACC_FLAGS) -o $@ -d $^
 
 $(LEX_OUT): $(LEX) $(YACC_OUT)
 	mkdir -p $(@D)
@@ -50,7 +56,7 @@ $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT)
 
 $(LY_OBJECTS): %.o : %.c $(HEADERS)
 	mkdir -p $(@D)
-	cc -c -ISources -o $@ $<
+	cc $(C_FLAGS) -c -ISources -o $@ $<
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(LY_OBJECTS)
 	mkdir -p $(@D)
