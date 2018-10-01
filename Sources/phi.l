@@ -51,6 +51,9 @@
 (case) {
     return KEYWORD_CASE;
 }
+(default) {
+    return KEYWORD_DEFAULT;
+}
 (Var) {
     return KEYWORD_SW_VAR;
 }
@@ -96,12 +99,6 @@
 }
 (<=) {
     return OP_LTE;
-}
-(\|\|) {
-    return OP_LOGIC_OR;
-}
-(&&) {
-    return OP_LOGIC_AND;
 }
 
 (&\+) {

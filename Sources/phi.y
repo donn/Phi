@@ -37,6 +37,7 @@
 %token KEYWORD_SWITCH
 %token KEYWORD_MUX
 %token KEYWORD_CASE
+%token KEYWORD_DEFAULT
 %token KEYWORD_SW_VAR
 %token KEYWORD_WIRE
 %token KEYWORD_REGISTER
@@ -53,8 +54,6 @@
 %token OP_NEQ
 %token OP_GTE
 %token OP_LTE
-%token OP_LOGIC_OR
-%token OP_LOGIC_AND
 %token OP_UNSIGNED_ADD
 %token OP_UNSIGNED_SUB
 %token OP_UNSIGNED_LT
@@ -69,9 +68,10 @@
 %left OP_LOGIC_OR
 %left OP_LOGIC_AND
 %left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>' OP_UNSIGNED_LT OP_UNSIGNED_LTE OP_UNSIGNED_GT OP_UNSIGNED_GTE
-%left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '~' '|' '&' '^'
-%left  '*' '/' '%'
+%left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '|' '&' '^'
+%left '*' '/' '%'
 %left OP_SRL OP_SRA OP_SLL
+%left '~' UNARY
 %left '.' '['
 
 %type<text> NUMERIC IDENTIFIER
@@ -100,16 +100,19 @@ template_declaration:
     | '<' template_declaration_list '>'
     ;
 template_declaration_list:
-    IDENTIFIER '=' number
-    | IDENTIFIER
+    IDENTIFIER optional_template_assignment template_declaration_list
+    | IDENTIFIER optional_template_assignment
+    ;
+optional_template_assignment:
+    | '=' '(' expression ')'
     ;
 
 inheritance:
     | ':' inheritance_list
     ;
 inheritance_list:
-    IDENTIFIER '.' inheritance_list
-    | IDENTIFIER
+    lhexpression ',' inheritance_list
+    | lhexpression
     ;
 
 block:
@@ -124,6 +127,7 @@ switch_block:
     ;
 labeled_statement_list:
     | KEYWORD_CASE number ':' statement_list labeled_statement_list
+    | KEYWORD_DEFAULT ':' statement_list
     ;
 
 statement:
@@ -184,8 +188,6 @@ nondeclarative_statement:
 
 expression:
     expression '?' expression ':' expression
-    | expression OP_LOGIC_OR expression
-    | expression OP_LOGIC_AND expression
     | expression OP_EQ expression
     | expression OP_NEQ expression
     | expression '>' expression
@@ -210,6 +212,9 @@ expression:
     | expression OP_SRL expression
     | expression OP_SRA expression
     | expression OP_RANGE expression
+    | '-' expression %prec UNARY
+    | '&' expression %prec UNARY
+    | '|' expression %prec UNARY
     | '~' expression
     | '[' concatenation ']'
     | lhexpression
