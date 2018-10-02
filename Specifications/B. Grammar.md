@@ -140,7 +140,7 @@
 
 *concatenation*:
 * *expression* **,** concatenation
-* *expression* **{** *expression* **}**
+* *expression* **[** *expression* **]**
 * *expression*
 
 

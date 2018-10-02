@@ -73,6 +73,7 @@
 %left OP_SRL OP_SRA OP_SLL
 %left '~' UNARY
 %left '.' '['
+%left CONCATENATION
 
 %type<text> NUMERIC IDENTIFIER
 %%
@@ -239,7 +240,7 @@ procedural_call_list:
 
 lhexpression:
     lhexpression '.' lhexpression
-    | lhexpression '[' expression ']'
+    | lhexpression '[' expression ']' %prec CONCATENATION
     | IDENTIFIER
     ;
     

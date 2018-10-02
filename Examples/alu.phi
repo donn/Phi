@@ -5,17 +5,17 @@ module ALU<width>(
     operation: Input[2..0],
     output: Output[width - 1..0]
 ) {
-    Var bits = log(width);
+    Var bits = $log(width);
     Wire[width - 1..0] add, and, or, xor, not, slt, shift;
     Wire[width - 1..0] result;
     Wire[width..0] altA, altB;
     
-    a$dd = allPurposeSwitch ? a &- b : a &+ b;
+    add = allPurposeSwitch ? a &- b : a &+ b;
     slt = allPurposeSwitch ? a < b ? 32b1 : 32b0 : a &< b ? 32b1 : 32b0;
 
-    // sll = s << b[bits - 1:0]
-    // srl = s >>> b[bits - 1:0]
-    // sra = s >> b[bits - 1:0]
+    // sll = s << b[bits - 1..0]
+    // srl = s >>> b[bits - 1..0]
+    // sra = s >> b[bits - 1..0]
     Generic.BarrelShifter<width: (width)> bs (
         left: operation[0],
         arithmetic: allPurposeSwitch,
