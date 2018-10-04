@@ -17,6 +17,10 @@
 * **case**
 * **for**
 * **while**
+* **sync**
+* **async**
+* **@resetHigh**
+* **@resetLow**
 * **Var**
 * **Wire**
 * **Register**

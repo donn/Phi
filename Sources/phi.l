@@ -63,6 +63,30 @@
 (Register) {
     return KEYWORD_REGISTER;
 }
+(async) {
+    return KEYWORD_ASYNC;
+}
+(sync) {
+    return KEYWORD_SYNC;
+}
+(Input) {
+    return KEYWORD_INPUT;
+}
+(Output) {
+    return KEYWORD_OUTPUT;
+}
+(@resetHigh) {
+    return KEYWORD_RESET_HIGH;
+}
+(@resetLow) {
+    return KEYWORD_RESET_HIGH;
+}
+(posedge) {
+    return KEYWORD_POSEDGE;
+}
+(negedge) {
+    return KEYWORD_NEGEDGE;
+}
 
 [_A-Za-z][_A-Za-z0-9]* {
     yylval.text = yytext;

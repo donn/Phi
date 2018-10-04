@@ -1,0 +1,20 @@
+namespace RiscBEE {
+    module Decoder(
+        word: Input[31..0],
+        Z: Input, C: Input, N: Input, V: Input,
+        rs1: Output[3..0], rs2: Output[3..0], rd: Output[3..0],
+        imm_uj: Output[31..0], imm_u: Output[31..0], imm_i: Output[31..0], imm_s: Output[31..0], imm_sb: Output[31..0],
+        alu_op: Output[3..0],
+        r: Output, uj: Output, u: Output, u_control: Output, i: Output, s: Output, sb: Output,
+        load_pc: Output, mem_read: Output, mem_read_sext: Output, iobytes: Output[3..0]
+    ) {
+        Wire arithmetic, load_store;
+        Wire[2..0] funct3;
+        Wire condition, signed_comp;
+
+        funct3 = word[14:12];
+        u_control = word[5];
+        arith = (word[4:2] == )
+
+    }
+}

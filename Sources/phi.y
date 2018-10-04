@@ -41,6 +41,14 @@
 %token KEYWORD_SW_VAR
 %token KEYWORD_WIRE
 %token KEYWORD_REGISTER
+%token KEYWORD_SYNC
+%token KEYWORD_ASYNC
+%token KEYWORD_INPUT
+%token KEYWORD_OUTPUT
+%token KEYWORD_RESET_HIGH
+%token KEYWORD_RESET_LOW
+%token KEYWORD_POSEDGE
+%token KEYWORD_NEGEDGE
 
 %token NUMERIC
 %token FW_NUMERIC
@@ -71,9 +79,8 @@
 %left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '|' '&' '^'
 %left '*' '/' '%'
 %left OP_SRL OP_SRA OP_SLL
-%left '~' UNARY
+%left '~' KEYWORD_POSEDGE KEYWORD_NEGEDGE UNARY
 %left '.' '['
-%left CONCATENATION
 
 %type<text> NUMERIC IDENTIFIER
 %%
@@ -93,9 +100,21 @@ port_declaration_list:
     | populated_port_declaration_list
     ;
 populated_port_declaration_list:
-    IDENTIFIER ':' lhexpression ',' populated_port_declaration_list
-    | IDENTIFIER ':' lhexpression
+    IDENTIFIER ':' port_declaration ',' populated_port_declaration_list
+    | IDENTIFIER ':' port_declaration
     ;
+port_declaration:
+    port_polarity
+    | KEYWORD_RESET_HIGH port_polarity
+    | KEYWORD_RESET_LOW port_polarity
+    ;
+port_polarity:
+    KEYWORD_INPUT
+    | KEYWORD_OUTPUT
+    | KEYWORD_INPUT array_subscript
+    | KEYWORD_OUTPUT array_subscript
+    ;
+
 
 template_declaration:
     | '<' template_declaration_list '>'
@@ -135,7 +154,8 @@ statement:
     subdeclaration ';'
     | nondeclarative_statement ';'
     | KEYWORD_NAMESPACE IDENTIFIER block
-    | '@' expression block
+    | KEYWORD_SYNC expression block
+    | KEYWORD_ASYNC block
     | KEYWORD_IF expression block
     | KEYWORD_SWITCH expression switch_block
     | KEYWORD_MUX expression switch_block
@@ -167,7 +187,7 @@ optional_assignment:
 
 probable_template:
     lhexpression
-    | lhexpression '<' template_list '>' %prec OP_SRL
+    | lhexpression '<' template_list '>'
     ;
 template_list:
     | IDENTIFIER ':' '(' expression ')' ',' template_list
@@ -217,6 +237,8 @@ expression:
     | '&' expression %prec UNARY
     | '|' expression %prec UNARY
     | '~' expression
+    | KEYWORD_POSEDGE expression
+    | KEYWORD_NEGEDGE expression
     | '[' concatenation ']'
     | lhexpression
     | '$' IDENTIFIER '(' procedural_call ')'
@@ -240,7 +262,7 @@ procedural_call_list:
 
 lhexpression:
     lhexpression '.' lhexpression
-    | lhexpression '[' expression ']' %prec CONCATENATION
+    | lhexpression '[' expression ']' 
     | IDENTIFIER
     ;
     

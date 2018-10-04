@@ -42,7 +42,7 @@ int main(int argc, const char* argv[]) {
         for (auto i = 0; i < errorCount; i += 1) {
             auto& error = Error::list[i];
 
-            std::cout << argv[1] << ":" << error.line << ": " << error.message << ": expected " << error.content << std::endl;
+            std::cout << argv[1] << ":" << error.line << ": " << error.message << ": unexpected " << error.content << std::endl;
         }
         std::cerr << errorCount << ((errorCount == 1) ? " error" : " errors") << " generated." << std::endl;
         return EX_DATAERR;

@@ -16,6 +16,17 @@
 * *identifier* **:** *lhexpression* **,** *populated_port_declaration_list*
 * *identifier* **:** *lhexpression*
 
+*port_declaration*:
+* *port_polarity*
+* **@resetHigh** *port_polarity*
+* **@resetLow** *port_polarity*
+
+*port_polarity*:
+* **input**
+* **output**
+* **input** *array_subscript*
+* **output** *array_subscript*
+
 *template_declaration*:
 * **<** *template_declaration_list* **>**
 
@@ -55,7 +66,8 @@
 * *subdeclaration* **;**
 * *nondeclarative_statement* **;**
 * **namespace** *identifier* *block*
-* **@** *expression* *block*
+* **async** *block*
+* **sync** *expression* *block*
 * **if** *expression* *block*
 * **switch** *expression* *switch_block*
 * **mux** *expression* *switch_block*
