@@ -17,7 +17,6 @@
 * **case**
 * **for**
 * **while**
-* **sync**
 * **async**
 * **@resetHigh**
 * **@resetLow**

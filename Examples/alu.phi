@@ -23,22 +23,15 @@ module ALU<width>(
         shift: b[bits - 1..0]
     );
     
-    mux (operation) {
-        case 3b11x:
-            result = shift;
-        case 3b101:
-            result = slt;
-        case 3b100:
-            result = ~a;
-        case 3b011:
-            result = a ^ b;
-        case 3b010:
-            result = a | b;
-        case 3b001:
-            result = a & b;
-        case 3b000:
-            result = add;
-    }
+    result = mux operation {
+        case 3b11x: shift;
+        case 3b101: slt;
+        case 3b100: ~a;
+        case 3b011: a ^ b;
+        case 3b010: a | b;
+        case 3b001: a & b;
+        case 3b000: add;
+    };
 
     output = result;
 }

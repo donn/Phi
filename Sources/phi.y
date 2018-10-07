@@ -82,6 +82,8 @@
 %left '~' KEYWORD_POSEDGE KEYWORD_NEGEDGE UNARY
 %left '.' '['
 
+%right THEN ELSE
+
 %type<text> NUMERIC IDENTIFIER
 %%
 
@@ -142,25 +144,28 @@ statement_list:
     | statement_list statement
     ;
 
-switch_block:
-    '{' labeled_statement_list '}'
-    ;
-labeled_statement_list:
-    | KEYWORD_CASE number ':' statement_list labeled_statement_list
-    | KEYWORD_DEFAULT ':' statement_list
-    ;
-
 statement:
     subdeclaration ';'
     | nondeclarative_statement ';'
-    | KEYWORD_NAMESPACE IDENTIFIER block
-    | KEYWORD_SYNC expression block
-    | KEYWORD_ASYNC block
-    | KEYWORD_IF expression block
-    | KEYWORD_SWITCH expression switch_block
-    | KEYWORD_MUX expression switch_block
+    | block_based
     | error ';'
+    ;
+
+block_based:
+    if
+    | KEYWORD_NAMESPACE IDENTIFIER block
+    | KEYWORD_SWITCH expression switch_block
+    | '@' expression block
+    | KEYWORD_ASYNC block
     | error '}'
+    ;
+
+if:
+    KEYWORD_IF expression block else;
+
+else:
+    | KEYWORD_ELSE if
+    | KEYWORD_ELSE expression block
     ;
 
 subdeclaration:
@@ -207,6 +212,14 @@ nondeclarative_statement:
     lhexpression '=' expression
     ;
 
+switch_block:
+    '{' labeled_statement_list '}'
+    ;
+labeled_statement_list:
+    | KEYWORD_CASE number ':' statement_list labeled_statement_list
+    | KEYWORD_DEFAULT ':' statement_list
+    ;
+
 expression:
     expression '?' expression ':' expression
     | expression OP_EQ expression
@@ -243,7 +256,16 @@ expression:
     | lhexpression
     | '$' IDENTIFIER '(' procedural_call ')'
     | '(' expression ')'
+    | KEYWORD_MUX expression mux_block
     | number
+    ;
+
+mux_block:
+    '{' labeled_expression_list '}'
+    ;
+labeled_expression_list:
+    | KEYWORD_CASE number ':' expression ';' labeled_expression_list
+    | KEYWORD_DEFAULT ':' labeled_expression_list ';'
     ;
 
 concatenation:

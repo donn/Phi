@@ -54,23 +54,24 @@
 * *statement_list* *statement*
 * ε
 
-*switch_block*:
-* **{** *labeled_statement_list* **}**
-
-*labeled_statement_list*:
-* **case** number **:** *statement_list* *labeled_statement_list*
-* **default** **:** *statement_list*
-* ε
-
 *statement*:
 * *subdeclaration* **;**
 * *nondeclarative_statement* **;**
+* *block_based*
+
+*block_based*:
 * **namespace** *identifier* *block*
+* **@** *expression* *block*
 * **async** *block*
-* **sync** *expression* *block*
-* **if** *expression* *block*
-* **switch** *expression* *switch_block*
-* **mux** *expression* *switch_block*
+* *if*
+
+*if*:
+* **if** *expression* *block* *else*
+
+*else*:
+* **else** *if*
+* **else** *expression* *block*
+* ε
 
 *subdeclaration*:
 * *subscriptable_dynamic_width* *declaration_list*
@@ -113,6 +114,14 @@
 *nondeclarative_statement*:
 * lhexpression **=** *expression*
 
+*switch_block*:
+* **{** *labeled_statement_list* **}**
+
+*labeled_statement_list*:
+* **case** number **:** *statement_list* *labeled_statement_list*
+* **default** **:** *statement_list*
+* ε
+
 *expression*:
 * *expression* **?** *expression* **:** *expression*
 * *expression* **||** *expression*
@@ -146,9 +155,18 @@
 * **~** *expression*
 * **[** *concatenation* **]**
 * *lhexpression*
+* **mux** *expression* *mux_block*
 * **$** *identifier* **(** *procedural_call* **)**
 * **(** *expression* **)**
 * *number*
+
+*mux_block*:
+* **{** *labeled_expression_list* **}**
+
+*labeled_expression_list*:
+* **case** *number* **:** *expression* **;** *labeled_expression_list*
+* **default** **:** *expression* **;**
+* ε
 
 *concatenation*:
 * *expression* **,** concatenation
