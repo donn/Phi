@@ -170,9 +170,9 @@
 
 *concatenation*:
 * *expression* **,** concatenation
-* *expression* **[** *expression* **]**
+* *expression* **{** *expression* **}** **,** concatenation
+* *expression* **{** *expression* **}**
 * *expression*
-
 
 *procedural_call*:
 * *procedural_call_list*
@@ -182,11 +182,15 @@
 * *expression* **,** *procedural_call_list*
 * *expression*
 
-
 *lhexpression*:
 * *lhexpression* **.** *lhexpression*
 * *lhexpression* **[** *expression* **]**
+* **{** *lhconcatenation* **}**
 * *identifier*
+
+*lhconcatenation*:
+* *lhexpression*, *lhconcatenation*
+* *lhexpression*
 
 *array_subscript*:
 * **[** *expression* **]**

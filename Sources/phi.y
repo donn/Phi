@@ -89,6 +89,7 @@
 
 description:
     | declaration description
+    | KEYWORD_NAMESPACE IDENTIFIER '{' description '}'
     ;
 
 declaration:
@@ -249,7 +250,7 @@ expression:
     | '-' expression %prec UNARY
     | '&' expression %prec UNARY
     | '|' expression %prec UNARY
-    | '~' expression
+    | '~' expression %prec UNARY
     | KEYWORD_POSEDGE expression
     | KEYWORD_NEGEDGE expression
     | '[' concatenation ']'
@@ -265,12 +266,13 @@ mux_block:
     ;
 labeled_expression_list:
     | KEYWORD_CASE number ':' expression ';' labeled_expression_list
-    | KEYWORD_DEFAULT ':' labeled_expression_list ';'
+    | KEYWORD_DEFAULT ':' expression ';'
     ;
 
 concatenation:
     expression ',' concatenation
-    | expression '{' expression '}'
+    | expression '{' expression '}' ',' concatenation
+    | expression '{' expression '}' 
     | expression
     ;
 
@@ -284,8 +286,14 @@ procedural_call_list:
 
 lhexpression:
     lhexpression '.' lhexpression
-    | lhexpression '[' expression ']' 
+    | lhexpression '[' expression ']'
+    | '{' lhconcatenation '}'
     | IDENTIFIER
+    ;
+
+lhconcatenation:
+    lhexpression ',' lhconcatenation
+    | lhexpression
     ;
     
 array_subscript:

@@ -111,6 +111,9 @@
 (>>) {
     return OP_SRA;
 }
+(<<) {
+    return OP_SLL;
+}
 
 (==) {
     return OP_EQ;
