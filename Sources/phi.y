@@ -69,6 +69,9 @@
 %token OP_UNSIGNED_GT
 %token OP_UNSIGNED_GTE
 
+%token LEFT_CAT
+%token RIGHT_CAT
+
 %right '=' ':' 
 
 %right '?'
@@ -81,8 +84,6 @@
 %left OP_SRL OP_SRA OP_SLL
 %left '~' KEYWORD_POSEDGE KEYWORD_NEGEDGE UNARY
 %left '.' '['
-
-%right THEN ELSE
 
 %type<text> NUMERIC IDENTIFIER
 %%
@@ -112,12 +113,9 @@ port_declaration:
     | KEYWORD_RESET_LOW port_polarity
     ;
 port_polarity:
-    KEYWORD_INPUT
-    | KEYWORD_OUTPUT
-    | KEYWORD_INPUT array_subscript
-    | KEYWORD_OUTPUT array_subscript
+    KEYWORD_INPUT optional_array_subscript
+    | KEYWORD_OUTPUT optional_array_subscript
     ;
-
 
 template_declaration:
     | '<' template_declaration_list '>'
@@ -134,8 +132,8 @@ inheritance:
     | ':' inheritance_list
     ;
 inheritance_list:
-    lhexpression ',' inheritance_list
-    | lhexpression
+    expression ',' inheritance_list
+    | expression
     ;
 
 block:
@@ -175,25 +173,28 @@ subdeclaration:
     ;
 
 subscriptable_dynamic_width:
-    dynamic_width
-    | dynamic_width array_subscript
+    dynamic_width optional_array_subscript
     ;
 dynamic_width:
     KEYWORD_SW_VAR
     | KEYWORD_WIRE 
     | KEYWORD_REGISTER
     ;
+optional_array_subscript:
+    | '[' expression ']'
+    ;
+
 declaration_list:
-    lhexpression optional_assignment ',' declaration_list
-    | lhexpression optional_assignment
+    expression optional_assignment ',' declaration_list
+    | expression optional_assignment
     ;
 optional_assignment:
     | '=' expression
     ;
 
 probable_template:
-    lhexpression
-    | lhexpression '<' template_list '>'
+    expression
+    | expression '<' template_list '>'
     ;
 template_list:
     | IDENTIFIER ':' '(' expression ')' ',' template_list
@@ -210,7 +211,7 @@ port_list:
     ;
     
 nondeclarative_statement:
-    lhexpression '=' expression
+    expression '=' expression
     ;
 
 switch_block:
@@ -253,11 +254,13 @@ expression:
     | '~' expression %prec UNARY
     | KEYWORD_POSEDGE expression
     | KEYWORD_NEGEDGE expression
+    | expression '.' expression
+    | expression '[' expression ']'
     | '[' concatenation ']'
-    | lhexpression
-    | '$' IDENTIFIER '(' procedural_call ')'
     | '(' expression ')'
+    | '$' IDENTIFIER '(' procedural_call ')'
     | KEYWORD_MUX expression mux_block
+    | IDENTIFIER
     | number
     ;
 
@@ -270,10 +273,13 @@ labeled_expression_list:
     ;
 
 concatenation:
-    expression ',' concatenation
-    | expression '{' expression '}' ',' concatenation
-    | expression '{' expression '}' 
-    | expression
+    concatenatable ',' concatenation
+    | concatenatable
+    ;
+
+concatenatable:
+    expression
+    | expression LEFT_CAT expression RIGHT_CAT
     ;
 
 procedural_call:
@@ -282,22 +288,6 @@ procedural_call:
 procedural_call_list:
     expression ',' procedural_call_list
     | expression
-    ;
-
-lhexpression:
-    lhexpression '.' lhexpression
-    | lhexpression '[' expression ']'
-    | '{' lhconcatenation '}'
-    | IDENTIFIER
-    ;
-
-lhconcatenation:
-    lhexpression ',' lhconcatenation
-    | lhexpression
-    ;
-    
-array_subscript:
-    '[' expression ']'
     ;
 
 number:

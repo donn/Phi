@@ -16,7 +16,7 @@ module Memory<memoryWidth>(): Slave {
     
     Var memorySize = $pow(2, memoryWidth - 2);
 
-    Register[31..0] storage[0..memorySize - 1] = [memorySize{32b0}];
+    Register[31..0] storage[0..memorySize - 1] = [memorySize[[32b0]]];
 
     @ posedge HCLK {
         if HREADY | WAIT {

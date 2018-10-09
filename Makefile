@@ -14,15 +14,19 @@ C_FLAGS = -pedantic
 CPP_FLAGS = -pedantic -std=c++14
 
 SOURCES = $(SOURCE_DIR)/Node.c
-HEADERS = $(SOURCE_DIR)/Node.h
+HEADERS = $(SOURCE_DIR)/Node.h $(BUILD_DIR)/$(SOURCE_DIR)/git_version.h
 
-CPP_SOURCES = $(SOURCE_DIR)/main.cpp $(SOURCE_DIR)/Errors.cpp
-CPP_HEADERS = 
+CPP_SOURCES = $(SOURCE_DIR)/Errors.cpp $(SOURCE_DIR)/main.cpp 
+CPP_HEADERS = $(SOURCE_DIR)/Errors.h
+
+LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -depth 1))
+LIBRARY_SOURCES =  Submodules/getopt_port/getopt.c
+CPP_LIBRARY_SOURCES = 
 
 LY_SOURCES = $(LEX_OUT) $(YACC_OUT)
 
-OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(SOURCES)))
-CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES)))
+OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(LIBRARY_SOURCES)))
+CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_LIBRARY_SOURCES)))
 LY_OBJECTS = $(patsubst %.c,%.o,$(LY_SOURCES))
 
 BINARY = phi
@@ -38,6 +42,14 @@ deep: all
 
 release: $(BINARY)
 
+$(BUILD_DIR)/$(SOURCE_DIR)/git_version.h:
+	mkdir -p $(@D)
+	echo "#ifndef _AUTO_git_version_h" > $@
+	echo "#define _AUTO_git_version_h" >> $@
+	echo "#define GIT_TAG \"$(shell git tag)\"" >> $@
+	echo "#define GIT_VER_STRING \"$(shell git describe --always --tags)\"" >> $@
+	echo "#endif // _AUT_git_version_h" >> $@
+
 $(YACC_OUT): $(YACC)
 	mkdir -p $(@D)
 	yacc $(YACC_FLAGS) -o $@ -d $^
@@ -50,9 +62,9 @@ $(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS)
 	mkdir -p $(@D)
 	cc $(C_FLAGS) -c -ISources -o $@ $<
 
-$(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT)
+$(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 	mkdir -p $(@D)
-	c++ $(CPP_FLAGS) -I$(BUILD_DIR)/$(SOURCE_DIR) -c -o $@ $<
+	c++ $(CPP_FLAGS) -I$(BUILD_DIR)/$(SOURCE_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
 
 $(LY_OBJECTS): %.o : %.c $(HEADERS)
 	mkdir -p $(@D)

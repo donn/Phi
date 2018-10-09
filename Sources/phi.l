@@ -147,6 +147,13 @@
     return OP_UNSIGNED_LTE;
 }
 
+(\[\[) {
+    return LEFT_CAT;
+}
+(\]\]) {
+    return RIGHT_CAT;
+}
+
 [@\$!~+\-*<>/%\|&^\?:;,=\.\{\}\[\]\(\)] {
     return yytext[0];
 }
