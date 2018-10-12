@@ -75,12 +75,6 @@
 (Output) {
     return KEYWORD_OUTPUT;
 }
-(@resetHigh) {
-    return KEYWORD_RESET_HIGH;
-}
-(@resetLow) {
-    return KEYWORD_RESET_HIGH;
-}
 (posedge) {
     return KEYWORD_POSEDGE;
 }
@@ -88,6 +82,9 @@
     return KEYWORD_NEGEDGE;
 }
 
+(@[_A-Za-z][_A-Za-z0-9]*) {
+    return ANNOTATION;
+}
 [_A-Za-z][_A-Za-z0-9]* {
     yylval.text = yytext;
     return IDENTIFIER;

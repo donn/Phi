@@ -45,10 +45,9 @@
 %token KEYWORD_ASYNC
 %token KEYWORD_INPUT
 %token KEYWORD_OUTPUT
-%token KEYWORD_RESET_HIGH
-%token KEYWORD_RESET_LOW
 %token KEYWORD_POSEDGE
 %token KEYWORD_NEGEDGE
+%token ANNOTATION
 
 %token NUMERIC
 %token FW_NUMERIC
@@ -83,7 +82,9 @@
 %left '*' '/' '%'
 %left OP_SRL OP_SRA OP_SLL
 %left '~' KEYWORD_POSEDGE KEYWORD_NEGEDGE UNARY
-%left '.' '['
+%left '.'
+%right '['
+%right SUBSCRIPT
 
 %type<text> NUMERIC IDENTIFIER
 %%
@@ -109,8 +110,7 @@ populated_port_declaration_list:
     ;
 port_declaration:
     port_polarity
-    | KEYWORD_RESET_HIGH port_polarity
-    | KEYWORD_RESET_LOW port_polarity
+    | ANNOTATION port_polarity
     ;
 port_polarity:
     KEYWORD_INPUT optional_array_subscript
@@ -173,7 +173,7 @@ subdeclaration:
     ;
 
 subscriptable_dynamic_width:
-    dynamic_width optional_array_subscript
+    dynamic_width optional_array_subscript  %prec SUBSCRIPT
     ;
 dynamic_width:
     KEYWORD_SW_VAR
@@ -185,8 +185,8 @@ optional_array_subscript:
     ;
 
 declaration_list:
-    expression optional_assignment ',' declaration_list
-    | expression optional_assignment
+    IDENTIFIER optional_array_subscript optional_assignment ',' declaration_list
+    | IDENTIFIER optional_array_subscript optional_assignment
     ;
 optional_assignment:
     | '=' expression

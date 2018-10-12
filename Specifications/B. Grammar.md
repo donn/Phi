@@ -13,19 +13,17 @@
 * ε
 
 *populated_port_declaration_list*:
-* *identifier* **:** *lhexpression* **,** *populated_port_declaration_list*
-* *identifier* **:** *lhexpression*
+* *identifier* **:** *expression* **,** *populated_port_declaration_list*
+* *identifier* **:** *expression*
 
 *port_declaration*:
 * *port_polarity*
-* **@resetHigh** *port_polarity*
+* *annotation* *port_polarity*
 * **@resetLow** *port_polarity*
 
 *port_polarity*:
-* **input**
-* **output**
-* **input** *array_subscript*
-* **output** *array_subscript*
+* **input** *optional_array_subscript*
+* **output** *optional_array_subscript*
 
 *template_declaration*:
 * **<** *template_declaration_list* **>**
@@ -78,8 +76,7 @@
 * *probable_template* *identifier* *ports*
 
 *subscriptable_dynamic_width*:
-* *dynamic_width*
-* *dynamic_width* *array_subscript*
+* *dynamic_width* *optional_array_subscript*
 
 *dynamic_width*:
 * **Var**
@@ -87,32 +84,32 @@
 * **Register**
 
 *declaration_list*:
-* lhexpression optional_assignment **,** declaration_list
-* lhexpression optional_assignment
+* *identifier* *optional_array_subscript* *optional_assignment* **,** *declaration_list*
+* *identifier* *optional_array_subscript* *optional_assignment*
 
 *optional_assignment*:
 * **=** *expression*
 * ε
 
 *probable_template*:
-* *lhexpression*
-* *lhexpression* **<** *template_list* **>**
+* *expression*
+* *expression* **<** *template_list* **>**
 
 *template_list*:
-* *identifier* **:** **(** *expression* **)** **,** template_list
+* *identifier* **:** **(** *expression* **)** **,** *template_list*
 * *identifier* **:** **(** *expression* **)**
-* ε;
+* ε
 
 *ports*:
 * **(** **)**
-* **(** port_list **)**
+* **(** *port_list* **)**
 
 *port_list*:
-* *identifier* **:** *expression* **,** port_list
+* *identifier* **:** *expression* **,** *port_list*
 * *identifier* **:** *expression*
 
 *nondeclarative_statement*:
-* lhexpression **=** *expression*
+* *expression* **=** *expression*
 
 *switch_block*:
 * **{** *labeled_statement_list* **}**
@@ -150,14 +147,16 @@
 * *expression* **>>>** *expression*
 * *expression* **>>** *expression*
 * *expression* **..** *expression*
+* *expression* **.** *expression*
+* *expression* **[** *expression* **]**
 * **&** *expression*
 * **|** *expression*
 * **~** *expression*
 * **[** *concatenation* **]**
-* *lhexpression*
 * **mux** *expression* *mux_block*
 * **$** *identifier* **(** *procedural_call* **)**
 * **(** *expression* **)**
+* *identifier*
 * *number*
 
 *mux_block*:
@@ -169,10 +168,12 @@
 * ε
 
 *concatenation*:
-* *expression* **,** concatenation
-* *expression* **{** *expression* **}** **,** concatenation
-* *expression* **{** *expression* **}**
+* *concatenable* **,** *concatenation*
+* *concatenable*
+
+*concatenatable*:
 * *expression*
+* *expression* **[[** expression **]]**
 
 *procedural_call*:
 * *procedural_call_list*
@@ -182,19 +183,9 @@
 * *expression* **,** *procedural_call_list*
 * *expression*
 
-*lhexpression*:
-* *lhexpression* **.** *lhexpression*
-* *lhexpression* **[** *expression* **]**
-* **{** *lhconcatenation* **}**
-* *identifier*
-
-*lhconcatenation*:
-* *lhexpression*, *lhconcatenation*
-* *lhexpression*
-
 *array_subscript*:
 * **[** *expression* **]**
-
+* ε
 
 *number*:
 * *decimal*
