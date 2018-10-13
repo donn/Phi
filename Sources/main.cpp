@@ -12,8 +12,7 @@
 #include <git_version.h>
 
 // Libraries
-#include <Flags.hh>
-#include <getopt.h>
+#include <StupidSimpleCPPOpts.h>
 
 extern "C" {
     #include <phi.l.h>
@@ -33,30 +32,20 @@ void printVersion() {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cout << "Invocation: ./phi <input.phi>" << std::endl;
-        return EX_USAGE;
-    }
-
     // CLI Option parsing
-    Flags flags;
+    SSCO::Options options({
+        {"help", 'h', "Show this message and exit.", false, [&](){ options.printHelp(); exit(0); }},
+        {"version", 'V', "Show the current version of Phi.", false, [&](){ printVersion(); exit(0); }},
+    });
 
-    bool help;
-    flags.Bool(help, 'h', "help", "Show this message and exit.", "Operation Modes");
+    auto opts = options.process(argc, argv);
 
-    bool version;
-    flags.Bool(version, 'v', "version", "Show the version.", "Operation Modes");
-
-    if (!flags.Parse(argc, argv)) {
-        flags.PrintHelp(argv[0], std::cerr);
+    if (!opts.has_value()) {
+        options.printHelp();
         return EX_USAGE;
-    } else if (help) {
-        flags.PrintHelp(argv[0]);
-        return EX_OK;
-    } else if (version) {
-        printVersion();
-        return EX_OK;
     }
+
+    auto& arguments = opts.value().arguments;
 
     // Read input file
     std::stringstream stringstream;

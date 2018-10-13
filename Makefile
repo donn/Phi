@@ -11,7 +11,7 @@ YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.c,$(YACC)))
 
 YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
-CPP_FLAGS = -pedantic -std=c++14
+CPP_FLAGS = -pedantic -std=c++17
 
 SOURCES = $(SOURCE_DIR)/Node.c
 HEADERS = $(SOURCE_DIR)/Node.h $(BUILD_DIR)/$(SOURCE_DIR)/git_version.h
@@ -20,7 +20,7 @@ CPP_SOURCES = $(SOURCE_DIR)/Errors.cpp $(SOURCE_DIR)/main.cpp
 CPP_HEADERS = $(SOURCE_DIR)/Errors.h
 
 LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -depth 1))
-LIBRARY_SOURCES =  Submodules/getopt_port/getopt.c
+LIBRARY_SOURCES = 
 CPP_LIBRARY_SOURCES = 
 
 LY_SOURCES = $(LEX_OUT) $(YACC_OUT)

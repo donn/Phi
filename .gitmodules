@@ -1,6 +1,3 @@
-[submodule "Submodules/getopt_port"]
-	path = Submodules/getopt_port
-	url = https://github.com/kimgr/getopt_port
-[submodule "Submodules/flags.hh"]
-	path = Submodules/flags.hh
-	url = https://github.com/songgao/flags.hh
+[submodule "Submodules/dff3c8a487c73c042efa086a8fc68bd3"]
+	path = Submodules/dff3c8a487c73c042efa086a8fc68bd3
+	url = https://gist.github.com/donn/dff3c8a487c73c042efa086a8fc68bd3
