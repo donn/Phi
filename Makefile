@@ -48,7 +48,7 @@ $(BUILD_DIR)/$(SOURCE_DIR)/git_version.h:
 	echo "#define _AUTO_git_version_h" >> $@
 	echo "#define GIT_TAG \"$(shell git tag)\"" >> $@
 	echo "#define GIT_VER_STRING \"$(shell git describe --always --tags)\"" >> $@
-	echo "#endif // _AUT_git_version_h" >> $@
+	echo "#endif // _AUT0_git_version_h" >> $@
 
 $(YACC_OUT): $(YACC)
 	mkdir -p $(@D)

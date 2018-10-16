@@ -33,6 +33,8 @@
 %token KEYWORD_IF
 %token KEYWORD_ELSE
 %token KEYWORD_WHILE
+%token KEYWORD_FOR
+%token KEYWORD_IN
 %token KEYWORD_WHEN
 %token KEYWORD_SWITCH
 %token KEYWORD_MUX
@@ -84,10 +86,11 @@
 %left '~' KEYWORD_POSEDGE KEYWORD_NEGEDGE UNARY
 %left '.'
 %right '['
-%right SUBSCRIPT
 
 %type<text> NUMERIC IDENTIFIER
 %%
+
+/* Top Level */
 
 description:
     | declaration description
@@ -101,6 +104,7 @@ declaration:
     | KEYWORD_INTERFACE error ';'
     ;
 
+/* Ports */
 port_declaration_list:
     | populated_port_declaration_list
     ;
@@ -117,6 +121,7 @@ port_polarity:
     | KEYWORD_OUTPUT optional_array_subscript
     ;
 
+/* Templating */
 template_declaration:
     | '<' template_declaration_list '>'
     ;
@@ -128,6 +133,7 @@ optional_template_assignment:
     | '=' '(' expression ')'
     ;
 
+/* Inheritance */
 inheritance:
     | ':' inheritance_list
     ;
@@ -136,12 +142,7 @@ inheritance_list:
     | expression
     ;
 
-block:
-    '{' statement_list '}'
-    ;
-statement_list:
-    | statement_list statement
-    ;
+/* Statements */
 
 statement:
     subdeclaration ';'
@@ -150,31 +151,48 @@ statement:
     | error ';'
     ;
 
+/* Blocks */
 block_based:
     if
+    | KEYWORD_FOR IDENTIFIER KEYWORD_IN range block
     | KEYWORD_NAMESPACE IDENTIFIER block
     | KEYWORD_SWITCH expression switch_block
     | '@' expression block
     | KEYWORD_ASYNC block
     | error '}'
     ;
-
 if:
-    KEYWORD_IF expression block else;
+    KEYWORD_IF expression block else
+    ;
 
 else:
     | KEYWORD_ELSE if
     | KEYWORD_ELSE expression block
     ;
 
-subdeclaration:
-    subscriptable_dynamic_width declaration_list
-    | probable_template IDENTIFIER ports
+switch_block:
+    '{' labeled_statement_list '}'
+    ;
+labeled_statement_list:
+    | KEYWORD_CASE number ':' statement_list labeled_statement_list
+    | KEYWORD_DEFAULT ':' statement_list
     ;
 
-subscriptable_dynamic_width:
-    dynamic_width optional_array_subscript  %prec SUBSCRIPT
+block:
+    '{' statement_list '}'
     ;
+
+statement_list:
+    | statement_list statement
+    ;
+
+/* Subdeclarations */
+
+subdeclaration:
+    dynamic_width optional_array_subscript declaration_list
+    | probable_template IDENTIFIER optional_array_subscript optional_ports
+    ;
+
 dynamic_width:
     KEYWORD_SW_VAR
     | KEYWORD_WIRE 
@@ -183,7 +201,9 @@ dynamic_width:
 optional_array_subscript:
     | '[' expression ']'
     ;
-
+optional_ports:
+    | ports
+    ;
 declaration_list:
     IDENTIFIER optional_array_subscript optional_assignment ',' declaration_list
     | IDENTIFIER optional_array_subscript optional_assignment
@@ -204,23 +224,19 @@ ports:
     '(' ')'
     | '(' port_list ')'
     ;
-    
 port_list:
     IDENTIFIER ':' expression ',' port_list
     | IDENTIFIER ':' expression
     ;
+
+/* Nondeclarative Statements */
     
 nondeclarative_statement:
     expression '=' expression
+    | expression ports
     ;
 
-switch_block:
-    '{' labeled_statement_list '}'
-    ;
-labeled_statement_list:
-    | KEYWORD_CASE number ':' statement_list labeled_statement_list
-    | KEYWORD_DEFAULT ':' statement_list
-    ;
+/* Expressions */
 
 expression:
     expression '?' expression ':' expression
@@ -247,7 +263,7 @@ expression:
     | expression OP_SLL expression
     | expression OP_SRL expression
     | expression OP_SRA expression
-    | expression OP_RANGE expression
+    | range
     | '-' expression %prec UNARY
     | '&' expression %prec UNARY
     | '|' expression %prec UNARY
@@ -264,6 +280,10 @@ expression:
     | number
     ;
 
+range:
+    expression OP_RANGE expression
+    ;
+
 mux_block:
     '{' labeled_expression_list '}'
     ;
@@ -276,7 +296,6 @@ concatenation:
     concatenatable ',' concatenation
     | concatenatable
     ;
-
 concatenatable:
     expression
     | expression LEFT_CAT expression RIGHT_CAT

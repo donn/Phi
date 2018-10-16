@@ -42,6 +42,12 @@
 (while) {
     return KEYWORD_WHILE;
 }
+(for) {
+    return KEYWORD_FOR;
+}
+(in) {
+    return KEYWORD_IN;
+}
 (switch) {
     return KEYWORD_SWITCH;
 }
