@@ -19,7 +19,7 @@ HEADERS = $(SOURCE_DIR)/Node.h $(BUILD_DIR)/$(SOURCE_DIR)/git_version.h
 CPP_SOURCES = $(SOURCE_DIR)/Errors.cpp $(SOURCE_DIR)/main.cpp 
 CPP_HEADERS = $(SOURCE_DIR)/Errors.h
 
-LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -depth 1))
+LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -mindepth 1 -maxdepth 1))
 LIBRARY_SOURCES = 
 CPP_LIBRARY_SOURCES = 
 
