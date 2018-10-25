@@ -2,9 +2,11 @@ export POSIXLY_CORRECT = 1
 
 SOURCE_DIR = Sources
 BUILD_DIR = Intermediates
+GRAMMAR_DIR = Grammar
+HEADER_DIR = Headers
 
-LEX = $(SOURCE_DIR)/phi.l
-YACC = $(SOURCE_DIR)/phi.y
+LEX = $(GRAMMAR_DIR)/phi.l
+YACC = $(GRAMMAR_DIR)/phi.y
 LEX_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.c,$(LEX)))
 LEX_HEADER = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.h,$(LEX)))
 YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.c,$(YACC)))
@@ -13,11 +15,11 @@ YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
 CPP_FLAGS = -pedantic -std=c++17
 
-SOURCES = $(SOURCE_DIR)/Node.c
-HEADERS = $(SOURCE_DIR)/Node.h $(BUILD_DIR)/$(SOURCE_DIR)/git_version.h
+SOURCES =
+HEADERS =
 
-CPP_SOURCES = $(SOURCE_DIR)/Errors.cpp $(SOURCE_DIR)/main.cpp 
-CPP_HEADERS = $(SOURCE_DIR)/Errors.h
+CPP_SOURCES = $(shell find Sources -depth 1)
+CPP_HEADERS = $(shell find Headers -depth 1) $(BUILD_DIR)/git_version.h
 
 LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -depth 1))
 LIBRARY_SOURCES = 
@@ -42,7 +44,7 @@ deep: all
 
 release: $(BINARY)
 
-$(BUILD_DIR)/$(SOURCE_DIR)/git_version.h:
+$(BUILD_DIR)/git_version.h:
 	mkdir -p $(@D)
 	echo "#ifndef _AUTO_git_version_h" > $@
 	echo "#define _AUTO_git_version_h" >> $@
@@ -60,15 +62,15 @@ $(LEX_OUT): $(LEX) $(YACC_OUT)
 
 $(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS)
 	mkdir -p $(@D)
-	cc $(C_FLAGS) -c -ISources -o $@ $<
+	cc $(C_FLAGS) -c -I$(HEADER_DIR) -o $@ $<
 
 $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 	mkdir -p $(@D)
-	c++ $(CPP_FLAGS) -I$(BUILD_DIR)/$(SOURCE_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
+	c++ $(CPP_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
 
 $(LY_OBJECTS): %.o : %.c $(HEADERS)
 	mkdir -p $(@D)
-	cc $(C_FLAGS) -c -ISources -o $@ $<
+	cc $(C_FLAGS) -c -I$(HEADER_DIR)  -o $@ $<
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(LY_OBJECTS)
 	mkdir -p $(@D)

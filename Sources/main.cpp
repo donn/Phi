@@ -5,8 +5,7 @@
 #include <map>
 
 // Project headers
-#include "sysexits.h"
-#include "Node.h"
+#include "BSDExits.h"
 #include "Errors.h"
 
 #include <git_version.h>
@@ -72,10 +71,6 @@ int main(int argc, char* argv[]) {
         std::cerr << errorCount << ((errorCount == 1) ? " error" : " errors") << " generated." << std::endl;
         return EX_DATAERR;
     }
-    
-    // Construct AST
-    traverse(head);
-
 
     return EX_OK;
 }
