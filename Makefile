@@ -21,7 +21,7 @@ HEADERS =
 CPP_SOURCES = $(shell find Sources -depth 1)
 CPP_HEADERS = $(shell find Headers -depth 1) $(BUILD_DIR)/git_version.h
 
-LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -depth 1))
+LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -mindepth 1 -maxdepth 1))
 LIBRARY_SOURCES = 
 CPP_LIBRARY_SOURCES = 
 
