@@ -1,5 +1,4 @@
 %{
-    #include "phi.y.h"
     #include <stdlib.h>
     void yyerror(char *);
     int cCommentNesting = 0;

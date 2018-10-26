@@ -14,7 +14,7 @@ module Memory<memoryWidth>(): Slave {
         Register[2..0] HSIZE =  3b0;
     }
     
-    Var memorySize = $pow(2, memoryWidth - 2);
+    Var[31..0] memorySize = $pow(2, memoryWidth - 2);
 
     Register[31..0] storage[0..memorySize - 1] = [memorySize[[32b0]]];
 

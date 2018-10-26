@@ -15,7 +15,7 @@
 
 extern "C" {
     #include <phi.l.h>
-    #include <phi.y.h>
+    #include <phi.yy.h>
     
     extern int yynerrs;
     extern int yyparse();

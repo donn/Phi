@@ -6,30 +6,27 @@ GRAMMAR_DIR = Grammar
 HEADER_DIR = Headers
 
 LEX = $(GRAMMAR_DIR)/phi.l
-YACC = $(GRAMMAR_DIR)/phi.y
+YACC = $(GRAMMAR_DIR)/phi.yy
 LEX_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.c,$(LEX)))
 LEX_HEADER = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.h,$(LEX)))
-YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.c,$(YACC)))
+YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cpp,$(YACC)))
 
 YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
 CPP_FLAGS = -pedantic -std=c++17
 
-SOURCES =
-HEADERS =
+SOURCES = $(LEX_OUT)
+HEADERS = $(LEX_HEADER)
 
-CPP_SOURCES = $(shell find Sources -depth 1)
+CPP_SOURCES = $(shell find Sources -depth 1) $(YACC_OUT)
 CPP_HEADERS = $(shell find Headers -depth 1) $(BUILD_DIR)/git_version.h
 
 LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -mindepth 1 -maxdepth 1))
 LIBRARY_SOURCES = 
-CPP_LIBRARY_SOURCES = 
-
-LY_SOURCES = $(LEX_OUT) $(YACC_OUT)
+CPP_LIBRARY_SOURCES =
 
 OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(LIBRARY_SOURCES)))
 CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_LIBRARY_SOURCES)))
-LY_OBJECTS = $(patsubst %.c,%.o,$(LY_SOURCES))
 
 BINARY = phi
 
@@ -67,10 +64,6 @@ $(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS)
 $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 	mkdir -p $(@D)
 	c++ $(CPP_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
-
-$(LY_OBJECTS): %.o : %.c $(HEADERS)
-	mkdir -p $(@D)
-	cc $(C_FLAGS) -c -I$(HEADER_DIR)  -o $@ $<
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(LY_OBJECTS)
 	mkdir -p $(@D)
