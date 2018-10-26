@@ -2,4 +2,4 @@
 require 'etc'
 
 threads = Etc.nprocessors
-exec('make', '-j4')
+exec('make', "-j#{thread}")
