@@ -2,6 +2,9 @@
 %defines
 %locations
 
+%define parser_class_name {Parser}
+%define api.namespace {Phi}
+
 %{
     // C STD
     #include <cstdio>
@@ -9,19 +12,20 @@
     #include <cstring>
 
     // Project Headers
-    #include "Errors.h"
+    #include "Context.h"
 
     void yyerror(char *);
     int yylex();
     int yydebug=1;
 
-    extern struct Node* head;
     extern int yylineno;
     extern char* yytext;
 %}
 
+%parse-param { Phi::Context* context }
+%lex-param   { Phi::Context* context }
+
 %union {
-    struct Node* node;
     char* text;
 }
 
@@ -91,6 +95,18 @@
 %right '['
 
 %type<text> NUMERIC IDENTIFIER
+
+%{
+    extern int yylex(Phi::Parser::semantic_type* yylval,
+                     Phi::Parser::location_type* yylloc,
+                     Phi::Context* context
+    );
+%}
+
+%initial-action {
+    @$.begin.filename = @$.end.filename = &context->files.back();
+}
+
 %%
 
 /* Top Level */
@@ -318,7 +334,3 @@ number:
     ;
 
 %%
-
-void yyerror(char *error) {
-    Phi_appendError(yylineno, -1, error, yytext);
-}

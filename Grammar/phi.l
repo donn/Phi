@@ -1,16 +1,30 @@
+%option noyywrap
 %{
-    #include <stdlib.h>
-    void yyerror(char *);
+    #include <cstdlib>
+
+    #include "Context.h"
+    #include "phi.yy.hh"
+
+    #define YY_DECL int yylex(Phi::Parser::semantic_type* yylval, \
+    Phi::Parser::location_type* yylloc, Phi::Context* context)
+
+    # define YY_USER_ACTION  yylloc->columns (yyleng);
+    
     int cCommentNesting = 0;
+
+    using token = Phi::Parser::token;
 %}
 
 
 %x C_COMMENT
 %%
+%{
+    yylloc->step ();
+%}
 (\/\*) { cCommentNesting += 1 ; BEGIN(C_COMMENT); }
 <C_COMMENT>(\/\*) { cCommentNesting += 1 ; }
 <C_COMMENT>(\*\/) { cCommentNesting -= 1 ; if (!cCommentNesting) { BEGIN(INITIAL); } }
-<C_COMMENT>\n   { yylineno += 1; } 
+<C_COMMENT>\n   { yylloc->lines(1); } 
 <C_COMMENT>. { }
 
 (\/\/.*) { 
@@ -21,139 +35,139 @@
     // Ignore whitespace
 }
 \n { 
-    yylineno += 1;
+    yylloc->lines(1);
 }
 (module) {
-    return KEYWORD_MODULE;
+    return token::KEYWORD_MODULE;
 }
 (interface) {
-    return KEYWORD_INTERFACE;
+    return token::KEYWORD_INTERFACE;
 }
 (namespace) {
-    return KEYWORD_NAMESPACE;
+    return token::KEYWORD_NAMESPACE;
 }
 (if) {
-    return KEYWORD_IF;
+    return token::KEYWORD_IF;
 }
 (else) {
-    return KEYWORD_ELSE;
+    return token::KEYWORD_ELSE;
 }
 (while) {
-    return KEYWORD_WHILE;
+    return token::KEYWORD_WHILE;
 }
 (for) {
-    return KEYWORD_FOR;
+    return token::KEYWORD_FOR;
 }
 (in) {
-    return KEYWORD_IN;
+    return token::KEYWORD_IN;
 }
 (switch) {
-    return KEYWORD_SWITCH;
+    return token::KEYWORD_SWITCH;
 }
 (mux) {
-    return KEYWORD_MUX;
+    return token::KEYWORD_MUX;
 }
 (case) {
-    return KEYWORD_CASE;
+    return token::KEYWORD_CASE;
 }
 (default) {
-    return KEYWORD_DEFAULT;
+    return token::KEYWORD_DEFAULT;
 }
 (Var) {
-    return KEYWORD_SW_VAR;
+    return token::KEYWORD_SW_VAR;
 }
 (Wire) {
-    return KEYWORD_WIRE;
+    return token::KEYWORD_WIRE;
 }
 (Register) {
-    return KEYWORD_REGISTER;
+    return token::KEYWORD_REGISTER;
 }
 (async) {
-    return KEYWORD_ASYNC;
+    return token::KEYWORD_ASYNC;
 }
 (sync) {
-    return KEYWORD_SYNC;
+    return token::KEYWORD_SYNC;
 }
 (Input) {
-    return KEYWORD_INPUT;
+    return token::KEYWORD_INPUT;
 }
 (Output) {
-    return KEYWORD_OUTPUT;
+    return token::KEYWORD_OUTPUT;
 }
 (posedge) {
-    return KEYWORD_POSEDGE;
+    return token::KEYWORD_POSEDGE;
 }
 (negedge) {
-    return KEYWORD_NEGEDGE;
+    return token::KEYWORD_NEGEDGE;
 }
 
 (@[_A-Za-z][_A-Za-z0-9]*) {
-    return ANNOTATION;
+    return token::ANNOTATION;
 }
 [_A-Za-z][_A-Za-z0-9]* {
-    yylval.text = yytext;
-    return IDENTIFIER;
+    yylval->text = yytext;
+    return token::IDENTIFIER;
 }
 [0-9]+[bodx][0-9zx]+ {
-    yylval.text = yytext;
-    return FW_NUMERIC;
+    yylval->text = yytext;
+    return token::FW_NUMERIC;
 }
 [0-9]+ {
-    yylval.text = yytext;
-    return NUMERIC;
+    yylval->text = yytext;
+    return token::NUMERIC;
 }
 
 (\.\.) {
-    return OP_RANGE;
+    return token::OP_RANGE;
 }
 
 (>>>) {
-    return OP_SRL;
+    return token::OP_SRL;
 }
 (>>) {
-    return OP_SRA;
+    return token::OP_SRA;
 }
 (<<) {
-    return OP_SLL;
+    return token::OP_SLL;
 }
 
 (==) {
-    return OP_EQ;
+    return token::OP_EQ;
 } 
 (!=) {
-    return OP_NEQ;
+    return token::OP_NEQ;
 }
 (>=) {
-    return OP_GTE;
+    return token::OP_GTE;
 }
 (<=) {
-    return OP_LTE;
+    return token::OP_LTE;
 }
 
 (&\+) {
-    return OP_UNSIGNED_ADD;
+    return token::OP_UNSIGNED_ADD;
 }
 (&\-) {
-    return OP_UNSIGNED_SUB;
+    return token::OP_UNSIGNED_SUB;
 }
 (&<) {
-    return OP_UNSIGNED_LT;
+    return token::OP_UNSIGNED_LT;
 }
 (&<=) {
-    return OP_UNSIGNED_LTE;
+    return token::OP_UNSIGNED_LTE;
 }
 (&>) {
-    return OP_UNSIGNED_GT;
+    return token::OP_UNSIGNED_GT;
 }
 (&>=) {
-    return OP_UNSIGNED_LTE;
+    return token::OP_UNSIGNED_LTE;
 }
 
 (\[\[) {
-    return LEFT_CAT;
+    return token::LEFT_CAT;
 }
 (\]\]) {
-    return RIGHT_CAT;
+    return token::RIGHT_CAT;
 }
 
 [@\$!~+\-*<>/%\|&^\?:;,=\.\{\}\[\]\(\)] {
@@ -161,7 +175,3 @@
 }
 
 %%
-
-int yywrap(void) {
-    return 1;
-}

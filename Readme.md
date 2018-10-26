@@ -9,10 +9,12 @@ It is our goal to design a well-defined language with:
 One that is unsurprising to newcomers yet one that is close enough to Verilog to not be as shocking to veteran engineers as languages such as MyHDL and Scala.
 
 # Dependencies and dependency guidelines
-Phi requires a POSIX-compliant system and a competent C++17-compatible compiler. The ultimate goal is portability between different operating systems and Lex/Yacc tools.
+Phi requires a POSIX-compliant system and a competent C++17-compatible compiler. 
 
-All C++ code written for this project should be be compiled with **c++14** and **pedantic** flags.
+All C++ code written for this project should be be compiled with **c++17** and **pedantic** flags.
 * i.e. MinGW should be used on Windows and no GCC or Clang specific extensions can be used.
+
+This also requires a recent of version of GNU Flex and GNU Bison.
 
 ## Usage
 ### General: After Cloning
@@ -21,7 +23,15 @@ Run `git submodule update --init --recursive`.
 We use open source libraries for various functions, and they're all submoduled.
 
 ### macOS
-Install Xcode from the App Store. At the time of writing, you do not need a later version of bison than the one that is provided with Xcode.
+Install Xcode from the App Store.
+
+To get a newer version of Flex/Bison, use [Homebrew](https://brew.sh) and then...
+
+```bash
+    brew install flex bison
+```
+
+You will need to add these to PATH, as brew won't.
 
 ### GNU/Linux
 Install Flex/Bison or some other Lex/Yacc compatible toolchain other using your software repository.
