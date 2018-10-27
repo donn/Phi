@@ -20,6 +20,7 @@ namespace Phi {
         std::vector<std::string> files;
     public:
         void setFile(std::string currentFile) { files.push_back(currentFile); }
+        bool error();
         void printErrors();
     };
 };

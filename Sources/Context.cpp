@@ -22,3 +22,7 @@ void Phi::Context::printErrors() {
         std::cerr << errorCount << ((errorCount == 1) ? " error" : " errors") << " generated." << std::endl;
     }
 }
+
+bool Phi::Context::error() {
+    return errorList.size() > 0;
+}

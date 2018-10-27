@@ -60,9 +60,11 @@ int main(int argc, char* argv[]) {
     // Parse
     auto context = Phi::Context();
     auto parser = Phi::Parser(&context);
+    
     context.setFile(argv[1]);
     auto parsingResult = parser.parse();
-    if (parsingResult) {
+
+    if (context.error()) {
         context.printErrors();
         return EX_DATAERR;
     }
