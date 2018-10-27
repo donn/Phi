@@ -330,15 +330,25 @@ concatenation:
     ;
 concatenatable:
     expression
-    | expression LEFT_CAT expression RIGHT_CAT
+    | expression LEFT_CAT expression RIGHT_CAT {
+        $$ 
+    }
     ;
 
 procedural_call:
-    | procedural_call_list
+    | procedural_call_list {
+        $$ = $1;
+    }
     ;
 procedural_call_list:
-    expression ',' procedural_call_list
-    | expression
+    expression ',' procedural_call_list {
+        std::stringstream stream;
+        stream << $1 << ", " << $2;
+        $$ = strdup(stream.str().c_str());
+    }
+    | expression {
+        $$ = $1;
+    }
     ;
 
 number:
