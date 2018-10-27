@@ -69,9 +69,9 @@ int main(int argc, char* argv[]) {
         return EX_DATAERR;
     }
 
-    for (auto k: context.hell) {
-        std::cout << k << std::endl;
-    }
+    // for (auto k: context.hell) {
+    //     std::cout << k << std::endl;
+    // }
 
     return EX_OK;
 }

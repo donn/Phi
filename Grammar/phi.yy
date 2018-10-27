@@ -11,8 +11,12 @@
     #include <cstdlib>
     #include <cstring>
 
+    // CPP STL
+    #include <sstream>
+
     // Project Headers
     #include "Context.h"
+    #include "Node.h"
 
     void yyerror(char *);
     int yylex();
@@ -20,6 +24,11 @@
 
     extern int yylineno;
     extern char* yytext;
+
+    using namespace Phi::Node;
+
+    #define catchIntoContext catch (const char* error) { context->errorList.push_back({yylhs.location, std::string(error)}); };
+    #define tcc(stmt) try { stmt } catchIntoContext
 %}
 
 %parse-param { Phi::Context* context }
@@ -27,6 +36,7 @@
 
 %union {
     char* text;
+    void* node;
 }
 
 %token ASSIGNMENT
@@ -94,10 +104,10 @@
 %left '.'
 %right '['
 
-%type<text> NUMERIC IDENTIFIER
+%type<text> NUMERIC FW_NUMERIC IDENTIFIER
 
 // Silly conversion
-%type<text> port_declaration_list template_declaration
+%type<text> number expression
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -115,8 +125,7 @@
 /* Top Level */
 
 description:
-    | declaration description {
-    }
+    | declaration description
     | KEYWORD_NAMESPACE IDENTIFIER '{' description '}'
     ;
 
@@ -333,8 +342,33 @@ procedural_call_list:
     ;
 
 number:
-    NUMERIC
-    | FW_NUMERIC
+    NUMERIC { 
+        std::stringstream stream;
+        stream << "64'" << $1;
+        $$ = strdup(stream.str().c_str());
+    }
+    | FW_NUMERIC {
+        std::stringstream stream;
+        Number* number;
+        tcc(number = new Number($1);)
+        stream << number->width << "'";
+        switch (number->radix) {
+            case 2:
+                stream << 'b';
+                break;
+            case 8:
+                stream << 'o';
+                break;
+            case 16:
+                stream << 'h';
+                break;
+            default:
+                stream << 'd';
+        }
+        stream << number->literal << std::endl;
+        delete number;
+        $$ = strdup(stream.str().c_str());
+    }  
     ;
 
 %%

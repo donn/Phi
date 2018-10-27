@@ -6,6 +6,7 @@
 
 // Flex/Bison
 #include <location.hh>
+
 using Location = Phi::location;
 
 namespace Phi {
@@ -15,15 +16,13 @@ namespace Phi {
     };
 
     class Context {
-        friend class Parser;
+    public:
         std::vector<Error> errorList;
         std::vector<std::string> files;
-    public:
+
         void setFile(std::string currentFile) { files.push_back(currentFile); }
         bool error();
         void printErrors();
-
-        std::vector<std::string> hell;
     };
 }
 
