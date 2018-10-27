@@ -4,3 +4,5 @@ Intermediates/
 .DS_Store
 phi
 *.vcd
+
+*.exe

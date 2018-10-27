@@ -9,10 +9,17 @@ It is our goal to design a well-defined language with:
 One that is unsurprising to newcomers yet one that is close enough to Verilog to not be as shocking to veteran engineers as languages such as MyHDL and Scala.
 
 # Dependencies and dependency guidelines
-Phi requires a POSIX-compliant system and a competent C++17-compatible compiler.
-* i.e. MinGW should be used on Windows and no GCC or Clang specific extensions can be used.
+Building Phi requires:
 
-This also requires a recent of version of GNU Flex and GNU Bison. These generate code that is incompatible with C++17, so they are treated a little bit differently.
+* Git
+* A POSIX-compliant system
+* A C++17 compiler that supports **standard** C++17
+    * No GCC or Clang specific extensions can be used.
+* GNU Flex
+* GNU Bison
+* Make
+* Ruby
+    * (For helper scripts)
 
 ## Usage
 ### General: After Cloning
@@ -32,15 +39,22 @@ To get a newer version of Flex/Bison, install [Homebrew](https://brew.sh) and th
 You will need to add these to PATH, as brew won't.
 
 ### GNU/Linux
-You'll need g++ and git, obviously.
-
-
-Install Flex/Bison or some other Lex/Yacc compatible toolchain other using your software repository.
+Install git, gcc, make, flex and bison toolchain other using your software repository.
 
 #### Debian-based OSes (incl. Ubuntu, elementary...)
+Use apt.
 
 ```bash
-    sudo apt install flex bison
+    sudo apt-get install git gcc flex bison make ruby
+```
+
+### Windows
+Get [MSYS2](https://www.msys2.org/).
+
+In the MSYS2 terminal, invoke:
+
+```bash
+    pacman -Syu git gcc flex bison make ruby
 ```
 
 # License

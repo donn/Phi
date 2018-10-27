@@ -3,9 +3,7 @@
 Dir["Examples/*"].map do |item|
     puts "Testing #{item}..."
     testable = item
-    if File.directory?(item)
-        testable += '/*'
-    end
+    testable += '/*' if File.directory?(item);
     `./phi #{item}`
     if $? != 0
         puts "Regression detected at test #{item}."
