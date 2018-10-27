@@ -6,3 +6,4 @@ phi
 *.vcd
 
 *.exe
+*.stackdump

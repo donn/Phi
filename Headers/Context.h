@@ -22,7 +22,9 @@ namespace Phi {
         void setFile(std::string currentFile) { files.push_back(currentFile); }
         bool error();
         void printErrors();
+
+        std::vector<std::string> hell;
     };
-};
+}
 
 #endif

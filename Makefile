@@ -66,7 +66,7 @@ $(LEX_OUT): $(LEX) $(YACC_OUT)
 	flex --header-file=$(LEX_HEADER) -o $@ $<
 
 $(LEX_HEADER): $(LEX_OUT)
-	echo "Header generated."
+	@echo "Header generated."
 
 $(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS)
 	mkdir -p $(@D)

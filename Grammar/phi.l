@@ -8,7 +8,7 @@
     #define YY_DECL int yylex(Phi::Parser::semantic_type* yylval, \
     Phi::Parser::location_type* yylloc, Phi::Context* context)
 
-    # define YY_USER_ACTION  yylloc->columns (yyleng);
+    # define YY_USER_ACTION  do { yylloc->columns(yyleng); } while (0);
     
     int cCommentNesting = 0;
 
@@ -19,7 +19,7 @@
 %x C_COMMENT
 %%
 %{
-    yylloc->step ();
+    yylloc->step();
 %}
 (\/\*) { cCommentNesting += 1 ; BEGIN(C_COMMENT); }
 <C_COMMENT>(\/\*) { cCommentNesting += 1 ; }

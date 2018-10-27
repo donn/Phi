@@ -96,6 +96,9 @@
 
 %type<text> NUMERIC IDENTIFIER
 
+// Silly conversion
+%type<text> port_declaration_list template_declaration
+
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
                      Phi::Parser::location_type* yylloc,
@@ -112,12 +115,13 @@
 /* Top Level */
 
 description:
-    | declaration description
+    | declaration description {
+    }
     | KEYWORD_NAMESPACE IDENTIFIER '{' description '}'
     ;
 
 declaration:
-    KEYWORD_MODULE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance block
+    KEYWORD_MODULE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance block 
     | KEYWORD_MODULE error '}'
     | KEYWORD_INTERFACE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance ';'
     | KEYWORD_INTERFACE error ';'
