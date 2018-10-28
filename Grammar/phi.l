@@ -105,15 +105,15 @@
     return token::ANNOTATION;
 }
 [_A-Za-z][_A-Za-z0-9]* {
-    yylval->text = yytext;
+    yylval->text = strdup(yytext);
     return token::IDENTIFIER;
 }
 [0-9]+[bodx][0-9zx]+ {
-    yylval->text = yytext;
+    yylval->text = strdup(yytext);
     return token::FW_NUMERIC;
 }
 [0-9]+ {
-    yylval->text = yytext;
+    yylval->text = strdup(yytext);
     return token::NUMERIC;
 }
 

@@ -20,6 +20,7 @@ namespace Phi {
         std::vector<Error> errorList;
         std::vector<std::string> files;
         char* top = NULL;
+        bool _HACK_FOR_ALWAYS = false;
 
         void setFile(std::string currentFile) { files.push_back(currentFile); }
         bool error();

@@ -17,6 +17,7 @@
     // Project Headers
     #include "Context.h"
     #include "Node.h"
+    #include "Utils.h"
 
     void yyerror(char *);
     int yylex();
@@ -31,8 +32,8 @@
     #define tcc(stmt) try { stmt } catchIntoContext
     #define cst std::stringstream stream
     #define ε strdup("")
-    #define err_placeholder strdup("/* PHI ERROR */")
-    #define TODO strdup("__PHI__UNIMPLEMENTED")
+    #define err_placeholder strdup("/* PHI TRANSLATOR: ERROR */")
+    #define TODO strdup("")
     #define dup strdup(stream.str().c_str())
 %}
 
@@ -143,10 +144,13 @@ description:
 
 declaration:
     KEYWORD_MODULE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance block  {
-        std::cout << $2 << std::endl;
-        std::cout << "--------------------------------" << std::endl;
-        cst; stream << "module " << $2 << TODO << '(' << $5 << ')' << TODO << $8;
-        $$ = dup;
+        cst; stream << "module " << $2 << TODO << '(' << std::endl << $5 << ')' << TODO << $8;
+        auto string = stream.str();
+        auto index = string.find("begin");
+        string.replace(index, 5, ";");
+        index = string.rfind("end");
+        string.replace(index, 3, "endmodule");
+        $$ = strdup(string.c_str());
     }
     | KEYWORD_MODULE error '}' {
         $$ = err_placeholder;
@@ -168,11 +172,11 @@ port_declaration_list:
     ;
 populated_port_declaration_list:
     IDENTIFIER ':' port_declaration ',' populated_port_declaration_list {
-        cst; stream << $3 << $1 << ',' << $5 << std::endl;
+        cst; stream << "    " << $3 << " " << $1 << ',' << std::endl << $5;
         $$ = dup;
     }
     | IDENTIFIER ':' port_declaration {
-        cst; stream << $3 << $1 << std::endl;
+        cst; stream << "    " << $3 << $1 << std::endl;
         $$ = dup;
     }
     ;
@@ -186,11 +190,11 @@ port_declaration:
     ;
 port_polarity:
     KEYWORD_INPUT optional_array_subscript {
-        cst; stream << "input" << $2;
+        cst; stream << "input " << $2;
         $$ = dup;
     }
     | KEYWORD_OUTPUT optional_array_subscript {
-        cst; stream << "output" << $2;
+        cst; stream << "output " << $2;
         $$ = dup;
     }
     ;
@@ -268,15 +272,15 @@ block_based:
         $$ = TODO;
     }
     | KEYWORD_SWITCH expression switch_block {
-        cst; stream << "switch (" << $2 << ")" << $3;
+        cst; stream << "switch (" << $2 << ") " << $3;
         $$ = dup;
     }
     | '@' expression block {
-        cst; stream << "always @ (" << $2 << ")" << $3;
+        cst; stream << "always @ (" << $2 << ") " << $3;
         $$ = dup;
     }
     | KEYWORD_ASYNC block {
-        cst; stream << "always @ (*)" << $2;
+        cst; stream << "always @ (*) " << $2;
         $$ = dup;
     }
     | error '}' {
@@ -285,7 +289,7 @@ block_based:
     ;
 if:
     KEYWORD_IF expression block else {
-        cst; stream << "if (" << $2 << ")" << $3 << $4;
+        cst; stream << "if (" << $2 << ")" << " " << $3 << " " << $4;
         $$ = dup;
     }
     ;
@@ -339,7 +343,7 @@ statement_list:
 
 subdeclaration:
     dynamic_width optional_array_subscript declaration_list {
-        cst; stream << $1 << $2 << $3;
+        cst; stream << $1 << " " << $2 << " " << $3;
         $$ = dup;
     }
     | probable_template IDENTIFIER optional_array_subscript optional_ports {
@@ -435,7 +439,15 @@ port_list:
     
 nondeclarative_statement:
     expression '=' expression {
-        cst; stream << $1 << '=' << $3;
+        cst;
+        auto assignee = std::string($1);
+        auto op = "=";
+        size_t pos = assignee.rfind(".next");
+        if (pos != std::string::npos) {
+            assignee.replace(pos, 5, "");
+            op = "<=";
+        }
+        stream << assignee << ' ' << op << ' ' << $3;
         $$ = dup;
     }
     | expression ports {
@@ -560,7 +572,8 @@ expression:
         $$ = dup;
     }
     | expression '.' expression {
-        $$ = TODO;
+        cst; stream << $1 << '.' << $3; // TODO PROPERLY
+        $$ = dup;
     }
     | expression '[' expression ']' {
         cst; stream << $1 << '[' << $3 << ']';
@@ -581,7 +594,7 @@ expression:
         $$ = TODO;
     }
     | IDENTIFIER {
-        $$ = $1;
+        $$ = strdup(yytext);
     }
     | number {
         $$ = $1;
@@ -660,8 +673,8 @@ number:
     }
     | FW_NUMERIC {
         cst; Number* number;
-        tcc(number = new Number($1);)
-        stream << number->width << '\'';
+        tcc(number = new Number(yytext);)
+        stream << int(number->width) << '\'';
         switch (number->radix) {
             case 2:
                 stream << 'b';
@@ -675,7 +688,7 @@ number:
             default:
                 stream << 'd';
         }
-        stream << number->literal << std::endl;
+        stream << number->literal;
         delete number;
         $$ = dup;
     }  
