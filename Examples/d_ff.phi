@@ -1,0 +1,15 @@
+module dFlipFlop(
+    x: Input[31..0],
+    y: Output[31..0],
+    clock: Input,
+    reset: Input
+) {
+    Register[31..0] store;
+    @ posedge clock | negedge reset {
+        if reset {
+            store.next = 32b0;
+        } else {
+            store.next = x;
+        }
+    }
+}

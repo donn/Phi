@@ -44,6 +44,8 @@ int main(int argc, char* argv[]) {
     // Read input file
     if (arguments.size() < 1) {
         std::cout << "No files provided." << std::endl;
+        options.printHelp();
+        return EX_USAGE;
     }
 
     std::stringstream stringstream;
@@ -68,6 +70,7 @@ int main(int argc, char* argv[]) {
         context.printErrors();
         return EX_DATAERR;
     }
+    std::cout << context.top;
 
     // for (auto k: context.hell) {
     //     std::cout << k << std::endl;

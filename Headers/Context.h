@@ -19,6 +19,7 @@ namespace Phi {
     public:
         std::vector<Error> errorList;
         std::vector<std::string> files;
+        char* top = NULL;
 
         void setFile(std::string currentFile) { files.push_back(currentFile); }
         bool error();
