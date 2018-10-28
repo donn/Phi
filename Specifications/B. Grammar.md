@@ -1,123 +1,150 @@
 # Draft: Grammar
 
+## Top Level
+
 *description*:
 * *declaration* *description*
+* **namespace** *identifier* **{** *description* **}**
 * ε
 
 *declaration*:
-* **module** *identifier* *template_declaration* **(** *port_declaration_list* **)** *inheritance* *block*
-* **interface** *identifier* *template_declaration* **(** *port_declaration_list* **)** *inheritance* **;**
+* **module** *identifier* *template-declaration* **(** *port-declaration-list* **)** *inheritance* *block*
+* **interface** *identifier* *template-declaration* **(** *port-declaration-list* **)** *inheritance* **;**
 
-*port_declaration_list*:
-* *populated_port_declaration_list*
+
+## Ports
+
+*port-declaration-list*:
+* *populated-port-declaration-list*
 * ε
 
-*populated_port_declaration_list*:
-* *identifier* **:** *expression* **,** *populated_port_declaration_list*
+*populated-port-declaration-list*:
+* *identifier* **:** *expression* **,** *populated-port-declaration-list*
 * *identifier* **:** *expression*
 
-*port_declaration*:
-* *port_polarity*
-* *annotation* *port_polarity*
-* **@resetLow** *port_polarity*
+*port-declaration*:
+* *port-polarity*
+* **@** *identifier* *port-polarity*
 
-*port_polarity*:
-* **input** *optional_array_subscript*
-* **output** *optional_array_subscript*
+*port-polarity*:
+* **Input** *optional-array-subscript*
+* **Output** *optional-array-subscript*
 
-*template_declaration*:
-* **<** *template_declaration_list* **>**
+## Templating
+*template-declaration*:
+* **<** *template-declaration-list* **>**
 
-*template_declaration_list*:
-* *identifier* *optional_template_assignment* *template_declaration_list*
-* *identifier* *optional_template_assignment*
+*template-declaration-list*:
+* *identifier* *optional-template-assignment* *template-declaration-list*
+* *identifier* *optional-template-assignment*
 
-*optional_template_assignment*:
-* **=** (*expression*)
+*optional-template-assignment*:
+* **=** **(** *expression* **)**
 * ε
 
-
+## Inheritance
 *inheritance*:
-* **:** *inheritance_list*
+* **:** *inheritance-list*
 * ε
 
-*inheritance_list*:
-* *lh_expression* **,** *inheritance_list*
-* *lh_expression*
+*inheritance-list*:
+* *lh-expression* **,** *inheritance-list*
+* *lh-expression*
 
-*block*:
-* **{** statement_list **}**
-
-*statement_list*:
-* *statement_list* *statement*
-* ε
-
+## Statements
 *statement*:
 * *subdeclaration* **;**
-* *nondeclarative_statement* **;**
-* *block_based*
+* *nondeclarative-statement* **;**
+* *block-based*
 
-*block_based*:
+*block-based*:
+* *if*
+* **for** *identifer* **in** *range* *block*
 * **namespace** *identifier* *block*
+* **switch** *expression* *switch-block*
 * **@** *expression* *block*
 * **async** *block*
-* *if*
 
 *if*:
 * **if** *expression* *block* *else*
 
 *else*:
 * **else** *if*
-* **else** *expression* *block*
+* **else** *block*
 * ε
 
+*switch-block*:
+* **{** *labeled-statement-list* **}**
+
+*labeled-statement-list*:
+* **case** *expression* **:** *statement_list* *labeled_statement_list*
+* **default** *expression* **:** *statement_list*
+* ε
+
+*block*:
+* **{** statement-list **}**
+
+*statement-list*:
+* *statement_list* *statement*
+* ε
+
+## Subdeclarations
 *subdeclaration*:
-* *subscriptable_dynamic_width* *declaration_list*
-* *probable_template* *identifier* *ports*
+* *dynamic-width* *optional-array-subscript* *declaration-list*
+* *probable-template* *identifier* *ports*
 
-*subscriptable_dynamic_width*:
-* *dynamic_width* *optional_array_subscript*
-
-*dynamic_width*:
+*dynamic-width*:
 * **Var**
 * **Wire** 
 * **Register**
 
-*declaration_list*:
-* *identifier* *optional_array_subscript* *optional_assignment* **,** *declaration_list*
-* *identifier* *optional_array_subscript* *optional_assignment*
+*optional-array-subscript*:
+* **[** *expression* **]**
+* ε
 
-*optional_assignment*:
+*optional-ports*:
+* *ports*
+* ε
+
+*declaration-list*:
+* *identifier* *optional-array-subscript* *optional-assignment* **,** *declaration-list*
+* *identifier* *optional-array-subscript* *optional-assignment*
+
+*optional-assignment*:
 * **=** *expression*
 * ε
 
-*probable_template*:
+*probable-template*:
 * *expression*
-* *expression* **<** *template_list* **>**
+* *expression* **<** *template-list* **>**
 
-*template_list*:
-* *identifier* **:** **(** *expression* **)** **,** *template_list*
+*template-list*:
+* *identifier* **:** **(** *expression* **)** **,** *template-list*
 * *identifier* **:** **(** *expression* **)**
 * ε
 
 *ports*:
 * **(** **)**
-* **(** *port_list* **)**
+* **(** *port-list* **)**
 
-*port_list*:
-* *identifier* **:** *expression* **,** *port_list*
+*port-list*:
+* *identifier* **:** *expression* **,** *port-list*
 * *identifier* **:** *expression*
 
-*nondeclarative_statement*:
+## Nondeclarative Statements
+
+*nondeclarative-statement*:
 * *expression* **=** *expression*
 
-*switch_block*:
-* **{** *labeled_statement_list* **}**
+*switch-block*:
+* **{** *labeled-statement-list* **}**
 
-*labeled_statement_list*:
-* **case** number **:** *statement_list* *labeled_statement_list*
-* **default** **:** *statement_list*
+*labeled-statement-list*:
+* **case** number **:** *statement-list* *labeled-statement-list*
+* **default** **:** *statement-list*
 * ε
+
+## Expressions
 
 *expression*:
 * *expression* **?** *expression* **:** *expression*
@@ -146,24 +173,27 @@
 * *expression* **<<** *expression*
 * *expression* **>>>** *expression*
 * *expression* **>>** *expression*
-* *expression* **..** *expression*
+* *range*
 * *expression* **.** *expression*
 * *expression* **[** *expression* **]**
 * **&** *expression*
 * **|** *expression*
 * **~** *expression*
 * **[** *concatenation* **]**
-* **mux** *expression* *mux_block*
-* **$** *identifier* **(** *procedural_call* **)**
+* **mux** *expression* *mux-block*
+* **$** *identifier* **(** *procedural-call* **)**
 * **(** *expression* **)**
 * *identifier*
 * *number*
 
-*mux_block*:
-* **{** *labeled_expression_list* **}**
+*range*:
+* *expression* **..** *expression*
 
-*labeled_expression_list*:
-* **case** *number* **:** *expression* **;** *labeled_expression_list*
+*mux-block*:
+* **{** *labeled-expression-list* **}**
+
+*labeled-expression-list*:
+* **case** *expression* **:** *expression* **;** *labeled-expression-list*
 * **default** **:** *expression* **;**
 * ε
 
@@ -173,17 +203,17 @@
 
 *concatenatable*:
 * *expression*
-* *expression* **[[** expression **]]**
+* *expression* **[[** *expression* **]]**
 
-*procedural_call*:
-* *procedural_call_list*
+*procedural-call*:
+* *procedural-call-list*
 * ε
 
-*procedural_call_list*:
-* *expression* **,** *procedural_call_list*
+*procedural-call-list*:
+* *expression* **,** *procedural-call-list*
 * *expression*
 
-*array_subscript*:
+*array-subscript*:
 * **[** *expression* **]**
 * ε
 

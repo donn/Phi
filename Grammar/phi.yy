@@ -254,9 +254,6 @@ statement:
     | block_based {
         $$ = $1;
     }
-    | error ';' {
-        $$ = err_placeholder;
-    }
     ;
 
 /* Blocks */
@@ -615,7 +612,7 @@ mux_block:
     ;
 labeled_expression_list:
     { $$ = ε; }
-    | KEYWORD_CASE number ':' expression ';' labeled_expression_list {
+    | KEYWORD_CASE expression ':' expression ';' labeled_expression_list {
         cst; stream << $2 << ": " << std::endl;
         stream << "__PHI__MUX__LAST = " << $4 << ';' << std::endl;
         stream << "break; " << std::endl;

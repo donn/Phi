@@ -1,3 +1,2 @@
-# NOTE: None of these are guaranteed to be up to date.
-
-I update these sporadically.
+## Documentation
+Up to date as of tag 0.0.2

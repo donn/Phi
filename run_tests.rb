@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-Dir["Examples/*"].map do |item|
+Dir["Examples/*.phi"].map do |item|
     puts "Testing #{item}..."
     testable = item
     testable += '/*' if File.directory?(item);

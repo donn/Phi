@@ -91,3 +91,6 @@ $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS)
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -f $(BINARY)
+	rm -f Examples/*.v
+	rm -f ./*.phi
+	rm -f *.exe *.stackdump # MSYS2/Windows
