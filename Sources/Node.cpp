@@ -5,10 +5,9 @@
 
 // Number
 Phi::Node::Number::Number(std::string interpretable) {
-    auto regex = std::regex("([0-9]+)([bodx])([0-9zx]+)");
+    auto regex = std::regex("([0-9]+)([bodx])([A-F0-9zx]+)");
     auto match = std::smatch();
     std::regex_match(interpretable, match, regex); // If it doesn't match, the regex here and in the .l file are mismatched.
-
     auto prospectiveWidth = std::stoi(match[1]);
     if (prospectiveWidth < 0 || prospectiveWidth > maxWidth) {
         throw "Width out of range.";

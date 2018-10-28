@@ -101,14 +101,11 @@
     return token::KEYWORD_NEGEDGE;
 }
 
-(@[_A-Za-z][_A-Za-z0-9]*) {
-    return token::ANNOTATION;
-}
 [_A-Za-z][_A-Za-z0-9]* {
     yylval->text = strdup(yytext);
     return token::IDENTIFIER;
 }
-[0-9]+[bodx][0-9zx]+ {
+[0-9]+[bodx][A-F0-9zx]+ {
     yylval->text = strdup(yytext);
     return token::FW_NUMERIC;
 }

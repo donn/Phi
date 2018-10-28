@@ -6,8 +6,7 @@
 
 namespace Phi {
     namespace Utils {
-        std::vector<std::string> split(const std::string* string, std::string delimiter);
+        std::vector<std::string> split(const std::string* string, char delimiter);
     }
 }
-
 #endif

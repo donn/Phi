@@ -19,10 +19,11 @@ namespace Phi {
     public:
         std::vector<Error> errorList;
         std::vector<std::string> files;
+        std::vector<std::string> currentFileLines;
         char* top = NULL;
         bool _HACK_FOR_ALWAYS = false;
 
-        void setFile(std::string currentFile) { files.push_back(currentFile); }
+        std::string setFile(std::string currentFile);
         bool error();
         void printErrors();
     };

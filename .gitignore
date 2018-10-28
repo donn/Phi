@@ -7,3 +7,5 @@ phi
 
 *.exe
 *.stackdump
+
+./*.phi

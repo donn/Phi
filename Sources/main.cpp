@@ -63,23 +63,13 @@ int main(int argc, char* argv[]) {
     auto outputFilename = filename;
     outputFilename.replace(extensionPosition, 4, ".v");
 
-    std::stringstream stringstream;
-    auto file = std::ifstream(filename);
-    if (file.fail()) {
-        std::cerr << "Could not open file '" << filename << "'." << std::endl;
-        return EX_NOINPUT;
-    }
-    stringstream << file.rdbuf();
-    file.close();
+    auto context = Phi::Context();
+    auto input = context.setFile(argv[1]);
 
-    auto input = stringstream.str();
     yy_scan_string(input.c_str());
 
     // Parse
-    auto context = Phi::Context();
     auto parser = Phi::Parser(&context);
-    
-    context.setFile(argv[1]);
     auto parsingResult = parser.parse();
 
     if (context.error()) {

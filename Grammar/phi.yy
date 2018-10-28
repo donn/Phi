@@ -72,7 +72,6 @@
 %token KEYWORD_OUTPUT
 %token KEYWORD_POSEDGE
 %token KEYWORD_NEGEDGE
-%token ANNOTATION
 
 %token NUMERIC
 %token FW_NUMERIC
@@ -184,8 +183,8 @@ port_declaration:
     port_polarity {
         $$ = $1;
     }
-    | ANNOTATION port_polarity {
-        $$ = TODO;
+    | '@' IDENTIFIER port_polarity {
+        $$ = $3;
     }
     ;
 port_polarity:
@@ -314,12 +313,12 @@ switch_block:
     ;
 labeled_statement_list:
     { $$ = ε; }
-    | KEYWORD_CASE number ':' statement_list labeled_statement_list {
+    | KEYWORD_CASE expression ':' statement_list labeled_statement_list {
         cst; stream << $2 << ": " << std::endl << $4 << std::endl << $5;
         $$ = dup;
     }
-    | KEYWORD_DEFAULT ':' statement_list {
-        cst; stream << "default: " << std::endl << $3;
+    | KEYWORD_DEFAULT expression ':' statement_list {
+        cst; stream << "default: " << std::endl << $4;
         $$ = dup;
     }
     ;

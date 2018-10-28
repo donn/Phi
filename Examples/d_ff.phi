@@ -4,6 +4,7 @@ module dFlipFlop(
     clock: Input,
     reset: Input
 ) {
+    Wire[31..0] v = x;
     Register[31..0] store;
 
     @ posedge clock | negedge reset {
