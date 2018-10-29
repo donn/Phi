@@ -314,7 +314,7 @@ labeled_statement_list:
         cst; stream << $2 << ": " << std::endl << $4 << std::endl << $5;
         $$ = dup;
     }
-    | KEYWORD_DEFAULT expression ':' statement_list {
+    | KEYWORD_DEFAULT ':' statement_list {
         cst; stream << "default: " << std::endl << $4;
         $$ = dup;
     }
