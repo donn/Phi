@@ -26,15 +26,15 @@ void Phi::Context::printErrors() {
             auto& loc = error.loc;
             auto& message = error.message;
 
-            auto highlight = "";
+            std::string highlight = "";
             if (loc.end.column > loc.begin.column) {
-                std::string(loc.end.column - loc.begin.column - 2, '~');
+                highlight = std::string(loc.end.column - loc.begin.column - 1, '~');
             }
 
             std::cerr << termcolor::bold << *loc.begin.filename << ":" << loc.begin.line << ":" << loc.begin.column << ": " << termcolor::red << message << termcolor::reset << std::endl;
             std::cerr << currentFileLines[loc.begin.line - 1] << std::endl;
             std::cerr << termcolor::bold << termcolor::green <<
-                std::setw(loc.begin.column + 1) << "^" <<
+                std::setw(loc.begin.column) << "^" <<
                 highlight << termcolor::reset << std::endl;
         }
         std::cerr << errorCount << ((errorCount == 1) ? " error" : " errors") << " generated." << std::endl;
