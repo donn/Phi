@@ -315,7 +315,7 @@ labeled_statement_list:
         $$ = dup;
     }
     | KEYWORD_DEFAULT ':' statement_list {
-        cst; stream << "default: " << std::endl << $4;
+        cst; stream << "default: " << std::endl << $3;
         $$ = dup;
     }
     ;
