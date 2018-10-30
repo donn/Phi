@@ -612,11 +612,11 @@ mux_block:
     ;
 labeled_expression_list:
     { $$ = ε; }
-    | KEYWORD_CASE expression ':' expression ';' labeled_expression_list {
-        cst; stream << $2 << ": " << std::endl;
-        stream << "__PHI__MUX__LAST = " << $4 << ';' << std::endl;
+    | expression ':' expression ';' labeled_expression_list {
+        cst; stream << $1 << ": " << std::endl;
+        stream << "__PHI__MUX__LAST = " << $3 << ';' << std::endl;
         stream << "break; " << std::endl;
-        stream << $6;
+        stream << $5;
         $$ = dup;
     }
     | KEYWORD_DEFAULT ':' expression ';' {

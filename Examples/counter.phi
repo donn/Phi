@@ -1,4 +1,4 @@
-moldule Counter<width>(clock: Input, reset: @resetHigh Input, output: Output[31..0]) {
+module Counter<width>(clock: Input, reset: @resetHigh Input, output: Output[31..0]) {
     Register[width - 1..0] store = 32b0;
 
     @ posedge clock {
