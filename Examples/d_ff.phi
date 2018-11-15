@@ -9,7 +9,7 @@ module dFlipFlop(
 
     store.clock = clock;
     store.reset = reset;
-    store.next = a;
+    store.data = a;
 
     b = store;
 }

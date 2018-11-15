@@ -23,11 +23,11 @@ module Memory<memoryWidth>(): Slave {
 
     async {
         if HREADY | WAIT {
-            AddressPhase.HSEL.next = HSEL;
-            AddressPhase.HWRITE.next = HWRITE;
-            AddressPhase.HTRANS.next = HTRANS;
-            AddressPhase.HADDR.next = HADDR;
-            AddressPhase.HSIZE.next = HSIZE;
+            AddressPhase.HSEL.data = HSEL;
+            AddressPhase.HWRITE.data = HWRITE;
+            AddressPhase.HTRANS.data = HTRANS;
+            AddressPhase.HADDR.data = HADDR;
+            AddressPhase.HSIZE.data = HSIZE;
         }
     }
 
@@ -58,20 +58,20 @@ module Memory<memoryWidth>(): Slave {
     async {
         if AddressPhase.HSEL & AddressPhase.HWRITE & AddressPhase.HTRANS[1] {
             if (byte0) {
-                memory[effectiveAddress][7..0].next = HWDATA[7..0];
+                memory[effectiveAddress][7..0].data = HWDATA[7..0];
             }
             if (byte1) {
-                memory[effectiveAddress][15..8].next = HWDATA[15..8];
+                memory[effectiveAddress][15..8].data = HWDATA[15..8];
             }
             if (byte2) {
-                memory[effectiveAddress][23..16].next = HWDATA[23..16];
+                memory[effectiveAddress][23..16].data = HWDATA[23..16];
             }
             if (byte3) {
-                memory[effectiveAddress][31..24].next = HWDATA[31..24];
+                memory[effectiveAddress][31..24].data = HWDATA[31..24];
             }
         }
     }
-    readOut.next = memory[effectiveAddress];
+    readOut.data = memory[effectiveAddress];
 
     Wire CEWR = AddressPhase.HWRITE & AddressPhase.HSEL; // Expect a write
     Wire CERD = HSEL & ~HWRITE;

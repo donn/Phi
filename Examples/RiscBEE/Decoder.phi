@@ -1,0 +1,58 @@
+namespace RiscBEE {
+    module Decoder(
+        word: Input[31..0],
+        Z: Input, C: Input, N: Input, V: Input,
+        rs1: Output[3..0], rs2: Output[3..0], rd: Output[3..0],
+        imm_uj: Output[31..0], imm_u: Output[31..0], imm_i: Output[31..0], imm_s: Output[31..0], imm_sb: Output[31..0],
+        alu_op: Output[3..0],
+        r: Output, uj: Output, u: Output, u_control: Output, i: Output, s: Output, sb: Output,
+        load_pc: Output, mem_read: Output, mem_read_sext: Output, iobytes: Output[3..0]
+    ) {
+        Wire arithmetic, load_store;
+        Wire[2..0] funct3;
+        Wire condition, signed_comp;
+
+        funct3 = word[14..12];
+        u_control = word[5];
+        arith = (word[4..2] == 3b100);
+        load_store = (word[4..2] == 3b000) & ~word[6];
+
+        u = (word[4..2] == 3b101);
+        uj = (word[4..2] == 3b011);
+        r = arith & word[5];
+        i = (arith | load_store) & (~word[5]);
+        s = load_store & word[5] & ~word[6];
+        sb = load_store & word[6];
+
+        rd = word[11..7];
+        rs1 = word[19..15];
+        rs2 = word[24..20];
+
+        imm_uj = [11{word[31]}, word[31], word[19..12], word[20], word[30..21], 1b0];
+        imm_u = [word[31..12], 12b0];
+        imm_i = [20{word[31]}, word[31..20]];
+        imm_s = [20{word[31]}, word[31..25], word[11..7]];
+        imm_sb = [19{word[31]}, word[31], word[7], word[30..25], word[11..8], 1b0];
+
+        signed_comp = (V)? ~N: N;
+        imm_sext = (arith & (funct3 == 3b011));
+
+        condition = mux funct3 {
+            case 3b000: Z;
+            case 3b001: ~Z;
+            case 3b010: 1b0;
+            case 3b011: 1b0;
+            case 3b100: signed_comp;
+            case 3b101: ~signed_comp;
+            case 3b110: N;
+            default: ~N;
+        };
+
+        iobytes = mux funct3[1..0] {
+            case 2b0: 4b1;
+            case 2b1: 4b11;
+            case 2b10: 4b1111;
+            default: 4b0; 
+        };
+    }
+}

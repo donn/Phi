@@ -1,0 +1,61 @@
+namespace RiscBEE {
+    module DataPath(
+        clk: Input, rst: Input,
+        rs1: Input[4..0], rs2: Input[4..0], rd: Input[4..0],
+        alu_op: Input[3..0],
+        pc: Input[31..0], imm_uj: Input[31..0], imm_u: Input[31..0],
+        imm_i: Input[31..0], imm_s: Input[31..0], imm_sb: Input[31..0],
+        memout: Input[31..0],
+        r: Input, uj: Input, u: Input, u_control: Input, i: Input, s: Input, sb: Input, load_pc: Input, mem_read: Input, mem_read_sext: Input, imm_sext: Input,
+        iobytes: Input[3..0],
+
+        Z: Output, C: Output, N: Output, V: Output,
+        o: Output[31..0], memin: Output[31..0], next_addr: Output[31..0]
+    ) {
+        Wire[31..0] aData, bData, bAlu, memextb, memexth, memext, regwrite, ujext, iext, sext, sbext;
+
+        bAlu = ([32{r | sb}] & bData) | ([32{i}] & imm_i) | ([32{s}] & imm_s);
+
+        Extender<width: (8)> memory(
+            isSigned: mem_read_sext,
+            in: memout,
+            out: memextb
+        );
+
+        Extender<width: (16)> memory(
+            isSigned: mem_read_sext,
+            in: memout,
+            out: memexth
+        );
+
+        memext = mux iobytes[2..0] {
+            case 3b000: memout;
+            case 3b001: memextb;
+            case 3b010: memout;
+            case 3b011: memexth;
+            case 3b100: memout;
+            case 3b101: memout;
+            case 3b110: memout;
+            case 3b111: memout;
+        };
+
+        regwrite = mem_read? memext: ([32{u}] & (u_control? imm_u: imm_u + pc)) | ([32{uj}] & pc) | ([32{i}] & (load_pc? pc: o)) |  ([32{r}] & o);
+
+        RegisterFile file(k: clk, t: rst, s: rs1, s: rs2, s: rd, a: aData, a: bData, a: regwrite, e: ~(sb | s));
+
+        next_addr = load_pc? ((([32{u & (~u_control)}] & imm_u) | ([32{uj}] & imm_uj) | [32{i}] & o) | ([32{sb}] & imm_sb)): 4;
+        memin = bData;
+
+        ALU alu(
+            a: aData,
+            b: bAlu,
+            allPurposeSwitch: alu_op[3],
+            operation: alu_op[2..0],
+            output: o,
+            Z: Z,
+            C: C,
+            N: N,
+            V: V
+        );
+    }
+}

@@ -434,7 +434,7 @@ nondeclarative_statement:
         cst;
         auto assignee = std::string($1);
         auto op = "=";
-        size_t pos = assignee.rfind(".next");
+        size_t pos = assignee.rfind(".data");
         if (pos != std::string::npos) {
             assignee.replace(pos, 5, "");
             op = "<=";

@@ -1,0 +1,41 @@
+namespace RiscBEE {
+    module ALU<width>(
+        a: Input[width - 1..0],
+        b: Input[width - 1..0],
+        allPurposeSwitch: Input,
+        operation: Input[2..0],
+        output: Output[width - 1..0],
+        Z: Output,
+        C: Output,
+        N: Output,
+        V: Output
+    ) {
+        Var bits = $log(width);
+        Wire[width - 1..0] add, and, or, xor, not, slt, shift;
+        Wire[width - 1..0] result;
+        Wire[width..0] altA, altB;
+        
+        {c, add} = allPurposeSwitch ? a - b : a + b;
+        {C, V} = (operation == 3b000) ? [c, c ^ (add[31] ^ A[31] ^ B[31])] : 2b0;
+        slt = allPurposeSwitch ? a < b ? 32b1 : 32b0 : a &< b ? 32b1 : 32b0;
+
+        sll = s << b[bits - 1..0];
+        srl = s >>> b[bits - 1..0];
+        sra = s >> b[bits - 1..0];
+
+        result = mux operation {
+            case 3b11x: shift;
+            case 3b101: slt;
+            case 3b100: ~a;
+            case 3b011: a ^ b;
+            case 3b010: a | b;
+            case 3b001: a & b;
+            case 3b000: add;
+        };
+
+        output = result;
+
+        Z = (O == 32b0)? 1b1: 1b0;
+        N = O[31];
+    }
+}
