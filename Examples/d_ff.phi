@@ -5,15 +5,11 @@ module dFlipFlop(
     reset: Input
 ) {
     Wire[31..0] v = x;
-    Register[31..0] store;
+    Register[31..0] store = 32b0;
 
-    @ posedge clock | negedge reset {
-        if reset {
-            store.next = 32b0;
-        } else {
-            store.next = a;
-        }
-    }
+    store.clock = clock;
+    store.reset = reset;
+    store.next = a;
 
     b = store;
 }

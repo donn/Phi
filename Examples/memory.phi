@@ -16,9 +16,12 @@ module Memory<memoryWidth>(): Slave {
     
     Var[31..0] memorySize = $pow(2, memoryWidth - 2);
 
-    Register[31..0] storage[0..memorySize - 1] = [memorySize[[32b0]]];
+    Register[31..0] storage[0..memorySize - 1];
+    for i in 0..memorySize - 1 {
+        storage[i] = 32b0; // Setting reset values
+    }
 
-    @ posedge HCLK {
+    async {
         if HREADY | WAIT {
             AddressPhase.HSEL.next = HSEL;
             AddressPhase.HWRITE.next = HWRITE;
@@ -52,7 +55,7 @@ module Memory<memoryWidth>(): Slave {
 
     Register[31..0] readOut;
 
-    @ posedge HCLK {
+    async {
         if AddressPhase.HSEL & AddressPhase.HWRITE & AddressPhase.HTRANS[1] {
             if (byte0) {
                 memory[effectiveAddress][7..0].next = HWDATA[7..0];
@@ -67,8 +70,8 @@ module Memory<memoryWidth>(): Slave {
                 memory[effectiveAddress][31..24].next = HWDATA[31..24];
             }
         }
-        readOut.next = memory[effectiveAddress];
     }
+    readOut.next = memory[effectiveAddress];
 
     Wire CEWR = AddressPhase.HWRITE & AddressPhase.HSEL; // Expect a write
     Wire CERD = HSEL & ~HWRITE;

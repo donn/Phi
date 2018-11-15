@@ -52,7 +52,7 @@ $(BUILD_DIR)/git_version.h:
 	echo "#ifndef _AUTO_git_version_h" > $@
 	echo "#define _AUTO_git_version_h" >> $@
 	echo "namespace Phi {" >> $@
-	echo "const char* GIT_TAG = \"$(shell git tag)\";" >> $@
+	echo "const char* GIT_TAG = \"$(shell git tag | tail -n 1)\";" >> $@
 	echo "const char* GIT_VER_STRING = \"$(shell git describe --always --tags)\";" >> $@
 	echo "}" >> $@
 	echo "#endif // _AUT0_git_version_h" >> $@

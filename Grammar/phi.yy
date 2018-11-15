@@ -28,13 +28,13 @@
 
     using namespace Phi::Node;
 
-    #define catchIntoContext catch (const char* error) { context->errorList.push_back({yylhs.location, std::string(error)}); };
-    #define tcc(stmt) try { stmt } catchIntoContext
-    #define cst std::stringstream stream
-    #define ε strdup("")
-    #define err_placeholder strdup("/* PHI TRANSLATOR: ERROR */")
-    #define TODO strdup("")
-    #define dup strdup(stream.str().c_str())
+    // #define catchIntoContext catch (const char* error) { context->errorList.push_back({yylhs.location, std::string(error)}); };
+    // #define tcc(stmt) try { stmt } catchIntoContext
+    // #define cst std::stringstream stream
+    // #define ε strdup("")
+    // #define err_placeholder strdup("/* PHI TRANSLATOR: ERROR */")
+    // #define TODO strdup("")
+    // #define dup strdup(stream.str().c_str())
 %}
 
 %parse-param { Phi::Context* context }
@@ -112,7 +112,7 @@
 %type<text> NUMERIC FW_NUMERIC IDENTIFIER
 
 // Silly conversion
-%type<text> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_array_subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list number
+// %type<text> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_array_subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list number
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -269,10 +269,6 @@ block_based:
     }
     | KEYWORD_SWITCH expression switch_block {
         cst; stream << "switch (" << $2 << ") " << $3;
-        $$ = dup;
-    }
-    | '@' expression block {
-        cst; stream << "always @ (" << $2 << ") " << $3;
         $$ = dup;
     }
     | KEYWORD_ASYNC block {

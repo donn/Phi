@@ -18,8 +18,6 @@
 * **for**
 * **while**
 * **async**
-* **@resetHigh**
-* **@resetLow**
 * **Var**
 * **Wire**
 * **Register**
