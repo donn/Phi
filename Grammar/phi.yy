@@ -112,7 +112,7 @@
 %type<text> NUMERIC FW_NUMERIC IDENTIFIER
 
 // Silly conversion
-// %type<text> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_array_subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list number
+%type<node> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_array_subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -361,6 +361,7 @@ optional_array_subscript:
         cst; stream << '[' << $2 << ']';
         $$ = dup;
     }
+    | '[' range ']'
     ;
 optional_ports:
     { $$ = ε; }
@@ -538,9 +539,6 @@ expression:
         cst; stream << "$signed(" << $1 << ") >> $signed(" << $3 << ")";
         $$ = dup;
     }
-    | range {
-        $$ = $1;
-    }
     | '-' expression %prec UNARY {
         cst; stream << '-' << $2;
         $$ = dup;
@@ -588,7 +586,7 @@ expression:
     | IDENTIFIER {
         $$ = strdup(yytext);
     }
-    | number {
+    | FW_NUMERIC {
         $$ = $1;
     }
     ;
@@ -597,6 +595,9 @@ range:
     expression OP_RANGE expression {
         cst; stream << $1 << ':' << $3;
         $$ = dup;
+    }
+    | NUMERIC OP_RANGE NUMERIC {
+
     }
     ;
 
@@ -656,34 +657,6 @@ procedural_call_list:
     | expression {
         $$ = $1;
     }
-    ;
-
-number:
-    NUMERIC { 
-        cst; stream << "64'd" << $1;
-        $$ = dup;
-    }
-    | FW_NUMERIC {
-        cst; Number* number;
-        tcc(number = new Number(yytext);)
-        stream << int(number->width) << '\'';
-        switch (number->radix) {
-            case 2:
-                stream << 'b';
-                break;
-            case 8:
-                stream << 'o';
-                break;
-            case 16:
-                stream << 'h';
-                break;
-            default:
-                stream << 'd';
-        }
-        stream << number->literal;
-        delete number;
-        $$ = dup;
-    }  
     ;
 
 %%

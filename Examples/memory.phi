@@ -28,6 +28,12 @@ module Memory<memoryWidth>(): Slave {
             AddressPhase.HTRANS.data = HTRANS;
             AddressPhase.HADDR.data = HADDR;
             AddressPhase.HSIZE.data = HSIZE;
+        } else {
+            AddressPhase.HSEL.data = AddressPhase.HSEL;
+            AddressPhase.HWRITE.data = AddressPhase.HWRITE;
+            AddressPhase.HTRANS.data = AddressPhase.HTRANS;
+            AddressPhase.HADDR.data = AddressPhase.HADDR;
+            AddressPhase.HSIZE.data = AddressPhase.HSIZE;
         }
     }
 
@@ -55,18 +61,18 @@ module Memory<memoryWidth>(): Slave {
 
     Register[31..0] readOut;
 
-    async {
+    @elseRetain async {
         if AddressPhase.HSEL & AddressPhase.HWRITE & AddressPhase.HTRANS[1] {
-            if (byte0) {
+            if byte0 {
                 memory[effectiveAddress][7..0].data = HWDATA[7..0];
             }
-            if (byte1) {
+            if byte1 {
                 memory[effectiveAddress][15..8].data = HWDATA[15..8];
             }
-            if (byte2) {
+            if byte2 {
                 memory[effectiveAddress][23..16].data = HWDATA[23..16];
             }
-            if (byte3) {
+            if byte3 {
                 memory[effectiveAddress][31..24].data = HWDATA[31..24];
             }
         }

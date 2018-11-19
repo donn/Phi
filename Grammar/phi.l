@@ -105,7 +105,7 @@
     yylval->text = strdup(yytext);
     return token::IDENTIFIER;
 }
-[0-9]+[bodx][A-F0-9zx]+ {
+[0-9]+[bodxh][A-F0-9zx]+ {
     yylval->text = strdup(yytext);
     return token::FW_NUMERIC;
 }

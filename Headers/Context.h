@@ -15,13 +15,22 @@ namespace Phi {
         std::string message;
     };
 
+    namespace ExpType {
+        enum Enum {
+            CompileTime = 0,
+            ParameterSensitive,
+            RunTime,
+
+            Undefined = 0xFF
+        };
+    };
+
     class Context {
     public:
         std::vector<Error> errorList;
         std::vector<std::string> files;
         std::vector<std::string> currentFileLines;
         char* top = NULL;
-        bool _HACK_FOR_ALWAYS = false;
 
         std::string setFile(std::string currentFile);
         bool error();

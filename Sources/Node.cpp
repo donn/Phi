@@ -4,8 +4,12 @@
 #include <sstream>
 
 // Number
-Phi::Node::Number::Number(std::string interpretable) {
-    auto regex = std::regex("([0-9]+)([bodx])([A-F0-9zx]+)");
+Phi::Node::Expression::Expression(std::string interpretable) {
+    left = NULL;
+    right = NULL;
+    expType = ExpType::RunTime;
+    
+    auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9zx]+)");
     auto match = std::smatch();
     std::regex_match(interpretable, match, regex); // If it doesn't match, the regex here and in the .l file are mismatched.
     auto prospectiveWidth = std::stoi(match[1]);
