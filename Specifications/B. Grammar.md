@@ -1,4 +1,4 @@
-# Draft: Grammar
+# Draft: Grammar (NOT UP TO DATE)
 
 ## Top Level
 
@@ -99,6 +99,7 @@
 
 *optional-array-subscript*:
 * **[** *expression* **]**
+* **[** *range* **]**
 * ε
 
 *optional-ports*:
@@ -134,6 +135,7 @@
 
 *nondeclarative-statement*:
 * *expression* **=** *expression*
+* *expression* *ports*
 
 *switch-block*:
 * **{** *labeled-statement-list* **}**
@@ -172,7 +174,6 @@
 * *expression* **<<** *expression*
 * *expression* **>>>** *expression*
 * *expression* **>>** *expression*
-* *range*
 * *expression* **.** *expression*
 * *expression* **[** *expression* **]**
 * **&** *expression*

@@ -112,7 +112,7 @@
 %type<text> NUMERIC FW_NUMERIC IDENTIFIER
 
 // Silly conversion
-%type<node> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_array_subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list
+%type<node> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_bus_declaration optional_array_declaration subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -188,11 +188,11 @@ port_declaration:
     }
     ;
 port_polarity:
-    KEYWORD_INPUT optional_array_subscript {
+    KEYWORD_INPUT optional_bus_declaration {
         cst; stream << "input " << $2;
         $$ = dup;
     }
-    | KEYWORD_OUTPUT optional_array_subscript {
+    | KEYWORD_OUTPUT optional_bus_declaration {
         cst; stream << "output " << $2;
         $$ = dup;
     }
@@ -334,11 +334,11 @@ statement_list:
 /* Subdeclarations */
 
 subdeclaration:
-    dynamic_width optional_array_subscript declaration_list {
+    dynamic_width optional_bus_declaration declaration_list {
         cst; stream << $1 << " " << $2 << " " << $3;
         $$ = dup;
     }
-    | probable_template IDENTIFIER optional_array_subscript optional_ports {
+    | probable_template IDENTIFIER optional_array_declaration optional_ports {
         cst; stream << $1 << $2 << " /* PHI: Unsupported array of components. */" << $4;
         $$ = dup;
     }
@@ -355,14 +355,18 @@ dynamic_width:
         $$ = strdup("reg");
     }
     ;
-optional_array_subscript:
+optional_bus_declaration:
+    { $$ = ε; }
+    | '[' range ']'
+    ;
+optional_array_declaration:
     { $$ = ε; }
     | '[' expression ']' {
         cst; stream << '[' << $2 << ']';
         $$ = dup;
     }
-    | '[' range ']'
     ;
+
 optional_ports:
     { $$ = ε; }
     | ports {
@@ -371,11 +375,11 @@ optional_ports:
     }
     ;
 declaration_list:
-    IDENTIFIER optional_array_subscript optional_assignment ',' declaration_list {
+    IDENTIFIER optional_array_declaration optional_assignment ',' declaration_list {
         cst; stream << $1 << $2 << $3 << ',';
         $$ = dup;
     }
-    | IDENTIFIER optional_array_subscript optional_assignment {
+    | IDENTIFIER optional_array_declaration optional_assignment {
         cst; stream << $1 << $2 << $3;
         $$ = dup;
     }
@@ -565,8 +569,8 @@ expression:
         cst; stream << $1 << '.' << $3; // TODO PROPERLY
         $$ = dup;
     }
-    | expression '[' expression ']' {
-        cst; stream << $1 << '[' << $3 << ']';
+    | expression subscript {
+        cst; stream << $1 << $2;
         $$ = dup;
     }
     | '[' concatenation ']' {
@@ -590,6 +594,15 @@ expression:
         $$ = $1;
     }
     ;
+
+subscript:
+    '[' range ']'
+    | '[' expression ']' {
+        cst; stream << '[' << $2 << ']';
+        $$ = dup;
+    }
+    ;
+
 
 range:
     expression OP_RANGE expression {

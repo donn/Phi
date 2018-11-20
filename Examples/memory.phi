@@ -61,7 +61,8 @@ module Memory<memoryWidth>(): Slave {
 
     Register[31..0] readOut;
 
-    @elseRetain async {
+    @elseRetain
+    async {
         if AddressPhase.HSEL & AddressPhase.HWRITE & AddressPhase.HTRANS[1] {
             if byte0 {
                 memory[effectiveAddress][7..0].data = HWDATA[7..0];

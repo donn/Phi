@@ -34,8 +34,13 @@
 [ \t]+ {
     // Ignore whitespace
 }
-\n { 
+\r?\n { 
     yylloc->lines(1);
+}
+(`[_A-Za-z][_A-Za-z0-9]*`) {
+    yylval->text = strdup(yytext + 1);
+    yylval->text[yyleng - 2] = 0
+    return token::IDENTIFIER;
 }
 (module) {
     return token::KEYWORD_MODULE;
