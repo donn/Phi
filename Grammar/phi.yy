@@ -99,8 +99,6 @@
 
 %right '?'
 %left OP_RANGE
-%left OP_LOGIC_OR
-%left OP_LOGIC_AND
 %left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>' OP_UNSIGNED_LT OP_UNSIGNED_LTE OP_UNSIGNED_GT OP_UNSIGNED_GTE
 %left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '|' '&' '^'
 %left '*' '/' '%'
