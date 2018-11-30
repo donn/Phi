@@ -64,6 +64,7 @@
 %token NUMERIC
 %token FW_NUMERIC
 %token IDENTIFIER
+%token STRING
 
 %token OP_RANGE
 %token OP_SRL
@@ -94,10 +95,10 @@
 %left '.'
 %right '['
 
-%type<text> NUMERIC FW_NUMERIC IDENTIFIER
+%type<text> NUMERIC FW_NUMERIC IDENTIFIER STRING
 
 // Silly conversion
-%type<node> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_bus_declaration optional_array_declaration subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list expressionOrNumber
+%type<node> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_bus_declaration optional_array_declaration subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -319,7 +320,7 @@ optional_bus_declaration:
     ;
 optional_array_declaration:
     { $$ = ε; }
-    | '[' expressionOrNumber ']' {
+    | '[' expression ']' {
         $$ = ε;
     }
     ;
@@ -507,11 +508,6 @@ expression:
     | FW_NUMERIC {
         $$ = ε;
     }
-    ;
-expressionOrNumber:
-    expression {
-        $$ = ε;
-    }
     | NUMERIC  {
         $$ = ε;
     }
@@ -521,14 +517,14 @@ subscript:
     '[' range ']' {
         $$ = ε;
     }
-    | '[' expressionOrNumber ']' {
+    | '[' expression ']' {
         $$ = ε;
     }
     ;
 
 
 range:
-    expressionOrNumber OP_RANGE expressionOrNumber {
+    expression OP_RANGE expression {
         $$ = ε;
     }
     ;
@@ -576,7 +572,13 @@ procedural_call_list:
     expression ',' procedural_call_list {
         $$ = ε;
     }
+    | STRING ',' procedural_call_list {
+        $$ = ε;
+    }
     | expression {
+        $$ = ε;
+    }
+    | STRING {
         $$ = ε;
     }
     ;

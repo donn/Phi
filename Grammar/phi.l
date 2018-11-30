@@ -116,6 +116,11 @@
     return token::NUMERIC;
 }
 
+\"(\\.|[^\\"])*\" {
+    yylval->text = strdup(yytext);
+    return token::STRING;
+}
+
 (\.\.) {
     return token::OP_RANGE;
 }

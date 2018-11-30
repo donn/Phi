@@ -14,8 +14,8 @@ module Memory<memoryWidth>(): Slave {
         Register[2..0] HSIZE =  3b0;
     }
     
-    Var[31..0] memorySize = $pow(32d2, memoryWidth - 32d2);
-    Var[31..0] memoryMax = memoryWidth - 32d1;
+    Var[31..0] memorySize = $pow(2, memoryWidth - 2);
+    Var[31..0] memoryMax = memoryWidth - 1;
 
     Register[31..0] storage[memorySize];
     for i in 0..memoryMax {
