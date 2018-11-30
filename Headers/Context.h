@@ -35,6 +35,10 @@ namespace Phi {
         std::string setFile(std::string currentFile);
         bool error();
         void printErrors();
+
+#if YYDEBUG
+        int trace = 0;
+#endif
     };
 }
 

@@ -14,10 +14,11 @@ module Memory<memoryWidth>(): Slave {
         Register[2..0] HSIZE =  3b0;
     }
     
-    Var[31..0] memorySize = $pow(2, memoryWidth - 2);
+    Var[31..0] memorySize = $pow(32d2, memoryWidth - 32d2);
+    Var[31..0] memoryMax = memoryWidth - 32d1;
 
-    Register[31..0] storage[0..memorySize - 1];
-    for i in 0..memorySize - 1 {
+    Register[31..0] storage[memorySize];
+    for i in 0..memoryMax {
         storage[i] = 32b0; // Setting reset values
     }
 
@@ -57,12 +58,15 @@ module Memory<memoryWidth>(): Slave {
     Wire byte2 = word_at_00 | half_at_10 | byte_at_10;
     Wire byte3 = word_at_00 | half_at_10 | byte_at_11;
 
-    Wire effectiveAddress = AddressPhase.HADDR[memoryWidth-1..2];
+    Wire effectiveAddress = AddressPhase.HADDR[memoryMax..2];
 
     Register[31..0] readOut;
 
-    @elseRetain
     async {
+        memory[effectiveAddress][7..0].data = memory[effectiveAddress][7..0];
+        memory[effectiveAddress][15..8].data = memory[effectiveAddress][15..8];
+        memory[effectiveAddress][23..16].data = memory[effectiveAddress][23..16];
+        memory[effectiveAddress][31..24].data = memory[effectiveAddress][31..24];
         if AddressPhase.HSEL & AddressPhase.HWRITE & AddressPhase.HTRANS[1] {
             if byte0 {
                 memory[effectiveAddress][7..0].data = HWDATA[7..0];

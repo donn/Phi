@@ -1,5 +1,5 @@
 module Counter<width>(clock: @clock Input, reset: @resetLow Input, output: Output[31..0]) {
-    Register[width - 1..0] store = 32b0;
-    store.data = store + 1;
+    Register[width - 32d1..0] store = 32b0;
+    store.data = store + 32d1;
     output = store.data;
 }

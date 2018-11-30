@@ -31,15 +31,15 @@
     // C99/C++-style comments
 }
 
-[ \t]+ {
+[ \t\r]+ {
     // Ignore whitespace
 }
-\r?\n { 
+\n { 
     yylloc->lines(1);
 }
 (`[_A-Za-z][_A-Za-z0-9]*`) {
     yylval->text = strdup(yytext + 1);
-    yylval->text[yyleng - 2] = 0
+    yylval->text[yyleng - 2] = 0;
     return token::IDENTIFIER;
 }
 (module) {
@@ -89,9 +89,6 @@
 }
 (async) {
     return token::KEYWORD_ASYNC;
-}
-(sync) {
-    return token::KEYWORD_SYNC;
 }
 (Input) {
     return token::KEYWORD_INPUT;
@@ -166,10 +163,7 @@
 }
 
 (\[\[) {
-    return token::LEFT_CAT;
-}
-(\]\]) {
-    return token::RIGHT_CAT;
+    return token::LEFT_REPEAT_CAT;
 }
 
 [@\$!~+\-*<>/%\|&^\?:;,=\.\{\}\[\]\(\)] {

@@ -1,14 +1,14 @@
 module RCA<width>(
-    a: Input[width - 1..0], b: Input[width - 1..0],
-    sum: Output[width - 1..0], c: Output[width - 1..0]
+    a: Input[width - 32d1..0], b: Input[width - 32d1..0],
+    sum: Output[width - 32d1..0], c: Output[width - 32d1..0]
 ) {
     FullAdder array[width];
-    Wire carry[width..0];
+    Wire carry[width + 32d1];
 
     array[0] = 1b0;
 
-    for i in 0..width - 1 {
-        array[i](a: a[i], b: b[i], cIn: carry[i], cOut: carry[i + 1], c: c[i]);
+    for i in 0..width - 32d1 {
+        array[i](a: a[i], b: b[i], cIn: carry[i], cOut: carry[i + 32d1], c: c[i]);
     }
 
     c = array[width];

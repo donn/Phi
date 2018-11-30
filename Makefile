@@ -36,13 +36,10 @@ BINARY = phi
 
 # Products
 
-all: CPP_FLAGS += -g -D_DEBUG
+all: CPP_FLAGS += -g -D_DEBUG -DYYDEBUG=1
+all: CPP_LY_FLAGS += -DYYDEBUG=1
 all: C_FLAGS += -g -D_DEBUG 
 all: $(BINARY)
-
-deep: CPP_LY_FLAGS += -DYY_DEBUG=1
-deep: YACC_FLAGS += -Dparse.trace
-deep: all
 
 release: -O3
 release: $(BINARY)
