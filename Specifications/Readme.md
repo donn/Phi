@@ -1,2 +1,1 @@
-## Documentation
-Under heavy updates.
+## Specification up to date as of Phi v0.0.3.
