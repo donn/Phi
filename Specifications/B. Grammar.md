@@ -219,7 +219,9 @@
 
 *procedural-call-list*:
 * *expression* **,** *procedural-call-list*
+* *string* **,** *procedural-call-list*
 * *expression*
+* *string*
 
 *number*:
 * *decimal*

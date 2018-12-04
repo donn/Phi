@@ -8,6 +8,7 @@ These cannot be separated by spaces.
 * *keyword*
 * *annotation*
 * *identifier*
+* *string*
 * *numeric*
 * *punctuator*
 
@@ -59,6 +60,16 @@ These cannot be separated by spaces.
 * in unicode ranges U+90000–U+9FFFD, U+A0000–U+AFFFD, U+B0000–U+BFFFD, or U+C0000–U+CFFFD
 * in unicode ranges U+D0000–U+DFFFD or U+E0000–U+EFFFD
 
+*string*:
+* **"** character-sequence **"**
+
+*character-sequence*:
+* *character* *character-sequence*
+* *character*
+
+*character*:
+* **\** **"**
+* Any valid Unicode character excluding U+0000-U+001F (control characters) and U+0022 (")
 
 *numeric*:
 * *decimal*
