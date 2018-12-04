@@ -1,4 +1,4 @@
-# Draft: Grammar (NOT UP TO DATE)
+# Appendix B. Grammar
 
 ## Top Level
 
@@ -24,7 +24,7 @@
 
 *port-declaration*:
 * *port-polarity*
-* **@** *identifier* *port-polarity*
+* *annotation* *port-polarity*
 
 *port-polarity*:
 * **Input** *optional-array-subscript*
@@ -53,9 +53,9 @@
 
 ## Statements
 *statement*:
-* *subdeclaration* **;**
-* *nondeclarative-statement* **;**
-* *block-based*
+* *optional-annotation* *subdeclaration* **;**
+* *optional-annotation* *nondeclarative-statement* **;**
+* *optional-annotation* *block-based*
 
 *block-based*:
 * *if*
@@ -89,7 +89,7 @@
 
 ## Subdeclarations
 *subdeclaration*:
-* *dynamic-width* *optional-array-subscript* *declaration-list*
+* *dynamic-width* *optional-bus-declaration* *declaration-list*
 * *probable-template* *identifier* *ports*
 
 *dynamic-width*:
@@ -97,9 +97,12 @@
 * **Wire** 
 * **Register**
 
-*optional-array-subscript*:
-* **[** *expression* **]**
+*optional-bus-declaration*:
 * **[** *range* **]**
+* ε
+
+*optional-array-declaration*:
+* **[** *expression* **]**
 * ε
 
 *optional-ports*:
@@ -107,8 +110,8 @@
 * ε
 
 *declaration-list*:
-* *identifier* *optional-array-subscript* *optional-assignment* **,** *declaration-list*
-* *identifier* *optional-array-subscript* *optional-assignment*
+* *identifier* *optional-array-declaration* *optional-assignment* **,** *declaration-list*
+* *identifier* *optional-array-declaration* *optional-assignment*
 
 *optional-assignment*:
 * **=** *expression*
@@ -174,17 +177,21 @@
 * *expression* **<<** *expression*
 * *expression* **>>>** *expression*
 * *expression* **>>** *expression*
-* *expression* **.** *expression*
-* *expression* **[** *expression* **]**
 * **&** *expression*
 * **|** *expression*
 * **~** *expression*
+* *expression* **.** *expression*
+* *expression* *subscript*
 * **[** *concatenation* **]**
 * **mux** *expression* *mux-block*
 * **$** *identifier* **(** *procedural-call* **)**
 * **(** *expression* **)**
 * *identifier*
 * *number*
+
+* *subscript*:
+* **[** *range* **]**
+* **[** *expression* **]**
 
 *range*:
 * *expression* **..** *expression*
@@ -193,8 +200,9 @@
 * **{** *labeled-expression-list* **}**
 
 *labeled-expression-list*:
-* **case** *expression* **:** *expression* **;** *labeled-expression-list*
-* **default** **:** *expression* **;**
+* **case** *expression* **:** *expression* **,** *labeled-expression-list*
+* *expression* **:** *expression*
+* **default** **:** *expression*
 * ε
 
 *concatenation*:
@@ -203,7 +211,7 @@
 
 *concatenatable*:
 * *expression*
-* *expression* **[[** *expression* **]]**
+* *expression* **[[** *expression* *]* *]*
 
 *procedural-call*:
 * *procedural-call-list*
@@ -212,10 +220,6 @@
 *procedural-call-list*:
 * *expression* **,** *procedural-call-list*
 * *expression*
-
-*array-subscript*:
-* **[** *expression* **]**
-* ε
 
 *number*:
 * *decimal*

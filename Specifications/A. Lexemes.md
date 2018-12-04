@@ -1,7 +1,12 @@
-# Draft: Lexemes
+# Appendix A. Lexemes
+
+These are the lexemes or tokens for the Phi Hardware Description Language.
+
+These cannot be separated by spaces.
 
 *tokens*:
 * *keyword*
+* *annotation*
 * *identifier*
 * *numeric*
 * *punctuator*
@@ -16,11 +21,13 @@
 * **mux**
 * **case**
 * **for**
-* **while**
 * **async**
 * **Var**
 * **Wire**
 * **Register**
+
+*annotation*:
+* *@* *starter* *endsequence*
 
 *identifier*:
 * *starter* *endsequence*
@@ -32,7 +39,7 @@
 
 *ender*:
 * *starter*
-* in unicode ranges U+0030–U+0039 (ASCII 0-9)
+* *decimal digit*
 * in unicode ranges U+0300–U+036F, U+1DC0–U+1DFF, U+20D0–U+20FF, or U+FE20–U+FE2F
 
 *starter*: any of
@@ -72,10 +79,13 @@
 * **b o d x**
 
 *state-digit*: any of
-* **z** **x** *digit*
+* **x** *digit*
 
 *digit*: any of
-* **0 1 2 3 4 5 6 7 8 9 A B C D E F**
+*  **A B C D E F**
+
+*decimal digit*: any of
+* **0 1 2 3 4 5 6 7 8 9**
 
 *punctuator*: any of
-* **@ $ ! ~ + - * < > / % | & ^ ? : ; , = . { } [ ] ( ) >= <= &+ &- &> &< &>= &<=**
+* **$ ! ~ + - * < > / % | & ^ ? : ; , = . { } [ ] ( ) >= <= &+ &- &> &< &>= &<=**

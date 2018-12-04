@@ -103,6 +103,10 @@
     return token::KEYWORD_NEGEDGE;
 }
 
+\@[_A-Za-z][_A-Za-z0-9]* {
+    yylval->text = strdup(yytext);
+    return token::ANNOTATION;
+}
 [_A-Za-z][_A-Za-z0-9]* {
     yylval->text = strdup(yytext);
     return token::IDENTIFIER;
@@ -171,7 +175,7 @@
     return token::LEFT_REPEAT_CAT;
 }
 
-[@\$!~+\-*<>/%\|&^\?:;,=\.\{\}\[\]\(\)] {
+[\$!~+\-*<>/%\|&^\?:;,=\.\{\}\[\]\(\)] {
     return yytext[0];
 }
 

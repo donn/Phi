@@ -63,6 +63,7 @@
 
 %token NUMERIC
 %token FW_NUMERIC
+%token ANNOTATION
 %token IDENTIFIER
 %token STRING
 
@@ -95,10 +96,10 @@
 %left '.'
 %right '['
 
-%type<text> NUMERIC FW_NUMERIC IDENTIFIER STRING
+%type<text> NUMERIC FW_NUMERIC IDENTIFIER ANNOTATION STRING
 
 // Silly conversion
-%type<node> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_bus_declaration optional_array_declaration subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list
+%type<node> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_bus_declaration optional_array_declaration subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list optional_annotation
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -108,8 +109,10 @@
 %}
 
 %initial-action {
+#if YYDEBUG
     this->set_debug_level(context->trace);
     @$.begin.filename = @$.end.filename = &context->files.back();
+#endif
 }
 
 %%
@@ -160,7 +163,7 @@ port_declaration:
     port_polarity {
         $$ = ε;
     }
-    | '@' IDENTIFIER port_polarity {
+    | ANNOTATION port_polarity {
         $$ = ε;
     }
     ;
@@ -214,13 +217,20 @@ inheritance_list:
 /* Statements */
 
 statement:
-    subdeclaration ';' {
+    optional_annotation subdeclaration ';' {
         $$ = ε;
     }
-    | nondeclarative_statement ';' {
+    | optional_annotation nondeclarative_statement ';' {
         $$ = ε;
     }
-    | block_based {
+    | optional_annotation block_based {
+        $$ = ε;
+    }
+    ;
+
+optional_annotation:
+    { $$ = ε; }
+    | ANNOTATION {
         $$ = ε;
     }
     ;
@@ -536,10 +546,13 @@ mux_block:
     ;
 labeled_expression_list:
     { $$ = ε; }
-    | expression ':' expression ';' labeled_expression_list {
+    | expression ':' expression ',' labeled_expression_list {
         $$ = ε;
     }
-    | KEYWORD_DEFAULT ':' expression ';' {
+    | expression ':' expression {
+        $$ = ε;
+    }
+    | KEYWORD_DEFAULT ':' expression {
         $$ = ε;
     }
     ;

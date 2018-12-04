@@ -41,7 +41,9 @@ all: CPP_LY_FLAGS += -DYYDEBUG=1
 all: C_FLAGS += -g -D_DEBUG 
 all: $(BINARY)
 
-release: -O3
+release: CPP_FLAGS += -O3
+release: CPP_LY_FLAGS += -O3
+release: C_FLAGS += -O3
 release: $(BINARY)
 
 $(BUILD_DIR)/git_version.h:

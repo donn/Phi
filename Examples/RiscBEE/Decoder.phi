@@ -28,31 +28,31 @@ namespace RiscBEE {
         rs1 = word[19..15];
         rs2 = word[24..20];
 
-        imm_uj = [11{word[31]}, word[31], word[19..12], word[20], word[30..21], 1b0];
+        imm_uj = [11[[word[31]]], word[31], word[19..12], word[20], word[30..21], 1b0];
         imm_u = [word[31..12], 12b0];
-        imm_i = [20{word[31]}, word[31..20]];
-        imm_s = [20{word[31]}, word[31..25], word[11..7]];
-        imm_sb = [19{word[31]}, word[31], word[7], word[30..25], word[11..8], 1b0];
+        imm_i = [20[[word[31]]], word[31..20]];
+        imm_s = [20[[word[31]]], word[31..25], word[11..7]];
+        imm_sb = [19[[word[31]]], word[31], word[7], word[30..25], word[11..8], 1b0];
 
         signed_comp = (V)? ~N: N;
         imm_sext = (arith & (funct3 == 3b011));
 
         condition = mux funct3 {
-            case 3b000: Z;
-            case 3b001: ~Z;
-            case 3b010: 1b0;
-            case 3b011: 1b0;
-            case 3b100: signed_comp;
-            case 3b101: ~signed_comp;
-            case 3b110: N;
-            default: ~N;
+            3b000: Z,
+            3b001: ~Z,
+            3b010: 1b0,
+            3b011: 1b0,
+            3b100: signed_comp,
+            3b101: ~signed_comp,
+            3b110: N,
+            default: ~N
         };
 
         iobytes = mux funct3[1..0] {
-            case 2b0: 4b1;
-            case 2b1: 4b11;
-            case 2b10: 4b1111;
-            default: 4b0; 
+            2b0: 4b1,
+            2b1: 4b11,
+            2b10: 4b1111,
+            default: 4b0
         };
     }
 }

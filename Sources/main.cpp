@@ -17,6 +17,7 @@
 
 // Libraries
 #include <StupidSimpleCPPOpts.h>
+#include <termcolor/termcolor.hpp>
 
 std::string versionString() {
     std::string dev = "";
@@ -68,7 +69,7 @@ int main(int argc, char* argv[]) {
     auto outputFilename = filename;
     outputFilename.replace(extensionPosition, 4, ".v");
 
-    auto context = Phi::Context();
+    auto context = Phi::Context(argv[0]);
     
 #if YYDEBUG
     if (options.find("trace") != options.end()) {
@@ -76,7 +77,18 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    auto input = context.setFile(filename);
+    std::string input;
+    try {
+        input = context.setFile(filename);
+    } catch (std::exception& e) {
+        if (std::string(e.what()) == std::string("context.couldNotOpen")) {
+            return EX_NOINPUT;
+        } else {
+            std::cout << argv[0] << ": " << termcolor::bold << termcolor::red
+            << "error:" << termcolor::reset << "unknown" << e.what() << std::endl;
+            return -1;
+        }
+    }
 
     yy_scan_string(input.c_str());
 

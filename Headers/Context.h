@@ -26,7 +26,10 @@ namespace Phi {
     };
 
     class Context {
+        std::string executableName;
     public:
+        Context(const char* argv0): executableName(argv0) {}
+
         std::vector<Error> errorList;
         std::vector<std::string> files;
         std::vector<std::string> currentFileLines;

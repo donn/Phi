@@ -21,13 +21,13 @@ namespace RiscBEE {
         sra = s >> b[bits - 1..0];
 
         result = mux operation {
-            3b11x: shift;
-            3b101: slt;
-            3b100: ~a;
-            3b011: a ^ b;
-            3b010: a | b;
-            3b001: a & b;
-            3b000: add;
+            3b11x: shift,
+            3b101: slt,
+            3b100: ~a,
+            3b011: a ^ b,
+            3b010: a | b,
+            3b001: a & b,
+            3b000: add
         };
 
         output = result;

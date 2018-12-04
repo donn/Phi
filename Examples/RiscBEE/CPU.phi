@@ -20,7 +20,7 @@ namespace RiscBEE {
         memaddr = o;
 
         Register[31..0] addr = 32b0;
-        addr.data = addr + next_addr;
+        addr.data = addr &+ next_addr;
 
         DataPath dp(pc: romaddr, clk: clk, memin: memin, next_addr: next_addr,  rst: rst, rs1: rs1, rs2: rs2, rd: rd, alu_op: alu_op, imm_uj: imm_uj, imm_u: imm_u, imm_i: imm_i, imm_s: imm_s, imm_sb: imm_sb, memout: memout, o: o, r: r, uj: uj, u: u, u_control: u_control, i: i, s: s, sb: sb, load_pc: load_pc, mem_read: mem_read, mem_read_sext: mem_read_sext, iobytes: iobytes, Z: Z, C: C, N: N, V: V, imm_sext: imm_sext);
 

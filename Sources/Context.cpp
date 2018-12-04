@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <exception>
 
 void Phi::Parser::error(Location const& loc, const std::string& string) {
     context->errorList.push_back({loc, string});
@@ -46,8 +47,10 @@ std::string Phi::Context::setFile(std::string currentFile)  {
 
     auto file = std::ifstream(currentFile);
     if (file.fail()) {
-        std::cerr << "Could not open file '" << currentFile << "'." << std::endl;
-        throw "couldNotOpen";
+        std::cout << executableName << ": " << termcolor::bold << termcolor::red
+        << "error: " << termcolor::reset << "no such file or directory: '"
+        << currentFile << "'" << std::endl;
+        throw std::runtime_error("context.couldNotOpen");
     }
     
     std::stringstream stringstream;

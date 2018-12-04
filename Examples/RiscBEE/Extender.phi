@@ -1,5 +1,5 @@
 namespace RiscBEE {
-    module Extender<inputLength>(isSigned: Input, in: Input[inputLength - 1..0], out: Output[31..0]) {
-        out = [(32 - inputLength){isSigned ? in[inputLength - 1]: 1b0}, in[inputLength - 1..0]];
+    module Extender<inputLength>(isSigned: Input, input: Input[inputLength - 1..0], out: Output[31..0]) {
+        out = [(32 - inputLength)[[isSigned ? input[inputLength - 1]: 1b0]], input[inputLength - 1..0]];
     }
 }
