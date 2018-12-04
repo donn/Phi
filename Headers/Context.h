@@ -23,7 +23,7 @@ namespace Phi {
 
             Undefined = 0xFF
         };
-    };
+    }
 
     class Context {
         std::string executableName;

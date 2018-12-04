@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
 
     // Parse
     auto parser = Phi::Parser(&context);
-    auto parsingResult = parser.parse();
+    /* auto parsingResult = */ parser.parse();
 
     if (context.error()) {
         context.printErrors();

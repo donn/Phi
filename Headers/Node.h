@@ -33,6 +33,6 @@ namespace Phi {
             Expression(std::string operation, Node* left, Node* right);
             Expression(std::string numericInterpretable);
         };
-    };
-};
+    }
+}
 #endif

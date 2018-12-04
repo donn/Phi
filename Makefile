@@ -14,7 +14,7 @@ YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cc,$(YACC)))
 YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
 CPP_LY_FLAGS = -Wno-deprecated-register -std=c++11
-CPP_FLAGS = -pedantic -std=c++17
+CPP_FLAGS = -Wall -pedantic -std=c++17
 
 SOURCES = 
 HEADERS =

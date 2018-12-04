@@ -28,7 +28,7 @@
     using namespace Phi::Node;
 
     #define catchIntoContext catch (const char* error) { context->errorList.push_back({yylhs.location, std::string(error)}); };
-    #define ε nullptr
+    #define epsilon nullptr
 %}
 
 %parse-param { Phi::Context* context }
@@ -109,9 +109,9 @@
 %}
 
 %initial-action {
+    @$.begin.filename = @$.end.filename = &context->files.back();
 #if YYDEBUG
     this->set_debug_level(context->trace);
-    @$.begin.filename = @$.end.filename = &context->files.back();
 #endif
 }
 
@@ -120,97 +120,97 @@
 /* Top Level */
 
 description:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | declaration description  {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_NAMESPACE IDENTIFIER '{' description '}' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 declaration:
     KEYWORD_MODULE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance block  {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_MODULE error '}' {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_INTERFACE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance ';' {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_INTERFACE error ';' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 /* Ports */
 port_declaration_list:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | populated_port_declaration_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 populated_port_declaration_list:
     IDENTIFIER ':' port_declaration ',' populated_port_declaration_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | IDENTIFIER ':' port_declaration {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 port_declaration:
     port_polarity {
-        $$ = ε;
+        $$ = epsilon;
     }
     | ANNOTATION port_polarity {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 port_polarity:
     KEYWORD_INPUT optional_bus_declaration {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_OUTPUT optional_bus_declaration {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 /* Templating */
 template_declaration:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | '<' template_declaration_list '>' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 template_declaration_list:
     IDENTIFIER optional_template_assignment template_declaration_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | IDENTIFIER optional_template_assignment {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 optional_template_assignment:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | '=' '(' expression ')' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 /* Inheritance */
 inheritance:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | ':' inheritance_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 inheritance_list:
     expression ',' inheritance_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
@@ -218,85 +218,85 @@ inheritance_list:
 
 statement:
     optional_annotation subdeclaration ';' {
-        $$ = ε;
+        $$ = epsilon;
     }
     | optional_annotation nondeclarative_statement ';' {
-        $$ = ε;
+        $$ = epsilon;
     }
     | optional_annotation block_based {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 optional_annotation:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | ANNOTATION {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 /* Blocks */
 block_based:
     if {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_FOR IDENTIFIER KEYWORD_IN range block {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_NAMESPACE IDENTIFIER block {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_SWITCH expression switch_block {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_ASYNC block {
-        $$ = ε;
+        $$ = epsilon;
     }
     | error '}' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 if:
     KEYWORD_IF expression block else {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 else:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | KEYWORD_ELSE if {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_ELSE block {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 switch_block:
     '{' labeled_statement_list '}' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 labeled_statement_list:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | KEYWORD_CASE expression ':' statement_list labeled_statement_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_DEFAULT ':' statement_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 block:
     '{' statement_list '}' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 statement_list:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | statement_list statement {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
@@ -304,89 +304,89 @@ statement_list:
 
 subdeclaration:
     dynamic_width optional_bus_declaration declaration_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | probable_template IDENTIFIER optional_array_declaration optional_ports {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 dynamic_width:
     KEYWORD_SW_VAR {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_WIRE {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_REGISTER {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 optional_bus_declaration:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | '[' range ']' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 optional_array_declaration:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | '[' expression ']' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 optional_ports:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | ports {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 declaration_list:
     IDENTIFIER optional_array_declaration optional_assignment ',' declaration_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | IDENTIFIER optional_array_declaration optional_assignment {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 optional_assignment:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | '=' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 probable_template:
     expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '<' template_list '>' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 template_list:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | IDENTIFIER ':' '(' expression ')' ',' template_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | IDENTIFIER ':' '(' expression ')' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 ports:
     '(' ')' {
-        $$ = ε;
+        $$ = epsilon;
     }
     | '(' port_list ')' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 port_list:
     IDENTIFIER ':' expression ',' port_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | IDENTIFIER ':' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
@@ -394,10 +394,10 @@ port_list:
     
 nondeclarative_statement:
     expression '=' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression ports {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
@@ -405,194 +405,194 @@ nondeclarative_statement:
 
 expression:
     expression '?' expression ':' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_EQ expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_NEQ expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '>' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '<' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_GTE expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_LTE expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_UNSIGNED_LT expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_UNSIGNED_GT  expression {
-        $$ = ε;
+        $$ = epsilon;
     } 
     | expression OP_UNSIGNED_LTE expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_UNSIGNED_GTE expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '+' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '-' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_UNSIGNED_ADD expression{
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_UNSIGNED_SUB expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '|' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '&' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '^' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '*' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '/' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '%' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_SLL expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_SRL expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression OP_SRA expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | '-' expression %prec UNARY {
-        $$ = ε;
+        $$ = epsilon;
     }
     | '&' expression %prec UNARY {
-        $$ = ε;
+        $$ = epsilon;
     }
     | '|' expression %prec UNARY {
-        $$ = ε;
+        $$ = epsilon;
     }
     | '~' expression %prec UNARY {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_POSEDGE expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_NEGEDGE expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression '.' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression subscript {
-        $$ = ε;
+        $$ = epsilon;
     }
     | '[' concatenation ']' {
-        $$ = ε;
+        $$ = epsilon;
     }
     | '(' expression ')' {
-        $$ = ε;
+        $$ = epsilon;
     }
     | '$' IDENTIFIER '(' procedural_call ')' {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_MUX expression mux_block {
-        $$ = ε;
+        $$ = epsilon;
     }
     | IDENTIFIER {
-        $$ = ε;
+        $$ = epsilon;
     }
     | FW_NUMERIC {
-        $$ = ε;
+        $$ = epsilon;
     }
     | NUMERIC  {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 subscript:
     '[' range ']' {
-        $$ = ε;
+        $$ = epsilon;
     }
     | '[' expression ']' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 
 range:
     expression OP_RANGE expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 mux_block:
     '{' labeled_expression_list '}' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 labeled_expression_list:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | expression ':' expression ',' labeled_expression_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression ':' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | KEYWORD_DEFAULT ':' expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 concatenation:
     concatenatable ',' concatenation {
-        $$ = ε;
+        $$ = epsilon;
     }
     | concatenatable {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 concatenatable:
     expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression LEFT_REPEAT_CAT expression ']' ']' {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
 procedural_call: {
-        $$ = ε;
+        $$ = epsilon;
     }
     | procedural_call_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 procedural_call_list:
     expression ',' procedural_call_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | STRING ',' procedural_call_list {
-        $$ = ε;
+        $$ = epsilon;
     }
     | expression {
-        $$ = ε;
+        $$ = epsilon;
     }
     | STRING {
-        $$ = ε;
+        $$ = epsilon;
     }
     ;
 
