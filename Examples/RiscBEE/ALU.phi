@@ -15,8 +15,8 @@ namespace RiscBEE {
         Wire[width - 1..0] result;
         Wire[width..0] altA, altB;
         
-        {c, add} = allPurposeSwitch ? a - b : a + b;
-        {C, V} = (operation == 3b000) ? [c, c ^ (add[31] ^ A[31] ^ B[31])] : 2b0;
+        [c, add] = allPurposeSwitch ? a - b : a + b;
+        [C, V] = (operation == 3b000) ? [c, c ^ (add[31] ^ A[31] ^ B[31])] : 2b0;
         slt = allPurposeSwitch ? a < b ? 32b1 : 32b0 : a &< b ? 32b1 : 32b0;
 
         sll = s << b[bits - 1..0];
@@ -24,13 +24,13 @@ namespace RiscBEE {
         sra = s >> b[bits - 1..0];
 
         result = mux operation {
-            case 3b11x: shift;
-            case 3b101: slt;
-            case 3b100: ~a;
-            case 3b011: a ^ b;
-            case 3b010: a | b;
-            case 3b001: a & b;
-            case 3b000: add;
+            3b11x: shift,
+            3b101: slt,
+            3b100: ~a,
+            3b011: a ^ b,
+            3b010: a | b,
+            3b001: a & b,
+            3b000: add
         };
 
         output = result;

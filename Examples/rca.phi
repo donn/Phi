@@ -3,7 +3,7 @@ module RCA<width>(
     sum: Output[width - 1..0], c: Output[width - 1..0]
 ) {
     FullAdder array[width];
-    Wire carry[width..0];
+    Wire carry[width + 1];
 
     array[0] = 1b0;
 

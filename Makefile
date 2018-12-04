@@ -14,7 +14,7 @@ YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cc,$(YACC)))
 YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
 CPP_LY_FLAGS = -Wno-deprecated-register -std=c++11
-CPP_FLAGS = -pedantic -std=c++17
+CPP_FLAGS = -Wall -pedantic -std=c++17
 
 SOURCES = 
 HEADERS =
@@ -36,15 +36,14 @@ BINARY = phi
 
 # Products
 
-all: CPP_FLAGS += -g -D_DEBUG
+all: CPP_FLAGS += -g -D_DEBUG -DYYDEBUG=1
+all: CPP_LY_FLAGS += -DYYDEBUG=1
 all: C_FLAGS += -g -D_DEBUG 
 all: $(BINARY)
 
-deep: CPP_LY_FLAGS += -DYY_DEBUG=1
-deep: YACC_FLAGS += -Dparse.trace
-deep: all
-
-release: -O3
+release: CPP_FLAGS += -O3
+release: CPP_LY_FLAGS += -O3
+release: C_FLAGS += -O3
 release: $(BINARY)
 
 $(BUILD_DIR)/git_version.h:

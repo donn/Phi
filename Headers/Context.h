@@ -23,10 +23,13 @@ namespace Phi {
 
             Undefined = 0xFF
         };
-    };
+    }
 
     class Context {
+        std::string executableName;
     public:
+        Context(const char* argv0): executableName(argv0) {}
+
         std::vector<Error> errorList;
         std::vector<std::string> files;
         std::vector<std::string> currentFileLines;
@@ -35,6 +38,10 @@ namespace Phi {
         std::string setFile(std::string currentFile);
         bool error();
         void printErrors();
+
+#if YYDEBUG
+        int trace = 0;
+#endif
     };
 }
 

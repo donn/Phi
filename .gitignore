@@ -8,5 +8,7 @@ phi
 *.exe
 *.stackdump
 
-./*.phi
+/*.phi
 Examples/*.v
+
+*~

@@ -14,36 +14,37 @@ namespace RiscBEE {
     ) {
         Wire[31..0] aData, bData, bAlu, memextb, memexth, memext, regwrite, ujext, iext, sext, sbext;
 
-        bAlu = ([32{r | sb}] & bData) | ([32{i}] & imm_i) | ([32{s}] & imm_s);
+        bAlu = ([32[[r | sb]]] & bData) | ([32[[i]]] & imm_i) | ([32[[s]]] & imm_s);
 
         Extender<width: (8)> memory(
             isSigned: mem_read_sext,
-            in: memout,
+            input: memout,
             out: memextb
         );
 
         Extender<width: (16)> memory(
             isSigned: mem_read_sext,
-            in: memout,
+            input: memout,
             out: memexth
         );
 
         memext = mux iobytes[2..0] {
-            case 3b000: memout;
-            case 3b001: memextb;
-            case 3b010: memout;
-            case 3b011: memexth;
-            case 3b100: memout;
-            case 3b101: memout;
-            case 3b110: memout;
-            case 3b111: memout;
+            3b000: memout,
+            3b001: memextb,
+            3b010: memout,
+            3b011: memexth,
+            3b100: memout,
+            3b101: memout,
+            3b110: memout,
+            3b111: memout
         };
 
-        regwrite = mem_read? memext: ([32{u}] & (u_control? imm_u: imm_u + pc)) | ([32{uj}] & pc) | ([32{i}] & (load_pc? pc: o)) |  ([32{r}] & o);
+        regwrite = mem_read? memext:
+                            ([32[[u]]] & (u_control? imm_u: imm_u + pc)) | ([32[[uj]]] & pc) | ([32[[i]]] & (load_pc? pc: o)) |  ([32[[r]]] & o);
 
         RegisterFile file(k: clk, t: rst, s: rs1, s: rs2, s: rd, a: aData, a: bData, a: regwrite, e: ~(sb | s));
 
-        next_addr = load_pc? ((([32{u & (~u_control)}] & imm_u) | ([32{uj}] & imm_uj) | [32{i}] & o) | ([32{sb}] & imm_sb)): 4;
+        next_addr = load_pc? ((([32[[u & (~u_control)]]] & imm_u) | ([32[[uj]]] & imm_uj) | [32[[i]]] & o) | ([32[[sb]]] & imm_sb)): 4;
         memin = bData;
 
         ALU alu(

@@ -3,8 +3,10 @@
 #include <regex>
 #include <sstream>
 
+using namespace Phi::Node;
+
 // Number
-Phi::Node::Expression::Expression(std::string interpretable) {
+Expression::Expression(std::string interpretable) {
     left = NULL;
     right = NULL;
     expType = ExpType::RunTime;
@@ -41,3 +43,8 @@ Phi::Node::Expression::Expression(std::string interpretable) {
     }
     literal = match[3];
 }
+
+Node* Expression::traverse() {
+    return nullptr;
+}
+

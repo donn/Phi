@@ -1,19 +1,20 @@
 namespace RiscBEE {
     module RegisterFile(
-        clk: @clock Input, rst: @reset Input, write: Input,
+        clk: @clock Input, rst: @reset Input, write: @enable Input,
         Ddata: Input[31..0],
-        Aaddress: Input[4..0], Baddress: Input[4..0], Daddress: Input[4..0]
+        Aaddress: Input[4..0], Baddress: Input[4..0], Daddress: Input[4..0],
         Adata: Output[31..0], Bdata: Output[31..0]
     ){
-        Register[31..0] bank[31..0];
+        Register[31..0] bank[32];
         for i in 0..31 {
             bank[i] = 32b0;
         }
         
         async {
-            if (write) {
+            if (Daddress == 0) {
+                bank[Daddress].data = 32b0;
+            } else {
                 bank[Daddress].data = Ddata;
-                bank[0].data = 32b0;
             }
         }
     }

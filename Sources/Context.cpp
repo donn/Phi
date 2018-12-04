@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <exception>
 
 void Phi::Parser::error(Location const& loc, const std::string& string) {
     context->errorList.push_back({loc, string});
@@ -21,15 +22,18 @@ void Phi::Parser::error(Location const& loc, const std::string& string) {
 void Phi::Context::printErrors() {
     auto errorCount = errorList.size();
     if (errorCount > 0) {
-        for (auto i = 0; i < errorCount; i += 1) {
-            auto& error = errorList[i];
-            auto& loc = error.loc;
-            auto& message = error.message;
+        for (size_t i = 0; i < errorCount; i += 1) {
+            auto error = errorList[i];
+            auto loc = error.loc;
+            auto message = error.message;
 
             std::string highlight = "";
             if (loc.end.column > loc.begin.column) {
                 highlight = std::string(loc.end.column - loc.begin.column - 1, '~');
             }
+
+            std::cout << loc.begin.filename << std::endl;
+
 
             std::cerr << termcolor::bold << *loc.begin.filename << ":" << loc.begin.line << ":" << loc.begin.column << ": " << termcolor::red << message << termcolor::reset << std::endl;
             std::cerr << currentFileLines[loc.begin.line - 1] << std::endl;
@@ -46,8 +50,10 @@ std::string Phi::Context::setFile(std::string currentFile)  {
 
     auto file = std::ifstream(currentFile);
     if (file.fail()) {
-        std::cerr << "Could not open file '" << currentFile << "'." << std::endl;
-        throw "couldNotOpen";
+        std::cout << executableName << ": " << termcolor::bold << termcolor::red
+        << "error: " << termcolor::reset << "no such file or directory: '"
+        << currentFile << "'" << std::endl;
+        throw std::runtime_error("context.couldNotOpen");
     }
     
     std::stringstream stringstream;

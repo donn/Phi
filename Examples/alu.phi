@@ -7,8 +7,10 @@ namespace RiscBEE {
         output: Output[width - 1..0]
     ) {
         Var[31..0] bits = $log(width);
-        Wire[width - 1..0] add, and, or, xor, not, slt, shift;
-        Wire[width - 1..0] result;
+        Var[31..0] msb = width - 1;
+
+        Wire[msb..0] add, and, or, xor, not, slt, shift;
+        Wire[msb..0] result;
         Wire[width..0] altA, altB;
         
         add = allPurposeSwitch ? a &- b : a &+ b;
@@ -19,13 +21,13 @@ namespace RiscBEE {
         sra = s >> b[bits - 1..0];
 
         result = mux operation {
-            3b11x: shift;
-            3b101: slt;
-            3b100: ~a;
-            3b011: a ^ b;
-            3b010: a | b;
-            3b001: a & b;
-            3b000: add;
+            3b11x: shift,
+            3b101: slt,
+            3b100: ~a,
+            3b011: a ^ b,
+            3b010: a | b,
+            3b001: a & b,
+            3b000: add
         };
 
         output = result;

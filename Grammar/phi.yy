@@ -21,20 +21,14 @@
 
     void yyerror(char *);
     int yylex();
-    int yydebug=1;
 
     extern int yylineno;
     extern char* yytext;
 
     using namespace Phi::Node;
 
-    // #define catchIntoContext catch (const char* error) { context->errorList.push_back({yylhs.location, std::string(error)}); };
-    // #define tcc(stmt) try { stmt } catchIntoContext
-    // #define cst std::stringstream stream
-    // #define ε strdup("")
-    // #define err_placeholder strdup("/* PHI TRANSLATOR: ERROR */")
-    // #define TODO strdup("")
-    // #define dup strdup(stream.str().c_str())
+    #define catchIntoContext catch (const char* error) { context->errorList.push_back({yylhs.location, std::string(error)}); };
+    #define epsilon nullptr
 %}
 
 %parse-param { Phi::Context* context }
@@ -44,11 +38,6 @@
     char* text;
     void* node;
 }
-
-%token ASSIGNMENT
-
-%token WHITESPACE
-%token NEWLINE
 
 %token KEYWORD_MODULE
 %token KEYWORD_INTERFACE
@@ -66,7 +55,6 @@
 %token KEYWORD_SW_VAR
 %token KEYWORD_WIRE
 %token KEYWORD_REGISTER
-%token KEYWORD_SYNC
 %token KEYWORD_ASYNC
 %token KEYWORD_INPUT
 %token KEYWORD_OUTPUT
@@ -75,7 +63,9 @@
 
 %token NUMERIC
 %token FW_NUMERIC
+%token ANNOTATION
 %token IDENTIFIER
+%token STRING
 
 %token OP_RANGE
 %token OP_SRL
@@ -92,8 +82,7 @@
 %token OP_UNSIGNED_GT
 %token OP_UNSIGNED_GTE
 
-%token LEFT_CAT
-%token RIGHT_CAT
+%token LEFT_REPEAT_CAT
 
 %right '=' ':' 
 
@@ -107,10 +96,10 @@
 %left '.'
 %right '['
 
-%type<text> NUMERIC FW_NUMERIC IDENTIFIER
+%type<text> NUMERIC FW_NUMERIC IDENTIFIER ANNOTATION STRING
 
 // Silly conversion
-%type<node> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_bus_declaration optional_array_declaration subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list
+%type<node> description declaration port_declaration_list populated_port_declaration_list port_declaration port_polarity template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else switch_block labeled_statement_list block statement_list subdeclaration dynamic_width optional_bus_declaration optional_array_declaration subscript optional_ports declaration_list optional_assignment probable_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list optional_annotation
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -121,6 +110,9 @@
 
 %initial-action {
     @$.begin.filename = @$.end.filename = &context->files.back();
+#if YYDEBUG
+    this->set_debug_level(context->trace);
+#endif
 }
 
 %%
@@ -128,204 +120,183 @@
 /* Top Level */
 
 description:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | declaration description  {
-        cst; stream << $1 << std::endl << std::endl << $2;
-        $$ = dup;
-        context->top = $$;
+        $$ = epsilon;
     }
     | KEYWORD_NAMESPACE IDENTIFIER '{' description '}' {
-        $$ = TODO;
+        $$ = epsilon;
     }
     ;
 
 declaration:
     KEYWORD_MODULE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance block  {
-        cst; stream << "module " << $2 << TODO << '(' << std::endl << $5 << ')' << TODO << $8;
-        auto string = stream.str();
-        auto index = string.find("begin");
-        string.replace(index, 5, ";");
-        index = string.rfind("end");
-        string.replace(index, 3, "endmodule");
-        $$ = strdup(string.c_str());
+        $$ = epsilon;
     }
     | KEYWORD_MODULE error '}' {
-        $$ = err_placeholder;
+        $$ = epsilon;
     }
     | KEYWORD_INTERFACE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance ';' {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | KEYWORD_INTERFACE error ';' {
-        $$ = err_placeholder;
+        $$ = epsilon;
     }
     ;
 
 /* Ports */
 port_declaration_list:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | populated_port_declaration_list {
-        $$ = $1;
+        $$ = epsilon;
     }
     ;
 populated_port_declaration_list:
     IDENTIFIER ':' port_declaration ',' populated_port_declaration_list {
-        cst; stream << "    " << $3 << " " << $1 << ',' << std::endl << $5;
-        $$ = dup;
+        $$ = epsilon;
     }
     | IDENTIFIER ':' port_declaration {
-        cst; stream << "    " << $3 << $1 << std::endl;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 port_declaration:
     port_polarity {
-        $$ = $1;
+        $$ = epsilon;
     }
-    | '@' IDENTIFIER port_polarity {
-        $$ = $3;
+    | ANNOTATION port_polarity {
+        $$ = epsilon;
     }
     ;
 port_polarity:
     KEYWORD_INPUT optional_bus_declaration {
-        cst; stream << "input " << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     | KEYWORD_OUTPUT optional_bus_declaration {
-        cst; stream << "output " << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 /* Templating */
 template_declaration:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | '<' template_declaration_list '>' {
-        $$ = $2;
+        $$ = epsilon;
     }
     ;
 template_declaration_list:
     IDENTIFIER optional_template_assignment template_declaration_list {
-        cst; stream << "parameter " << $1 << $2 << ";" << std::endl << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | IDENTIFIER optional_template_assignment {
-        cst; stream << "parameter " << $1 << $2 << ";";
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 optional_template_assignment:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | '=' '(' expression ')' {
-        cst; stream << '=' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 /* Inheritance */
 inheritance:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | ':' inheritance_list {
-        $$ = TODO;
+        $$ = epsilon;
     }
     ;
 inheritance_list:
     expression ',' inheritance_list {
-        cst; stream << $1 << ',' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression {
-        $$ = $1;
+        $$ = epsilon;
     }
     ;
 
 /* Statements */
 
 statement:
-    subdeclaration ';' {
-        cst; stream << $1 << ";";
-        $$ = dup;
+    optional_annotation subdeclaration ';' {
+        $$ = epsilon;
     }
-    | nondeclarative_statement ';' {
-        cst; stream << $1 << ";";
-        $$ = dup;
+    | optional_annotation nondeclarative_statement ';' {
+        $$ = epsilon;
     }
-    | block_based {
-        $$ = $1;
+    | optional_annotation block_based {
+        $$ = epsilon;
+    }
+    ;
+
+optional_annotation:
+    { $$ = epsilon; }
+    | ANNOTATION {
+        $$ = epsilon;
     }
     ;
 
 /* Blocks */
 block_based:
     if {
-        $$ = $1;
+        $$ = epsilon;
     }
     | KEYWORD_FOR IDENTIFIER KEYWORD_IN range block {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | KEYWORD_NAMESPACE IDENTIFIER block {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | KEYWORD_SWITCH expression switch_block {
-        cst; stream << "switch (" << $2 << ") " << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | KEYWORD_ASYNC block {
-        cst; stream << "always @ (*) " << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     | error '}' {
-        $$ = err_placeholder;
+        $$ = epsilon;
     }
     ;
 if:
     KEYWORD_IF expression block else {
-        cst; stream << "if (" << $2 << ")" << " " << $3 << " " << $4;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 else:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | KEYWORD_ELSE if {
-        cst; stream << "else " << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     | KEYWORD_ELSE block {
-        cst; stream << "else " << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 switch_block:
     '{' labeled_statement_list '}' {
-        cst; stream << "begin" << std::endl << $2 << std::endl << "end";
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 labeled_statement_list:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | KEYWORD_CASE expression ':' statement_list labeled_statement_list {
-        cst; stream << $2 << ": " << std::endl << $4 << std::endl << $5;
-        $$ = dup;
+        $$ = epsilon;
     }
     | KEYWORD_DEFAULT ':' statement_list {
-        cst; stream << "default: " << std::endl << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 block:
     '{' statement_list '}' {
-        cst; stream << "begin" << std::endl << $2 << std::endl << "end";
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 statement_list:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | statement_list statement {
-        cst; stream << $1 << std::endl << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
@@ -333,100 +304,89 @@ statement_list:
 
 subdeclaration:
     dynamic_width optional_bus_declaration declaration_list {
-        cst; stream << $1 << " " << $2 << " " << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | probable_template IDENTIFIER optional_array_declaration optional_ports {
-        cst; stream << $1 << $2 << " /* PHI: Unsupported array of components. */" << $4;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 dynamic_width:
     KEYWORD_SW_VAR {
-        $$ = strdup("var");
+        $$ = epsilon;
     }
     | KEYWORD_WIRE {
-        $$ = strdup("wire");
+        $$ = epsilon;
     }
     | KEYWORD_REGISTER {
-        $$ = strdup("reg");
+        $$ = epsilon;
     }
     ;
 optional_bus_declaration:
-    { $$ = ε; }
-    | '[' range ']'
+    { $$ = epsilon; }
+    | '[' range ']' {
+        $$ = epsilon;
+    }
     ;
 optional_array_declaration:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | '[' expression ']' {
-        cst; stream << '[' << $2 << ']';
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 optional_ports:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | ports {
-        cst; stream << $1;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 declaration_list:
     IDENTIFIER optional_array_declaration optional_assignment ',' declaration_list {
-        cst; stream << $1 << $2 << $3 << ',';
-        $$ = dup;
+        $$ = epsilon;
     }
     | IDENTIFIER optional_array_declaration optional_assignment {
-        cst; stream << $1 << $2 << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 optional_assignment:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | '=' expression {
-        cst; stream << '=' << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 probable_template:
     expression {
-        $$ = $1;
+        $$ = epsilon;
     }
     | expression '<' template_list '>' {
-        cst; stream << $1 << "#(" << $3 << ")";
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 template_list:
-    { $$ = ε; }
+    { $$ = epsilon; }
     | IDENTIFIER ':' '(' expression ')' ',' template_list {
-        cst; stream << '.' << $1 << '(' << $4 << ')' << ',' << $7;
-        $$ = dup;
+        $$ = epsilon;
     }
     | IDENTIFIER ':' '(' expression ')' {
-        cst; stream << '.' << $1 << '(' << $4 << ')';
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 ports:
     '(' ')' {
-        $$ = strdup("()");
+        $$ = epsilon;
     }
     | '(' port_list ')' {
-        cst; stream << '(' << $2 << ')';
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 port_list:
     IDENTIFIER ':' expression ',' port_list {
-        cst; stream << '.' << $1 << '(' << $3 << ')' << ',' << $5;
-        $$ = dup;
+        $$ = epsilon;
     }
     | IDENTIFIER ':' expression {
-        cst; stream << '.' << $1 << '(' << $3 << ')';
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
@@ -434,239 +394,205 @@ port_list:
     
 nondeclarative_statement:
     expression '=' expression {
-        cst;
-        auto assignee = std::string($1);
-        auto op = "=";
-        size_t pos = assignee.rfind(".data");
-        if (pos != std::string::npos) {
-            assignee.replace(pos, 5, "");
-            op = "<=";
-        }
-        stream << assignee << ' ' << op << ' ' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression ports {
-        cst; stream << $1 << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 /* Expressions */
 
 expression:
-    expression '?' expression ':' expression 
+    expression '?' expression ':' expression {
+        $$ = epsilon;
+    }
     | expression OP_EQ expression {
-        cst; stream << $1 << "==" << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression OP_NEQ expression {
-        cst; stream << $1 << "!=" << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression '>' expression {
-        cst; stream << $1 << '>' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression '<' expression {
-        cst; stream << $1 << '<' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression OP_GTE expression {
-        cst; stream << $1 << ">=" << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression OP_LTE expression {
-        cst; stream << $1 << "<=" << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression OP_UNSIGNED_LT expression {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | expression OP_UNSIGNED_GT  expression {
-        $$ = TODO;
+        $$ = epsilon;
     } 
     | expression OP_UNSIGNED_LTE expression {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | expression OP_UNSIGNED_GTE expression {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | expression '+' expression {
-        cst; stream << $1 << '+' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression '-' expression {
-        cst; stream << $1 << '-' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression OP_UNSIGNED_ADD expression{
-        $$ = TODO;
+        $$ = epsilon;
     }
     | expression OP_UNSIGNED_SUB expression {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | expression '|' expression {
-        cst; stream << $1 << '|' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression '&' expression {
-        cst; stream << $1 << '&' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression '^' expression {
-        cst; stream << $1 << '^' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression '*' expression {
-        cst; stream << $1 << '*' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression '/' expression {
-        cst; stream << $1 << '/' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression '%' expression {
-        cst; stream << $1 << '%' << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression OP_SLL expression {
-        cst; stream << $1 << "<<" << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression OP_SRL expression {
-        cst; stream << $1 << ">>" << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression OP_SRA expression {
-        cst; stream << "$signed(" << $1 << ") >> $signed(" << $3 << ")";
-        $$ = dup;
+        $$ = epsilon;
     }
     | '-' expression %prec UNARY {
-        cst; stream << '-' << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     | '&' expression %prec UNARY {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | '|' expression %prec UNARY {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | '~' expression %prec UNARY {
-        cst; stream << '~' << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     | KEYWORD_POSEDGE expression {
-        cst; stream << "posedge " << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     | KEYWORD_NEGEDGE expression {
-        cst; stream << "negedge " << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression '.' expression {
-        cst; stream << $1 << '.' << $3; // TODO PROPERLY
-        $$ = dup;
+        $$ = epsilon;
     }
     | expression subscript {
-        cst; stream << $1 << $2;
-        $$ = dup;
+        $$ = epsilon;
     }
     | '[' concatenation ']' {
-        cst; stream << '{' << $2 << '}';
-        $$ = dup;
+        $$ = epsilon;
     }
     | '(' expression ')' {
-        cst; stream << '(' << $2 << ')';
-        $$ = dup;
+        $$ = epsilon;
     }
     | '$' IDENTIFIER '(' procedural_call ')' {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | KEYWORD_MUX expression mux_block {
-        $$ = TODO;
+        $$ = epsilon;
     }
     | IDENTIFIER {
-        $$ = strdup(yytext);
+        $$ = epsilon;
     }
     | FW_NUMERIC {
-        $$ = $1;
+        $$ = epsilon;
+    }
+    | NUMERIC  {
+        $$ = epsilon;
     }
     ;
 
 subscript:
-    '[' range ']'
+    '[' range ']' {
+        $$ = epsilon;
+    }
     | '[' expression ']' {
-        cst; stream << '[' << $2 << ']';
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 
 
 range:
     expression OP_RANGE expression {
-        cst; stream << $1 << ':' << $3;
-        $$ = dup;
-    }
-    | NUMERIC OP_RANGE NUMERIC {
-
+        $$ = epsilon;
     }
     ;
 
 mux_block:
     '{' labeled_expression_list '}' {
-        cst; stream << '{' << $2 << '}';
-        $$ = dup;
+        $$ = epsilon;
     }
     ;
 labeled_expression_list:
-    { $$ = ε; }
-    | expression ':' expression ';' labeled_expression_list {
-        cst; stream << $1 << ": " << std::endl;
-        stream << "__PHI__MUX__LAST = " << $3 << ';' << std::endl;
-        stream << "break; " << std::endl;
-        stream << $5;
-        $$ = dup;
+    { $$ = epsilon; }
+    | expression ':' expression ',' labeled_expression_list {
+        $$ = epsilon;
     }
-    | KEYWORD_DEFAULT ':' expression ';' {
-        cst; stream << "default: " << std::endl;
-        stream << "__PHI__MUX__LAST = " << $3 << ';' << std::endl;
-        $$ = dup;
+    | expression ':' expression {
+        $$ = epsilon;
+    }
+    | KEYWORD_DEFAULT ':' expression {
+        $$ = epsilon;
     }
     ;
 
 concatenation:
     concatenatable ',' concatenation {
-        cst; stream << $1 << ", " << $3;
-        $$ = dup;
+        $$ = epsilon;
     }
     | concatenatable {
-        $$ = $1;
+        $$ = epsilon;
     }
     ;
 concatenatable:
     expression {
-        $$ = $1;
+        $$ = epsilon;
     }
-    | expression LEFT_CAT expression RIGHT_CAT {
-        cst; stream << '{' << $1 << '{' << $3 << '}' << '}';
-        $$ = dup;
+    | expression LEFT_REPEAT_CAT expression ']' ']' {
+        $$ = epsilon;
     }
     ;
 
 procedural_call: {
-        $$ = ε;
+        $$ = epsilon;
     }
     | procedural_call_list {
-        $$ = $1;
+        $$ = epsilon;
     }
     ;
 procedural_call_list:
     expression ',' procedural_call_list {
-        cst; stream << $1 << ", " << $3;
-        $$ = dup;
+        $$ = epsilon;
+    }
+    | STRING ',' procedural_call_list {
+        $$ = epsilon;
     }
     | expression {
-        $$ = $1;
+        $$ = epsilon;
+    }
+    | STRING {
+        $$ = epsilon;
     }
     ;
 
