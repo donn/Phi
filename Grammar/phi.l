@@ -87,8 +87,11 @@
 (Register) {
     return token::KEYWORD_REGISTER;
 }
-(async) {
-    return token::KEYWORD_ASYNC;
+(Latch) {
+    return token::KEYWORD_LATCH;
+}
+(comb) {
+    return token::KEYWORD_COMB;
 }
 (Input) {
     return token::KEYWORD_INPUT;

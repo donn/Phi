@@ -55,7 +55,8 @@
 %token KEYWORD_SW_VAR
 %token KEYWORD_WIRE
 %token KEYWORD_REGISTER
-%token KEYWORD_ASYNC
+%token KEYWORD_LATCH
+%token KEYWORD_COMB
 %token KEYWORD_INPUT
 %token KEYWORD_OUTPUT
 %token KEYWORD_POSEDGE
@@ -249,7 +250,7 @@ block_based:
     | KEYWORD_SWITCH expression switch_block {
         $$ = epsilon;
     }
-    | KEYWORD_ASYNC block {
+    | KEYWORD_COMB block {
         $$ = epsilon;
     }
     | error '}' {
@@ -319,6 +320,9 @@ dynamic_width:
         $$ = epsilon;
     }
     | KEYWORD_REGISTER {
+        $$ = epsilon;
+    }
+    | KEYWORD_LATCH {
         $$ = epsilon;
     }
     ;

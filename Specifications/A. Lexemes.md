@@ -22,7 +22,7 @@ These cannot be separated by spaces.
 * **mux**
 * **case**
 * **for**
-* **async**
+* **comb**
 * **Var**
 * **Wire**
 * **Register**

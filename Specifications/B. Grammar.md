@@ -62,7 +62,7 @@
 * **for** *identifer* **in** *range* *block*
 * **namespace** *identifier* *block*
 * **switch** *expression* *switch-block*
-* **async** *block*
+* **comb** *block*
 
 *if*:
 * **if** *expression* *block* *else*

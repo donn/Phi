@@ -10,7 +10,7 @@ namespace RiscBEE {
             bank[i] = 32b0;
         }
         
-        async {
+        comb {
             if (Daddress == 0) {
                 bank[Daddress].data = 32b0;
             } else {
