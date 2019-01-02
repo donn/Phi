@@ -1,41 +1,41 @@
 #ifndef _context_h
 #define _context_h
-// CPP STL
-#include <string>
+// C++ STL
 #include <vector>
 
 // Flex/Bison
 #include <location.hh>
+
+// Project Headers
+#include "Types.h"
 
 using Location = Phi::location;
 
 namespace Phi {
     struct Error {
         Location loc;
-        std::string message;
+        String message;
     };
 
-    namespace ExpType {
-        enum Enum {
-            CompileTime = 0,
-            ParameterSensitive,
-            RunTime,
+    enum class ExpType {
+        CompileTime = 0,
+        ParameterSensitive,
+        RunTime,
 
-            Undefined = 0xFF
-        };
-    }
+        Undefined = 0xFF
+    };
 
     class Context {
-        std::string executableName;
+        String executableName;
     public:
         Context(const char* argv0): executableName(argv0) {}
 
         std::vector<Error> errorList;
-        std::vector<std::string> files;
-        std::vector<std::string> currentFileLines;
+        std::vector<String> files;
+        std::vector<String> currentFileLines;
         char* top = NULL;
 
-        std::string setFile(std::string currentFile);
+        String setFile(String currentFile);
         bool error();
         void printErrors();
 

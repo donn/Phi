@@ -6,7 +6,7 @@
 using namespace Phi::Node;
 
 // Number
-Expression::Expression(std::string interpretable) {
+Expression::Expression(String interpretable) {
     left = NULL;
     right = NULL;
     expType = ExpType::RunTime;
@@ -20,7 +20,7 @@ Expression::Expression(std::string interpretable) {
     }
 
     width = prospectiveWidth;
-    std::string radix = match[2];
+    String radix = match[2];
 
     switch(radix[0]) {
         case 'b':

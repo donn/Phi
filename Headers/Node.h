@@ -1,8 +1,7 @@
 #ifndef _node_h
 #define _node_h
 
-#include <string>
-
+// Project Headers
 #include "Types.h"
 #include "Context.h"
 
@@ -10,6 +9,7 @@ namespace Phi {
     namespace Node {
         using Width = uint16;
         static const Width maxWidth = UINT16_MAX;
+
         struct Node {
             Node* left;
             Node* right;
@@ -18,20 +18,60 @@ namespace Phi {
             }
         };
 
-        struct Declarative: public Node {
+        // Declarations
+        struct Expression; // Fwd Declaration
+        struct Declaration: public Node {
+            String name;
         };
 
-        struct Expression: public Node {
-            ExpType::Enum expType;
-            std::string operation;
+        struct Port {
+            String name;
+            bool polarity; // Input: Output
 
-            virtual Node* traverse();
+            std::optional<bool> clockPort; // Active Low: Active High
+            std::optional<bool> resetPort; // Active Low: Active High
+            std::optional<bool> enablePort; // Active Low: Active High
+        };
+
+        struct Namespace: public Declaration {
+            Node* content;
+        };
+        
+        struct TopLevelDeclaration: public Declaration {
+            enum class Type {
+                module = 0,
+                interface
+            };
+            std::vector<Port> ports;
+        };
+
+        struct InstanceDeclaration: public Declaration {
+            Expression* array;
+            Expression* moduleName;
+        };
+
+        struct VariableLengthDecalaration: public Declaration {
+            enum class Type {
+                var = 0,
+                wire, reg, latch
+            };
+            Type type;
+            Expression* array;
+            Expression* bus;
+        };
+
+        // Expression
+        struct Expression: public Node {
+            ExpType expType;
+            String operation;
+
+            virtual Node* traverse() override;
 
             Width width;
-            std::string literal;
+            String literal;
 
-            Expression(std::string operation, Node* left, Node* right);
-            Expression(std::string numericInterpretable);
+            Expression(String operation, Node* left, Node* right);
+            Expression(String numericInterpretable);
         };
     }
 }

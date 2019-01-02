@@ -19,12 +19,12 @@
 #include <StupidSimpleCPPOpts.h>
 #include <termcolor/termcolor.hpp>
 
-std::string versionString() {
-    std::string dev = "";
-    if (std::string(Phi::GIT_TAG) != std::string(Phi::GIT_VER_STRING)) {
+String versionString() {
+    String dev = "";
+    if (String(Phi::GIT_TAG) != String(Phi::GIT_VER_STRING)) {
         dev = "-dev";
     }
-    return std::string(Phi::GIT_TAG) + dev + " (" + Phi::GIT_VER_STRING + ")";
+    return String(Phi::GIT_TAG) + dev + " (" + Phi::GIT_VER_STRING + ")";
 }
 
 void printVersion() {
@@ -33,7 +33,6 @@ void printVersion() {
 }
 
 int main(int argc, char* argv[]) {
-
     // CLI Option parsing
     SSCO::Options getOpt({
         {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(); exit(0); }},
@@ -61,7 +60,7 @@ int main(int argc, char* argv[]) {
 
     auto filename = arguments[0];
     auto extensionPosition = filename.rfind(".phi");
-    if (extensionPosition == std::string::npos) {
+    if (extensionPosition == String::npos) {
         std::cerr << "File must end with .phi." << std::endl;
         return EX_DATAERR;
     }
@@ -77,11 +76,11 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    std::string input;
+    String input;
     try {
         input = context.setFile(filename);
     } catch (std::exception& e) {
-        if (std::string(e.what()) == std::string("context.couldNotOpen")) {
+        if (String(e.what()) == String("context.couldNotOpen")) {
             return EX_NOINPUT;
         } else {
             std::cout << argv[0] << ": " << termcolor::bold << termcolor::red

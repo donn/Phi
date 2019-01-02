@@ -3,12 +3,12 @@
 #include <iostream>
 #include <sstream>
 
-std::vector<std::string> Phi::Utils::split(const std::string* string, char delimiter) {
-    std::vector<std::string> returnValue;
+std::vector<String> Phi::Utils::split(const String* string, char delimiter) {
+    std::vector<String> returnValue;
     std::stringstream ss;
     ss.str(*string);
 
-    std::string item;
+    String item;
     while (std::getline(ss, item, delimiter)) {
         returnValue.push_back(item);
     }

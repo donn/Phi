@@ -15,7 +15,7 @@
 #include <fstream>
 #include <exception>
 
-void Phi::Parser::error(Location const& loc, const std::string& string) {
+void Phi::Parser::error(Location const& loc, const String& string) {
     context->errorList.push_back({loc, string});
 }
 
@@ -27,9 +27,9 @@ void Phi::Context::printErrors() {
             auto loc = error.loc;
             auto message = error.message;
 
-            std::string highlight = "";
+            String highlight = "";
             if (loc.end.column > loc.begin.column) {
-                highlight = std::string(loc.end.column - loc.begin.column - 1, '~');
+                highlight = String(loc.end.column - loc.begin.column - 1, '~');
             }
 
             std::cout << loc.begin.filename << std::endl;
@@ -45,7 +45,7 @@ void Phi::Context::printErrors() {
     }
 }
 
-std::string Phi::Context::setFile(std::string currentFile)  {
+String Phi::Context::setFile(String currentFile)  {
     files.push_back(currentFile);
 
     auto file = std::ifstream(currentFile);
