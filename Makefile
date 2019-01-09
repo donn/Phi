@@ -20,8 +20,8 @@ SOURCES =
 HEADERS =
 
 CPP_LY_SOURCES = $(YACC_OUT) $(LEX_OUT)
-CPP_SOURCES = $(shell find Sources -mindepth 1 -maxdepth 1)
-CPP_HEADERS = $(shell find Headers -mindepth 1 -maxdepth 1) $(BUILD_DIR)/git_version.h  $(LEX_HEADER)
+CPP_SOURCES = $(shell find Sources -name *.cpp)
+CPP_HEADERS = $(shell find Headers -name *.h) $(BUILD_DIR)/git_version.h  $(LEX_HEADER)
 
 LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -mindepth 1 -maxdepth 1)) $(addprefix -I, $(shell find Submodules -name include))
 LIBRARY_SOURCES = 

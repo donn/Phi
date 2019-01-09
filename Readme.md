@@ -8,24 +8,24 @@ It is our goal to design a well-defined language with:
 
 One that is unsurprising to newcomers yet one that is close enough to Verilog to not be as shocking to veteran engineers as languages such as MyHDL and Scala.
 
-# Dependencies and dependency guidelines
+# Dependencies
 Building Phi requires:
 
 * Git
 * A POSIX-compliant system
 * A C++17 compiler that supports **standard** C++17
-    * No GCC or Clang specific extensions can be used.
+    * No GCC or Clang specific extensions are used. Any used by accident are a bug we are interested in fixing.
 * GNU Flex
 * GNU Bison
 * Make
-* Ruby
-    * (For helper scripts)
+
+Some helper scripts are written in Ruby.
 
 ## Usage
-### General: After Cloning
+### All: After Cloning
 Run `git submodule update --init --recursive`.
 
-We use open source libraries for various functions, and they're all submoduled.
+We use open source libraries for various functions, and they're all imported using git submodule.
 
 ### macOS
 Install Xcode from the App Store.

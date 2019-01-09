@@ -4,7 +4,7 @@
 
 *description*:
 * *declaration* *description*
-* **namespace** *identifier* **{** *description* **}**
+* **namespace** *identifier* **{** *description* **}** *description*
 * ε
 
 *declaration*:
@@ -19,16 +19,12 @@
 * ε
 
 *populated-port-declaration-list*:
-* *identifier* **:** *expression* **,** *populated-port-declaration-list*
-* *identifier* **:** *expression*
-
-*port-declaration*:
-* *port-polarity*
-* *annotation* *port-polarity*
+* *identifier* **:** *optional-annotation* *port-polarity* *optional-bus-declaration* **,** *populated-port-declaration-list*
+* *identifier* **:** *optional-annotation* *port-polarity* *optional-bus-declaration*
 
 *port-polarity*:
-* **Input** *optional-array-subscript*
-* **Output** *optional-array-subscript*
+* **Input**
+* **Output**
 
 ## Templating
 *template-declaration*:
@@ -61,7 +57,7 @@
 * *if*
 * **for** *identifer* **in** *range* *block*
 * **namespace** *identifier* *block*
-* **switch** *expression* *switch-block*
+* **switch** *expression* **{** *labeled-statement-list* **}**
 * **comb** *block*
 
 *if*:
@@ -71,9 +67,6 @@
 * **else** *if*
 * **else** *block*
 * ε
-
-*switch-block*:
-* **{** *labeled-statement-list* **}**
 
 *labeled-statement-list*:
 * **case** *expression* **:** *statement_list* *labeled_statement_list*
@@ -90,7 +83,7 @@
 ## Subdeclarations
 *subdeclaration*:
 * *dynamic-width* *optional-bus-declaration* *declaration-list*
-* *probable-template* *identifier* *ports*
+* *expression* *optional-template* *identifier* *ports*
 
 *dynamic-width*:
 * **Var**
@@ -117,9 +110,10 @@
 * **=** *expression*
 * ε
 
-*probable-template*:
-* *expression*
-* *expression* **<** *template-list* **>**
+*optional-template*:
+* **<** *template-list* **>**
+* ε
+
 
 *template-list*:
 * *identifier* **:** **(** *expression* **)** **,** *template-list*
