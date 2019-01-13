@@ -17,14 +17,6 @@ namespace Phi {
         String message;
     };
 
-    enum class ExpType {
-        CompileTime = 0,
-        ParameterSensitive,
-        RunTime,
-
-        Undefined = 0xFF
-    };
-
     class Context {
         String executableName;
     public:

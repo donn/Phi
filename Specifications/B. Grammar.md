@@ -98,10 +98,6 @@
 * **[** *expression* **]**
 * ε
 
-*optional-ports*:
-* *ports*
-* ε
-
 *declaration-list*:
 * *identifier* *optional-array-declaration* *optional-assignment* **,** *declaration-list*
 * *identifier* *optional-array-declaration* *optional-assignment*
@@ -114,10 +110,13 @@
 * **<** *template-list* **>**
 * ε
 
-
 *template-list*:
 * *identifier* **:** **(** *expression* **)** **,** *template-list*
 * *identifier* **:** **(** *expression* **)**
+* ε
+
+*optional-ports*:
+* *ports*
 * ε
 
 *ports*:
@@ -175,17 +174,14 @@
 * **|** *expression*
 * **~** *expression*
 * *expression* **.** *expression*
-* *expression* *subscript*
+* *expression* **[** *range* **]**
+* *expression* **[** *expression* **]**
 * **[** *concatenation* **]**
 * **mux** *expression* *mux-block*
 * **$** *identifier* **(** *procedural-call* **)**
 * **(** *expression* **)**
 * *identifier*
 * *number*
-
-* *subscript*:
-* **[** *range* **]**
-* **[** *expression* **]**
 
 *range*:
 * *expression* **..** *expression*
@@ -205,7 +201,7 @@
 
 *concatenatable*:
 * *expression*
-* *expression* **[[** *expression* *]* *]*
+* *expression* **[[** *expression* **]** **]**
 
 *procedural-call*:
 * *procedural-call-list*

@@ -99,12 +99,6 @@
 (Output) {
     return token::KEYWORD_OUTPUT;
 }
-(posedge) {
-    return token::KEYWORD_POSEDGE;
-}
-(negedge) {
-    return token::KEYWORD_NEGEDGE;
-}
 
 \@[_A-Za-z][_A-Za-z0-9]* {
     yylval->text = strdup(yytext);

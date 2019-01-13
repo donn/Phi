@@ -16,6 +16,8 @@ namespace Phi {
             virtual Node* traverse() {
                 return NULL;
             }
+            Node() {}
+            Node(Node* right): right(right) {}
             virtual ~Node() {}
         };
 
@@ -62,11 +64,6 @@ namespace Phi {
             Statement* contents;
 
             TopLevelDeclaration(String name, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(name), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
-        };
-
-        struct InstanceDeclaration: public Declaration {
-            Expression* array;
-            Expression* moduleName;
         };
 
         // Templating
@@ -153,24 +150,123 @@ namespace Phi {
 
         };
 
+        struct ExpressionIDPair;
+        struct InstanceDeclaration: public Declaration {
+            Expression* module;
+            ExpressionIDPair* parameters;
+
+            Expression* array;
+            ExpressionIDPair* ports;
+
+            InstanceDeclaration(const char* name, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(name), module(module), parameters(parameters), array(array), ports(ports) {}
+        };
+
+        struct ExpressionIDPair: Declaration {
+            Expression* expression;
+
+            ExpressionIDPair(const char* name, Expression* expression): Declaration(name), expression(expression) {}
+        };
 
         // Nondeclarative Statements
         struct Nondeclarative: public Statement {
+            Expression* lhs;
 
+            Nondeclarative(Expression* lhs): lhs(lhs) {}
+        };
+        struct NondeclarativeAssignment: public Nondeclarative {
+            Expression* expression;
+
+            NondeclarativeAssignment(Expression* lhs, Expression* expression): Nondeclarative(lhs), expression(expression) {}
+        };
+        struct NondeclarativePorts: public Nondeclarative {
+            ExpressionIDPair* ports;
+
+            NondeclarativePorts(Expression* lhs, ExpressionIDPair* ports): Nondeclarative(lhs), ports(ports) {}
         };
 
         // Expression
         struct Expression: public Node {
-            ExpType expType;
-            String operation;
+            enum class Type {
+                CompileTime = 0,
+                ParameterSensitive,
+                RunTime,
 
-            virtual Node* traverse() override;
+                Undefined = 0xFF
+            };
+            Type type = Type::Undefined;
+        };
 
-            Width width;
+        struct Literal: public Expression {
             String literal;
+            String width;
 
-            Expression(String operation, Node* left, Node* right);
-            Expression(String numericInterpretable);
+            Literal(String interpretable);
+        };
+
+        struct Unary: public Expression {
+            enum class Operation {
+                negate = 0,
+                bitwiseNot,
+                allAnd,
+                allOr
+            };
+            Operation operation;
+            Unary(Operation operation, Expression* right): operation(operation) { this->right = right; }
+        };
+
+        struct Binary: public Expression {
+            enum class Operation {
+                equal = 0,
+                notEqual,
+                greaterThan,
+                lessThan,
+                greaterThanOrEqual,
+                lessThanOrEqual,
+                unsignedLessThan,
+                unsignedGreaterThan,
+                unsignedLessThanOrEqual,
+                unsignedGreaterThanOrEqual,
+
+                plus,
+                minus,
+                unsignedPlus,
+                unsignedMinus,
+
+                mul,
+                div,
+                modulo,
+
+                bitwiseOr,
+                bitwiseAnd,
+                bitwiseXor,
+
+                shiftLeftLogical,
+                shiftRightLogical,
+                shiftRightArithmetic
+            };
+            Operation operation;
+
+            Binary(Expression* left,  Operation operation, Expression* right): operation(operation) {
+                this->left = left; this->right = right;
+            }
+        };
+
+        struct Ternary: public Expression {
+            Expression* condition;
+
+            Ternary(Expression* condition, Expression* left, Expression* right): condition(condition) {
+                this->left = left; this->right = right;
+            }
+        };
+
+        struct PropertyAccess: public Expression {
+        };
+
+        struct ArrayAccess: public Expression {
+        };
+
+        struct Range: public Node {
+            
         };
     }
 }

@@ -6,10 +6,8 @@
 using namespace Phi::Node;
 
 // Number
-Expression::Expression(String interpretable) {
-    left = NULL;
-    right = NULL;
-    expType = ExpType::RunTime;
+Literal::Literal(String interpretable) {
+    type = Type::CompileTime;
     
     auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9zx]+)");
     auto match = std::smatch();
@@ -43,8 +41,3 @@ Expression::Expression(String interpretable) {
     }
     literal = match[3];
 }
-
-Node* Expression::traverse() {
-    return nullptr;
-}
-
