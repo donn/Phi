@@ -37,7 +37,7 @@ BINARY = phi
 # Products
 
 all: CPP_FLAGS += -g -D_DEBUG -DYYDEBUG=1
-all: CPP_LY_FLAGS += -DYYDEBUG=1
+all: CPP_LY_FLAGS += -g -DYYDEBUG=1
 all: C_FLAGS += -g -D_DEBUG 
 all: $(BINARY)
 

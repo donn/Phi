@@ -40,6 +40,7 @@
 %union {
     char* text;
     struct Node* node;
+    struct Expression* expr;
     bool bin;
     VariableLengthDeclaration::Type vldt;
 }
@@ -106,8 +107,9 @@
 
 %type<vldt> dynamic_width
 
-// Silly conversion
-%type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list optional_template_assignment inheritance inheritance_list statement block_based if else  labeled_statement_list block statement_list subdeclaration  optional_bus_declaration optional_array_declaration optional_ports declaration_list optional_assignment optional_template template_list ports port_list nondeclarative_statement expression range mux_block labeled_expression_list concatenation concatenatable procedural_call procedural_call_list 
+%type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list   statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list 
+
+%type<expr> expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -143,16 +145,16 @@ description:
 
 declaration:
     KEYWORD_MODULE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance block  {
-        $$ = new TopLevelDeclaration($2, TopLevelDeclaration::Type::module, (Port*)$5, (Expression*)$7, (Statement*)$8);
+        $$ = new TopLevelDeclaration($2, TopLevelDeclaration::Type::module, (Port*)$5, $7, (Statement*)$8);
     }
     | KEYWORD_MODULE error '}' {
-        $$ = epsilon;
+        $$ = new ErrorNode();
     }
     | KEYWORD_INTERFACE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance ';' {
-        $$ = new TopLevelDeclaration($2, TopLevelDeclaration::Type::interface, (Port*)$5, (Expression*)$7);
+        $$ = new TopLevelDeclaration($2, TopLevelDeclaration::Type::interface, (Port*)$5, $7);
     }
     | KEYWORD_INTERFACE error ';' {
-        $$ = epsilon;
+        $$ = new ErrorNode();
     }
     ;
 
@@ -191,12 +193,12 @@ template_declaration:
     ;
 template_declaration_list:
     IDENTIFIER optional_template_assignment template_declaration_list {
-        auto node = new TemplateDeclaration($1, (Expression*)$2);
-        node->assignment = (Expression*)$3;
+        auto node = new TemplateDeclaration($1, $2);
+        node->right = $3;
         $$ = node;
     }
     | IDENTIFIER optional_template_assignment {
-        $$ = new TemplateDeclaration($1, (Expression*)$2);
+        $$ = new TemplateDeclaration($1, $2);
     }
     ;
 optional_template_assignment:
@@ -269,18 +271,18 @@ block_based:
         $$ = new Namespace((Statement*)$3, $2);
     }
     | KEYWORD_SWITCH expression '{' labeled_statement_list '}' {
-        $$ = new Switch((Expression*)$2, (LabeledStatementList*)$4);
+        $$ = new Switch($2, (LabeledStatementList*)$4);
     }
     | KEYWORD_COMB block {
         $$ = new Combinational((Statement*)$2);
     }
     | error '}' {
-        $$ = epsilon;
+        $$ = new ErrorNode();
     }
     ;
 if:
     KEYWORD_IF expression block else {
-        $$ = new If((Statement*)$3, (Expression*)$2, (If*)$4);
+        $$ = new If((Statement*)$3, $2, (If*)$4);
     }
     ;
 
@@ -297,7 +299,7 @@ else:
 labeled_statement_list:
     { $$ = epsilon; }
     | KEYWORD_CASE expression ':' statement_list labeled_statement_list {
-        auto node = new LabeledStatementList(false, (Expression*)$2, (Statement*)$4);
+        auto node = new LabeledStatementList(false, $2, (Statement*)$4);
         node->right = $5;
         $$ = node;
     }
@@ -315,9 +317,13 @@ block:
 statement_list:
     { $$ = epsilon; }
     | statement_list statement {
-        auto node = $1;
-        $1->right = $2;
-        $$ = $1;
+        if ($1) {
+            auto node = $1;
+            node->right = $2;
+            $$ = $1;
+        } else {
+            $$ = $2;
+        }
     }
     ;
 
@@ -327,7 +333,7 @@ subdeclaration:
         $$ = VariableLengthDeclaration::flattenedList($1, (Range*)$2, (DeclarationListItem*)$3);
     }
     | expression optional_template IDENTIFIER optional_array_declaration optional_ports {
-        $$ = new InstanceDeclaration($3, (Expression*)$1, (ExpressionIDPair*)$2, (Expression*)$4, (ExpressionIDPair*)$5);
+        $$ = new InstanceDeclaration($3, $1, (ExpressionIDPair*)$2, $4, (ExpressionIDPair*)$5);
     }
     ;
 
@@ -361,12 +367,12 @@ optional_array_declaration:
     
 declaration_list:
     IDENTIFIER optional_array_declaration optional_assignment ',' declaration_list {
-        auto node = new DeclarationListItem($1, (Expression*)$2, (Expression*)$3);
+        auto node = new DeclarationListItem($1, $2, $3);
         node->right = $5;
         $$ = node;
     }
     | IDENTIFIER optional_array_declaration optional_assignment {
-        $$ = new DeclarationListItem($1, (Expression*)$2, (Expression*)$3);
+        $$ = new DeclarationListItem($1, $2, $3);
     }
     ;
 optional_assignment:
@@ -385,12 +391,12 @@ optional_template:
 template_list:
     { $$ = epsilon; }
     | IDENTIFIER ':' '(' expression ')' ',' template_list {
-        auto node = new ExpressionIDPair($1, (Expression*)$4);
+        auto node = new ExpressionIDPair($1, $4);
         node->right = $7;
         $$ = node;
     }
     | IDENTIFIER ':' '(' expression ')' {
-        $$ = new ExpressionIDPair($1, (Expression*)$4);
+        $$ = new ExpressionIDPair($1, $4);
     }
     ;
 
@@ -412,12 +418,12 @@ ports:
 
 port_list:
     IDENTIFIER ':' expression ',' port_list {
-        auto node = new ExpressionIDPair($1, (Expression*)$3);
+        auto node = new ExpressionIDPair($1, $3);
         node->right = $5;
         $$ = node;
     }
     | IDENTIFIER ':' expression {
-        $$ = new ExpressionIDPair($1, (Expression*)$3);
+        $$ = new ExpressionIDPair($1, $3);
     }
     ;
 
@@ -425,10 +431,10 @@ port_list:
     
 nondeclarative_statement:
     expression '=' expression {
-        $$ = new NondeclarativeAssignment((Expression*)$1, (Expression*)$3);
+        $$ = new NondeclarativeAssignment($1, $3);
     }
     | expression ports {
-        $$ = new NondeclarativePorts((Expression*)$1, (ExpressionIDPair*)$2);
+        $$ = new NondeclarativePorts($1, (ExpressionIDPair*)$2);
     }
     ;
 
@@ -436,181 +442,186 @@ nondeclarative_statement:
 
 expression:
     expression '?' expression ':' expression {
-        $$ = new Ternary((Expression*)$1, (Expression*)$3, (Expression*)$5);
+        $$ = new Ternary($1, $3, $5);
     }
     | expression OP_EQ expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::equal, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::equal, $3);
     }
     | expression OP_NEQ expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::notEqual, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::notEqual, $3);
     }
     | expression '>' expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::greaterThan, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::greaterThan, $3);
     }
     | expression '<' expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::lessThan, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::lessThan, $3);
     }
     | expression OP_GTE expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::greaterThanOrEqual, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::greaterThanOrEqual, $3);
     }
     | expression OP_LTE expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::lessThanOrEqual, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::lessThanOrEqual, $3);
     }
     | expression OP_UNSIGNED_LT expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::unsignedLessThan, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::unsignedLessThan, $3);
     }
     | expression OP_UNSIGNED_GT  expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::unsignedGreaterThan, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::unsignedGreaterThan, $3);
     } 
     | expression OP_UNSIGNED_LTE expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::unsignedLessThanOrEqual, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::unsignedLessThanOrEqual, $3);
     }
     | expression OP_UNSIGNED_GTE expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::unsignedGreaterThanOrEqual, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::unsignedGreaterThanOrEqual, $3);
     }
     | expression '+' expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::plus, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::plus, $3);
     }
     | expression '-' expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::minus, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::minus, $3);
     }
     | expression OP_UNSIGNED_ADD expression{
-        $$ = new Binary((Expression*)$1, Binary::Operation::unsignedPlus, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::unsignedPlus, $3);
     }
     | expression OP_UNSIGNED_SUB expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::unsignedMinus, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::unsignedMinus, $3);
     }
     | expression '|' expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::bitwiseOr, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::bitwiseOr, $3);
     }
     | expression '&' expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::bitwiseAnd, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::bitwiseAnd, $3);
     }
     | expression '^' expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::bitwiseXor, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::bitwiseXor, $3);
     }
     | expression '*' expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::mul, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::mul, $3);
     }
     | expression '/' expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::div, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::div, $3);
     }
     | expression '%' expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::modulo, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::modulo, $3);
     }
     | expression OP_SLL expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::shiftLeftLogical, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::shiftLeftLogical, $3);
     }
     | expression OP_SRL expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::shiftRightLogical, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::shiftRightLogical, $3);
     }
     | expression OP_SRA expression {
-        $$ = new Binary((Expression*)$1, Binary::Operation::shiftRightArithmetic, (Expression*)$3);
+        $$ = new Binary($1, Binary::Operation::shiftRightArithmetic, $3);
     }
     | '-' expression %prec UNARY {
-        $$ = new Unary(Unary::Operation::negate, (Expression*)$2);
+        $$ = new Unary(Unary::Operation::negate, $2);
     }
     | '&' expression %prec UNARY {
-        $$ = new Unary(Unary::Operation::allAnd, (Expression*)$2);
+        $$ = new Unary(Unary::Operation::allAnd, $2);
     }
     | '|' expression %prec UNARY {
-        $$ = new Unary(Unary::Operation::allOr, (Expression*)$2);
+        $$ = new Unary(Unary::Operation::allOr, $2);
     }
     | '~' expression %prec UNARY {
-        $$ = new Unary(Unary::Operation::bitwiseNot, (Expression*)$2);
+        $$ = new Unary(Unary::Operation::bitwiseNot, $2);
     }
     | expression '.' expression {
-        $$ = epsilon;
+        $$ = new PropertyAccess($1, $3);
     }
     | expression '[' range ']' {
-        $$ = epsilon;
+        $$ = new RangeAccess($1, (Range*)$3);
     }
     | expression '[' expression ']' {
-        $$ = epsilon;
+        $$ = new ArrayAccess($1, $3);;
     }
     | '[' concatenation ']' {
-        $$ = epsilon;
+        $$ = $2;
     }
     | '(' expression ')' {
-        $$ = epsilon;
+        $$ = $2;
     }
-    | '$' IDENTIFIER '(' procedural_call ')' {
-        $$ = epsilon;
+    | '$' expression '(' procedural_call ')' {
+        $$ = new ProceduralCall($2, (Argument*)$4);
     }
     | KEYWORD_MUX expression mux_block {
         $$ = epsilon;
     }
     | IDENTIFIER {
-        $$ = epsilon;
+        $$ = new Identifier($1);
     }
     | FW_NUMERIC {
-        $$ = epsilon;
+        $$ = new Literal($1, true);
     }
     | NUMERIC  {
-        $$ = epsilon;
+        $$ = new Literal($1, false);
     }
     ;
 
 range:
     expression OP_RANGE expression {
-        $$ = epsilon;
-    }
-    ;
-
-mux_block:
-    '{' labeled_expression_list '}' {
-        $$ = epsilon;
-    }
-    ;
-labeled_expression_list:
-    { $$ = epsilon; }
-    | expression ':' expression ',' labeled_expression_list {
-        $$ = epsilon;
-    }
-    | expression ':' expression {
-        $$ = epsilon;
-    }
-    | KEYWORD_DEFAULT ':' expression {
-        $$ = epsilon;
+        $$ = new Range($1, $3);
     }
     ;
 
 concatenation:
     concatenatable ',' concatenation {
-        $$ = epsilon;
+        $$ = new Concatenation($1, $3);
     }
     | concatenatable {
-        $$ = epsilon;
+        $$ = $1;
     }
     ;
 concatenatable:
     expression {
-        $$ = epsilon;
+        $$ = $1;
     }
     | expression LEFT_REPEAT_CAT expression ']' ']' {
-        $$ = epsilon;
+        $$ = new RepeatConcatenation($1, $3);
     }
     ;
 
-procedural_call: {
-        $$ = epsilon;
-    }
+procedural_call:
+    { $$ = epsilon; }
     | procedural_call_list {
-        $$ = epsilon;
+        $$ = $1;
     }
     ;
 procedural_call_list:
     expression ',' procedural_call_list {
-        $$ = epsilon;
+        auto node = new ExpressionArgument($1);
+        node->right = $3;
+        $$ = node;
     }
     | STRING ',' procedural_call_list {
-        $$ = epsilon;
+        auto node = new StringArgument($1);
+        node->right = $3;
+        $$ = node;
     }
     | expression {
-        $$ = epsilon;
+        $$ = new ExpressionArgument($1);
     }
     | STRING {
-        $$ = epsilon;
+        $$ = new StringArgument($1);
+    }
+    ;
+
+mux_block:
+    '(' labeled_expression_list ')' {
+        $$ = $2;
+    }
+    ;
+labeled_expression_list:
+    { $$ = epsilon; }
+    | expression ':' expression ',' labeled_expression_list {
+        auto node = new ExpressionPair($1, $3);
+        node->right = $5;
+        $$ = node;
+    }
+    | expression ':' expression {
+        $$ = new ExpressionPair($1, $3);;
+    }
+    | KEYWORD_DEFAULT ':' expression {
+        $$ = new ExpressionPair(nullptr, $3);;
     }
     ;
 

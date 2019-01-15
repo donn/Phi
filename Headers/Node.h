@@ -21,6 +21,8 @@ namespace Phi {
             virtual ~Node() {}
         };
 
+        struct ErrorNode: public Node {};
+
         // Declarations
         struct Expression; // Fwd Declaration
         struct Range; // Fwd Declaration
@@ -199,8 +201,15 @@ namespace Phi {
         struct Literal: public Expression {
             String literal;
             String width;
+            uint8 radix;
 
-            Literal(String interpretable);
+            Literal(const char* interpretable, bool widthIncluded = true);
+        };
+
+        struct Identifier: public Expression {
+            String identifier;
+
+            Identifier(const char* identifier): identifier(identifier) {}
         };
 
         struct Unary: public Expression {
@@ -259,14 +268,69 @@ namespace Phi {
             }
         };
 
-        struct PropertyAccess: public Expression {
+        struct Access: public Expression {};
+
+        struct PropertyAccess: public Access {
+            PropertyAccess(Expression* object, Expression* property) {
+                this->left = object; this->right = property;
+            }
         };
 
-        struct ArrayAccess: public Expression {
+        struct ArrayAccess: public Access {
+            ArrayAccess(Expression* object, Expression* width) {
+                this->left = object; this->right = width;
+            }
         };
-
+        
         struct Range: public Node {
-            
+            Range(Expression* from, Expression* to) {
+                this->left = from; this->right = to;
+            }
+        };
+        struct RangeAccess: public Access {
+            RangeAccess(Expression* object, Range* range) {
+                this->left = object; this->right = range;
+            }
+        };
+
+        struct RepeatConcatenation: public Expression {
+            RepeatConcatenation(Expression* repeatCount, Expression* repeatable) {
+                this->left = repeatCount; this->right = repeatable;
+            }
+        };
+
+        struct Concatenation: public Expression {
+            Concatenation(Expression* of, Expression* with) {
+                this->left = of; this->right = with;
+            }
+        };
+        
+        struct Argument: public Node {};
+
+        struct StringArgument: public Node {
+            String argument;
+            StringArgument(const char* argument): argument(argument) {}
+        };
+        
+        struct ExpressionArgument: public Node {
+            Expression* argument;
+            ExpressionArgument(Expression* argument): argument(argument) {}
+        };
+
+        struct ProceduralCall: public Expression {
+            ProceduralCall(Expression* function, Argument* argument) {
+                this->left = function; this->right = argument;
+            }
+        };
+
+        struct ExpressionPair: public Node {
+            Expression* label; // If NULL, default
+            Expression* result;
+            ExpressionPair(Expression* label, Expression* result): label(label), result(result) {}
+        };
+
+        struct Multiplexer: public Expression {
+            Multiplexer(Expression* selection, ExpressionPair* options) {}
         };
     }
 }

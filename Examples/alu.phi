@@ -20,7 +20,7 @@ namespace RiscBEE {
         srl = s >>> b[bits - 1..0];
         sra = s >> b[bits - 1..0];
 
-        result = mux operation {
+        result = mux operation (
             3b11x: shift,
             3b101: slt,
             3b100: ~a,
@@ -28,7 +28,7 @@ namespace RiscBEE {
             3b010: a | b,
             3b001: a & b,
             3b000: add
-        };
+        );
 
         output = result;
     }

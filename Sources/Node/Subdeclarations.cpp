@@ -7,19 +7,16 @@ using namespace Phi::Node;
 
 using VLD = Phi::Node::VariableLengthDeclaration;
 
-VLD* VLD::flattenedList(VLD::Type type, Range* bus, DeclarationListItem* list) {
+VLD* VLD::flattenedList(VLD::Type type, Range* bus, DeclarationListItem* item) {
     VLD vld("", VariableLengthDeclaration::Type::wire, nullptr, nullptr, nullptr);
 
     auto seeker = &vld;
-    while (list) {
-        auto current = list;
-
-        auto addition = new VLD(current->name, type, bus, current->array, current->optionalAssignment);
-
-        seeker->right = addition;
+    while (item) {
+        seeker->right = new VLD(item->name, type, bus, item->array, item->optionalAssignment);
         seeker = (VLD*)seeker->right;
 
-        list = (DeclarationListItem*)current->right;
+        auto current = item;
+        item = (DeclarationListItem*)current->right;
         delete current;
     }
 

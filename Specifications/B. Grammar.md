@@ -178,22 +178,14 @@
 * *expression* **[** *expression* **]**
 * **[** *concatenation* **]**
 * **mux** *expression* *mux-block*
-* **$** *identifier* **(** *procedural-call* **)**
+* **$** *expression* **(** *procedural-call* **)**
 * **(** *expression* **)**
 * *identifier*
-* *number*
+* *fixed-width-numeric*
+* *numeric*
 
 *range*:
 * *expression* **..** *expression*
-
-*mux-block*:
-* **{** *labeled-expression-list* **}**
-
-*labeled-expression-list*:
-* **case** *expression* **:** *expression* **,** *labeled-expression-list*
-* *expression* **:** *expression*
-* **default** **:** *expression*
-* ε
 
 *concatenation*:
 * *concatenable* **,** *concatenation*
@@ -213,6 +205,11 @@
 * *expression*
 * *string*
 
-*number*:
-* *decimal*
-* *state-digit*
+*mux-block*:
+* **(** *labeled-expression-list* **)**
+
+*labeled-expression-list*:
+* **case** *expression* **:** *expression* **,** *labeled-expression-list*
+* *expression* **:** *expression*
+* **default** **:** *expression*
+* ε
