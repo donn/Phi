@@ -15,7 +15,7 @@ Building Phi requires:
 * A POSIX-compliant system
 * A C++17 compiler that supports **standard** C++17
     * No GCC or Clang specific extensions are used. Any used by accident are a bug we are interested in fixing.
-* GNU Flex
+* [Genivia's RE-flex](https://github.com/Genivia/RE-flex)
 * GNU Bison
 * Make
 
@@ -30,22 +30,24 @@ We use open source libraries for various functions, and they're all imported usi
 ### macOS
 Install Xcode from the App Store.
 
-To get a newer version of Flex/Bison, install [Homebrew](https://brew.sh) and then...
+You need Re-Flex alongside a newer version of Bison, install [Homebrew](https://brew.sh) and then...
 
 ```bash
-    brew install flex bison
+    brew install re-flex bison
 ```
 
 You will need to add these to PATH, as brew won't.
 
 ### GNU/Linux
-Install git, gcc, make, flex and bison toolchain other using your software repository.
+Install git, gcc, make and bison toolchain other using your software repository.
+
+You will need to install Re-Flex **manually** from its repository.
 
 #### Debian-based OSes (incl. Ubuntu, elementary...)
 Use apt.
 
 ```bash
-    sudo apt-get install git gcc flex bison make ruby
+    sudo apt-get install git gcc bison make ruby
 ```
 
 ### Windows

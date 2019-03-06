@@ -4,3 +4,6 @@
 [submodule "Submodules/termcolor"]
 	path = Submodules/termcolor
 	url = https://github.com/ikalnytskyi/termcolor
+[submodule "Submodules/RE-flex"]
+	path = Submodules/RE-flex
+	url = https://github.com/Genivia/RE-flex

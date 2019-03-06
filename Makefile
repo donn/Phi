@@ -1,9 +1,22 @@
-export POSIXLY_CORRECT = 1
+#export POSIXLY_CORRECT = 1
 
 SOURCE_DIR = Sources
 BUILD_DIR = Intermediates
 GRAMMAR_DIR = Grammar
 HEADER_DIR = Headers
+
+REFLEX_DIR = Submodules/RE-flex
+REFLEX_UNICODE_SRC_DIR = $(REFLEX_DIR)/unicode
+REFLEX_LIB_SRC_DIR = $(REFLEX_DIR)/lib
+REFLEX_LIB_HEADER_DIR = $(REFLEX_DIR)/include
+
+REFLEX_LIB_SOURCES = $(shell find $(REFLEX_LIB_SRC_DIR) -name *.cpp)
+REFLEX_UNICODE_SOURCES = $(shell find $(REFLEX_UNICODE_SRC_DIR) -name *.cpp)
+
+REFLEX_LIB_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(REFLEX_LIB_SOURCES)))
+REFLEX_UNICODE_OBJECTS =  $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(REFLEX_UNICODE_SOURCES)))
+
+REFLEX_MESS = $(REFLEX_DIR)/src/reflex.cpp $(REFLEX_LIB_OBJECTS) $(REFLEX_UNICODE_OBJECTS)
 
 LEX = $(GRAMMAR_DIR)/phi.l
 YACC = $(GRAMMAR_DIR)/phi.yy
@@ -60,12 +73,24 @@ $(YACC_OUT): $(YACC)
 	mkdir -p $(@D)
 	bison $(YACC_FLAGS) -o $@ -d $^
 
-$(LEX_OUT): $(LEX) $(YACC_OUT)
+$(REFLEX_LIB_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(REFLEX_LIB_HEADER_DIR)
 	mkdir -p $(@D)
-	flex --header-file=$(LEX_HEADER) -o $@ $<
+	c++ $(CPP_LY_FLAGS) -c -I$(REFLEX_LIB_HEADER_DIR) -o $@ $<
+
+$(REFLEX_UNICODE_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(REFLEX_LIB_HEADER_DIR)
+	mkdir -p $(@D)
+	c++ $(CPP_LY_FLAGS) -c -I$(REFLEX_LIB_HEADER_DIR) -o $@ $<
+
+Intermediates/reflex: $(REFLEX_MESS)
+	mkdir -p $(@D)
+	c++ $(CPP_LY_FLAGS) -I $(REFLEX_LIB_HEADER_DIR) -o $@ $^
+
+$(LEX_OUT): $(LEX) $(YACC_OUT) Intermediates/reflex
+	mkdir -p $(@D)
+	Intermediates/reflex --flex --bison --bison-locations -o $@ --header-file=$(LEX_HEADER) $<
 
 $(LEX_HEADER): $(LEX_OUT)
-	@echo "Header generated."
+	@echo "\033[1;32m>> Lex header generated.\033[0m"
 
 $(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS)
 	mkdir -p $(@D)
@@ -73,7 +98,7 @@ $(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS)
 
 $(CPP_LY_OBJECTS): %.o : %.cc $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 	mkdir -p $(@D)
-	c++ $(CPP_LY_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
+	c++ $(CPP_LY_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) -I /usr/local/include/ $(LIBRARY_HEADER_PATHS) -c -o $@ $<
 
 $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 	mkdir -p $(@D)

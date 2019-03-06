@@ -1,14 +1,16 @@
 %option noyywrap
+%top {
+    #include "phi.yy.hh"
+%}
 %{
     #include <cstdlib>
 
     #include "Context.h"
-    #include "phi.yy.hh"
 
     #define YY_DECL int yylex(Phi::Parser::semantic_type* yylval, \
     Phi::Parser::location_type* yylloc, Phi::Context* context)
 
-    # define YY_USER_ACTION  do { yylloc->columns(yyleng); } while (0);
+    //# define YY_USER_ACTION  do { yylloc->columns(yyleng); } while (0);
     
     int cCommentNesting = 0;
 
