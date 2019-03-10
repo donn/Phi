@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
         {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(); exit(0); }},
         {"version", 'V', "Show the current version of Phi.", false, [&](){ printVersion(); exit(0); }},
 #if YYDEBUG
-        {"trace", 'T', "Trace GNU Bison's operation. (Debug builds only.)", false, std::nullopt}
+        {"trace", 'T', "Trace GNU Bison's operation. (Debug builds only.)", false, nullopt}
 #endif
     });
     auto opts = getOpt.process(argc, argv);
@@ -76,20 +76,13 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    String input;
-    try {
-        input = context.setFile(filename);
-    } catch (std::exception& e) {
-        if (String(e.what()) == String("context.couldNotOpen")) {
-            return EX_NOINPUT;
-        } else {
-            std::cout << argv[0] << ": " << termcolor::bold << termcolor::red
-            << "error:" << termcolor::reset << "unknown" << e.what() << std::endl;
-            return -1;
-        }
+    optional<String> input = context.setFile(filename);
+    unless (input.has_value()) {
+        context.printErrors();
+        return EX_NOINPUT;
     }
 
-    yy_scan_string(input.c_str());
+    yy_scan_string(input.value().c_str());
 
     // Parse
     auto parser = Phi::Parser(&context);

@@ -1,5 +1,5 @@
 namespace RiscBEE {
-    module ALU<width>(
+    moldule ALU<width>(
         a: Input[width - 1..0],
         b: Input[width - 1..0],
         allPurposeSwitch: Input,

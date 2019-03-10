@@ -13,12 +13,13 @@ namespace Phi {
         struct Node {
             Node* left = nullptr;
             Node* right = nullptr;
-            virtual Node* traverse() {
-                return NULL;
-            }
+
             Node() {}
             Node(Node* right): right(right) {}
             virtual ~Node() {}
+
+            virtual Node* elaborate() { return nullptr; }
+            virtual bool semanticCheck() { return false; }
         };
 
         struct ErrorNode: public Node {};
@@ -38,7 +39,7 @@ namespace Phi {
             bool polarity; // polarity ? Input: Output
             Range* bus;
 
-            std::optional<String> annotation;
+            optional<String> annotation;
 
             Port(const char* name, bool polarity, Range* bus, const char* annotation): name(name), polarity(polarity), bus(bus) {
                 if (annotation) {
@@ -77,7 +78,7 @@ namespace Phi {
 
         // Statements
         struct Statement: public Node {
-            std::optional<String> annotation = std::nullopt;
+            optional<String> annotation = nullopt;
         };
 
         // Block-Based Statements
@@ -324,7 +325,7 @@ namespace Phi {
         };
 
         struct ExpressionPair: public Node {
-            Expression* label; // If NULL, default
+            Expression* label; // If nullptr, default
             Expression* result;
             ExpressionPair(Expression* label, Expression* result): label(label), result(result) {}
         };

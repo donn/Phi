@@ -25,9 +25,9 @@ namespace Phi {
         std::vector<Error> errorList;
         std::vector<String> files;
         std::vector<String> currentFileLines;
-        char* top = NULL;
+        char* top = nullptr;
 
-        String setFile(String currentFile);
+        optional<String> setFile(String currentFile);
         bool error();
         void printErrors();
 
