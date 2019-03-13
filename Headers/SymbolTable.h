@@ -4,44 +4,57 @@
 // CPP STL
 #include <map>
 #include <vector>
+#include <memory>
 
 // Project Headers
 #include "Types.h"
 #include "Context.h"
+#include "Utils.h"
 
-enum class SymbolType {
-    nspace = 0,
-    module
-};
+namespace Phi {
+    enum class SymbolType {
+        invalid = 0,
+        nspace,
+        module,
+        variable
+    };
 
-struct Symbol {
-    String id;
-    SymbolType type;
+    struct Symbol {
+        std::string id;
+        SymbolType type;
 
-    Symbol(String id, SymbolType type): id(id), type(type) {}
-};
+        Symbol(std::string id, SymbolType type): id(id), type(type) {}
+        Symbol(const Symbol& copyable): id(copyable.id), type(copyable.type) {} // Copy Constructor
 
-struct SymbolSpace: public Symbol {
-    std::map<String, Symbol> space;
+        virtual ~Symbol() = default;
+    };
 
-    SymbolSpace(String id, SymbolType type): Symbol(id, type) {
-        space = std::map<String, Symbol>();
-    }
-};
+    struct SymbolSpace: public Symbol {
+        std::map< std::string, std::shared_ptr<Symbol> > space;
 
-class SymbolTable {
-    SymbolSpace* head = nullptr;
-    std::vector<SymbolSpace*> stack;
+        SymbolSpace(std::string id, SymbolType type): Symbol(id, type) {
+            space = std::map<std::string, std::shared_ptr<Symbol> >();
+        }
+        SymbolSpace(const SymbolSpace& copyable): Symbol(copyable.id, copyable.type) { // Copy Constructor
+            space = copyable.space;
+        }
+    };
 
-public: 
-    SymbolTable();
-    ~SymbolTable();
+    class SymbolTable {
+        std::shared_ptr<SymbolSpace> head = nullptr;
+        std::vector< std::shared_ptr<SymbolSpace> > stack;
+
+    public: 
+        SymbolTable();
+        ~SymbolTable();
 
 
-    void add(Symbol symbol);
-    void checkExistence(std::vector<String> ids, SymbolType type);
-    void nestInto(SymbolSpace newSpace);
-    void nestOut();
+        void add(std::string id, SymbolType type, bool space = false);
+        void checkExistence(std::vector<std::string> ids, SymbolType type);
+        void nestInto(std::string id);
+        void nestIntoAndCreate(std::string id, SymbolType type);
+        void nestOut();
+    };
 };
 
 #endif

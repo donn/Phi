@@ -2,7 +2,6 @@
 #define _types_h
 
 #include <string>
-using String = std::string;
 
 #include <optional>
 using std::nullopt;

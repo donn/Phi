@@ -29,21 +29,21 @@ namespace Phi {
         struct Range; // Fwd Declaration
 
         struct Declaration: public Node {
-            String name;
+            std::string name;
 
-            Declaration(String name): name(name) {}
+            Declaration(std::string name): name(name) {}
         };
 
         struct Port: public Node {
-            String name;
+            std::string name;
             bool polarity; // polarity ? Input: Output
             Range* bus;
 
-            optional<String> annotation;
+            optional<std::string> annotation;
 
             Port(const char* name, bool polarity, Range* bus, const char* annotation): name(name), polarity(polarity), bus(bus) {
                 if (annotation) {
-                    this->annotation = String(annotation);
+                    this->annotation = std::string(annotation);
                 }
             }
         };
@@ -66,7 +66,7 @@ namespace Phi {
             Expression* inheritance;
             Statement* contents;
 
-            TopLevelDeclaration(String name, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(name), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
+            TopLevelDeclaration(std::string name, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(name), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
         };
 
         // Templating
@@ -78,7 +78,7 @@ namespace Phi {
 
         // Statements
         struct Statement: public Node {
-            optional<String> annotation = nullopt;
+            optional<std::string> annotation = nullopt;
         };
 
         // Block-Based Statements
@@ -97,13 +97,13 @@ namespace Phi {
 
         struct ForLoop: public BlockBased {
             Range* range;
-            String identifier;
+            std::string identifier;
 
             ForLoop(Statement* contents, Range* range, const char* identifier): BlockBased(contents), range(range), identifier(identifier) {}
         };
 
         struct Namespace: public BlockBased {
-            String identifier;
+            std::string identifier;
 
             Namespace(Statement* contents, const char* identifier): BlockBased(contents), identifier(identifier) {}
         };
@@ -142,7 +142,7 @@ namespace Phi {
 
             static VariableLengthDeclaration* flattenedList(Type type, Range* bus, DeclarationListItem* list);
 
-            VariableLengthDeclaration(String name, Type type, Range* bus, Expression* array, Expression* optionalAssignment): Declaration(name), type(type), bus(bus), array(array), optionalAssignment(optionalAssignment) {}
+            VariableLengthDeclaration(std::string name, Type type, Range* bus, Expression* array, Expression* optionalAssignment): Declaration(name), type(type), bus(bus), array(array), optionalAssignment(optionalAssignment) {}
         };
 
         struct DeclarationListItem: public Declaration { // TEMP: Flattened in VLD constructor!!
@@ -200,15 +200,15 @@ namespace Phi {
         };
 
         struct Literal: public Expression {
-            String literal;
-            String width;
+            std::string literal;
+            std::string width;
             uint8 radix;
 
             Literal(const char* interpretable, bool widthIncluded = true);
         };
 
         struct Identifier: public Expression {
-            String identifier;
+            std::string identifier;
 
             Identifier(const char* identifier): identifier(identifier) {}
         };
@@ -309,7 +309,7 @@ namespace Phi {
         struct Argument: public Node {};
 
         struct StringArgument: public Node {
-            String argument;
+            std::string argument;
             StringArgument(const char* argument): argument(argument) {}
         };
         

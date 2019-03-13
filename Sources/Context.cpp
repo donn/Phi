@@ -15,7 +15,7 @@
 #include <fstream>
 #include <exception>
 
-void Phi::Parser::error(Location const& loc, const String& string) {
+void Phi::Parser::error(Location const& loc, const std::string& string) {
     auto copy = string;
     if (copy == "syntax error") {
         copy = "parser.syntaxError";
@@ -32,9 +32,9 @@ void Phi::Context::printErrors() {
             auto loc = error.loc;
             auto message = error.message;
 
-            String highlight = "";
+            std::string highlight = "";
             if (loc.end.column > loc.begin.column) {
-                highlight = String(loc.end.column - loc.begin.column - 2, '~');
+                highlight = std::string(loc.end.column - loc.begin.column - 2, '~');
             }
 
             std::cerr << termcolor::bold << *loc.begin.filename;
@@ -53,7 +53,7 @@ void Phi::Context::printErrors() {
     }
 }
 
-optional<String> Phi::Context::setFile(String currentFile)  {
+optional<std::string> Phi::Context::setFile(std::string currentFile)  {
     files.push_back(currentFile);
 
     auto file = std::ifstream(currentFile);

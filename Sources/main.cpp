@@ -11,6 +11,7 @@
 #include "Context.h"
 #include "BSDExits.h"
 
+
 // Flex/Bison Headers
 #include <phi.l.hh>
 #include <phi.yy.hh>
@@ -19,12 +20,12 @@
 #include <StupidSimpleCPPOpts.h>
 #include <termcolor/termcolor.hpp>
 
-String versionString() {
-    String dev = "";
-    if (String(Phi::GIT_TAG) != String(Phi::GIT_VER_STRING)) {
+std::string versionString() {
+    std::string dev = "";
+    if (std::string(Phi::GIT_TAG) != std::string(Phi::GIT_VER_STRING)) {
         dev = "-dev";
     }
-    return String(Phi::GIT_TAG) + dev + " (" + Phi::GIT_VER_STRING + ")";
+    return std::string(Phi::GIT_TAG) + dev + " (" + Phi::GIT_VER_STRING + ")";
 }
 
 void printVersion() {
@@ -38,7 +39,7 @@ int main(int argc, char* argv[]) {
         {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(); exit(0); }},
         {"version", 'V', "Show the current version of Phi.", false, [&](){ printVersion(); exit(0); }},
 #if YYDEBUG
-        {"trace", 'T', "Trace GNU Bison's operation. (Debug builds only.)", false, nullopt}
+        {"trace", 'T', "Trace GNU Bison/Phi semantic analysis operation. (Debug builds only.)", false, nullopt}
 #endif
     });
     auto opts = getOpt.process(argc, argv);
@@ -60,7 +61,7 @@ int main(int argc, char* argv[]) {
 
     auto filename = arguments[0];
     auto extensionPosition = filename.rfind(".phi");
-    if (extensionPosition == String::npos) {
+    if (extensionPosition == std::string::npos) {
         std::cerr << "File must end with .phi." << std::endl;
         return EX_DATAERR;
     }
@@ -76,7 +77,7 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    optional<String> input = context.setFile(filename);
+    optional<std::string> input = context.setFile(filename);
     unless (input.has_value()) {
         context.printErrors();
         return EX_NOINPUT;

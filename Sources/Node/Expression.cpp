@@ -7,7 +7,7 @@ using namespace Phi::Node;
 
 // Number
 Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
-    String interpretable = String(interpretablePtr);
+    std::string interpretable = std::string(interpretablePtr);
 
     if (!widthIncluded) {
         width = 32;
@@ -25,7 +25,7 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
         }
 
         width = prospectiveWidth;
-        String radixCharacter = match[2];
+        std::string radixCharacter = match[2];
 
         switch(radixCharacter[0]) {
             case 'b':
