@@ -1,0 +1,10 @@
+namespace Alpha {
+    namespace Alpha {
+        namespace Alpha {
+            
+        }
+    }
+    module Beta(a: Input, b: Output) {
+    }
+    interface Theta(phi: Input, psi: Output);
+}

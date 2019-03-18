@@ -8,10 +8,13 @@
 
 // Project Headers
 #include "Types.h"
+#include "Node.h"
 
 using Location = Phi::location;
 
 namespace Phi {
+    class SymbolTable;
+
     struct Error {
         Location loc;
         std::string message;
@@ -25,11 +28,13 @@ namespace Phi {
         std::vector<Error> errorList;
         std::vector<std::string> files;
         std::vector<std::string> currentFileLines;
-        char* top = nullptr;
+        using Node = Phi::Node::Node;
+        Node* head = nullptr;
 
         optional<std::string> setFile(std::string currentFile);
         bool error();
         void printErrors();
+        void elaborate(SymbolTable* table);
 
 #if YYDEBUG
         int trace = 0;

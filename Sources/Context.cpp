@@ -76,3 +76,7 @@ optional<std::string> Phi::Context::setFile(std::string currentFile)  {
 bool Phi::Context::error() {
     return errorList.size() > 0;
 }
+
+void Phi::Context::elaborate(SymbolTable* table) {
+    head->elaborate(table);
+}

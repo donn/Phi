@@ -12,7 +12,7 @@ VLD* VLD::flattenedList(VLD::Type type, Range* bus, DeclarationListItem* item) {
 
     auto seeker = &vld;
     while (item) {
-        seeker->right = new VLD(item->name, type, bus, item->array, item->optionalAssignment);
+        seeker->right = new VLD(item->identifier, type, bus, item->array, item->optionalAssignment);
         seeker = (VLD*)seeker->right;
 
         auto current = item;

@@ -10,21 +10,14 @@
 #include "Types.h"
 #include "Context.h"
 #include "Utils.h"
+#include "Node.h"
 
 namespace Phi {
-    enum class SymbolType {
-        invalid = 0,
-        nspace,
-        module,
-        variable
-    };
-
     struct Symbol {
         std::string id;
-        SymbolType type;
+        Node::Node* attached;
 
-        Symbol(std::string id, SymbolType type): id(id), type(type) {}
-        Symbol(const Symbol& copyable): id(copyable.id), type(copyable.type) {} // Copy Constructor
+        Symbol(std::string id, Node::Node* attached): id(id), attached(attached) {}
 
         virtual ~Symbol() = default;
     };
@@ -32,12 +25,11 @@ namespace Phi {
     struct SymbolSpace: public Symbol {
         std::map< std::string, std::shared_ptr<Symbol> > space;
 
-        SymbolSpace(std::string id, SymbolType type): Symbol(id, type) {
+        SymbolSpace(std::string id, Node::Node* attached): Symbol(id, attached) {
             space = std::map<std::string, std::shared_ptr<Symbol> >();
         }
-        SymbolSpace(const SymbolSpace& copyable): Symbol(copyable.id, copyable.type) { // Copy Constructor
-            space = copyable.space;
-        }
+
+        void represent(std::ostream* stream, int nesting = 1);
     };
 
     class SymbolTable {
@@ -49,11 +41,13 @@ namespace Phi {
         ~SymbolTable();
 
 
-        void add(std::string id, SymbolType type, bool space = false);
-        void checkExistence(std::vector<std::string> ids, SymbolType type);
-        void nestInto(std::string id);
-        void nestIntoAndCreate(std::string id, SymbolType type);
-        void nestOut();
+        void add(std::string id, Node::Node* attached, bool space = false);
+        std::shared_ptr<Symbol>  checkExistence(std::vector<std::string> ids, Node::Node* attached);
+        void stepInto(std::string id);
+        void stepIntoAndCreate(std::string id, Node::Node* attached);
+        void stepOut();
+
+        void represent(std::ostream* stream);
     };
 };
 

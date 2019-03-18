@@ -135,11 +135,13 @@ description:
         auto node = $1;
         node->right = $2;
         $$ = node;
+        context->head = node;
     }
     | KEYWORD_NAMESPACE IDENTIFIER '{' description '}' description {
         auto node = new TopLevelNamespace($2, $4);
         node->right = $6;
         $$ = node;
+        context->head = node;
     }
     ;
 

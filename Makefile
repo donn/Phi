@@ -14,14 +14,14 @@ YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cc,$(YACC)))
 YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
 CPP_LY_FLAGS = -Wno-deprecated-register -std=c++17
-CPP_FLAGS = -Wall -pedantic -std=c++17
+CPP_FLAGS = -Wall -pedantic -std=c++17 $(CPPFLAGS)
 
 SOURCES = 
 HEADERS =
 
 CPP_LY_SOURCES = $(YACC_OUT) $(LEX_OUT)
-CPP_SOURCES = $(shell find Sources -name *.cpp)
-CPP_HEADERS = $(shell find Headers -name *.h) $(BUILD_DIR)/git_version.h  $(LEX_HEADER)
+CPP_SOURCES = $(shell find Sources | grep .cpp)
+CPP_HEADERS = $(shell find Headers | grep .h) $(BUILD_DIR)/git_version.h  $(LEX_HEADER)
 
 LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -mindepth 1 -maxdepth 1)) $(addprefix -I, $(shell find Submodules -name include))
 LIBRARY_SOURCES = 
@@ -31,6 +31,8 @@ OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(SOURCES))) $(addprefix
 
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
 CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_LIBRARY_SOURCES)))
+
+LD_FLAGS = $(LDFLAGS) -lllvm
 
 BINARY = phi
 
@@ -65,7 +67,7 @@ $(LEX_OUT): $(LEX) $(YACC_OUT)
 	flex --header-file=$(LEX_HEADER) -o $@ $<
 
 $(LEX_HEADER): $(LEX_OUT)
-	@echo "Header generated."
+	@echo "Lex header generated."
 
 $(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS)
 	mkdir -p $(@D)
@@ -81,8 +83,7 @@ $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS)
 	mkdir -p $(@D)
-	echo $(CPP_LY_OBJECTS)
-	c++ -o $@ $^
+	c++ $(LDFLAGS) -o $@ $^
 	@echo "\033[1;32m>> Build complete.\033[0m"
 
 .PHONY: clean

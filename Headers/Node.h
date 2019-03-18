@@ -1,11 +1,21 @@
 #ifndef _node_h
 #define _node_h
-
 // Project Headers
 #include "Types.h"
-#include "Context.h"
+
+#include <llvm/ADT/APInt.h>
+#include <llvm/ADT/StringRef.h>
+
+// Elaboration Macros
+#define MACRO_ELAB_PARAMS SymbolTable* table, Context* context
+#define MACRO_ELAB_SIG_HDR virtual void elaborate (MACRO_ELAB_PARAMS)
+#define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
 
 namespace Phi {
+    // Forward declarations
+    class SymbolTable;
+    class Context;
+
     namespace Node {
         using Width = uint16;
         static const Width maxWidth = UINT16_MAX;
@@ -18,9 +28,15 @@ namespace Phi {
             Node(Node* right): right(right) {}
             virtual ~Node() {}
 
-            virtual Node* elaborate() { return nullptr; }
+            MACRO_ELAB_SIG_HDR {}
             virtual bool semanticCheck() { return false; }
         };
+
+        inline void tryElaborate(Node* node, MACRO_ELAB_PARAMS) {
+            if (node) {
+                node->elaborate(table, context);
+            }
+        }
 
         struct ErrorNode: public Node {};
 
@@ -28,30 +44,34 @@ namespace Phi {
         struct Expression; // Fwd Declaration
         struct Range; // Fwd Declaration
 
-        struct Declaration: public Node {
-            std::string name;
-
-            Declaration(std::string name): name(name) {}
-        };
-
         struct Port: public Node {
-            std::string name;
+            std::string identifier;
             bool polarity; // polarity ? Input: Output
             Range* bus;
 
             optional<std::string> annotation;
 
-            Port(const char* name, bool polarity, Range* bus, const char* annotation): name(name), polarity(polarity), bus(bus) {
+            Port(const char* identifier, bool polarity, Range* bus, const char* annotation): identifier(identifier), polarity(polarity), bus(bus) {
                 if (annotation) {
                     this->annotation = std::string(annotation);
                 }
             }
+
+            MACRO_ELAB_SIG_HDR;
+        };
+
+        struct Declaration: public Node {
+            std::string identifier;
+
+            Declaration(std::string identifier): identifier(identifier) {}
         };
 
         struct TopLevelNamespace: public Declaration {
             Node* contents;
 
-            TopLevelNamespace(const char* name, Node* contents): Declaration(name), contents(contents) {}
+            TopLevelNamespace(const char* identifier, Node* contents): Declaration(identifier), contents(contents) {}
+            
+            MACRO_ELAB_SIG_HDR;
         };
 
         struct Statement;
@@ -66,14 +86,16 @@ namespace Phi {
             Expression* inheritance;
             Statement* contents;
 
-            TopLevelDeclaration(std::string name, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(name), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
+            TopLevelDeclaration(std::string identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
+            
+            MACRO_ELAB_SIG_HDR;
         };
 
         // Templating
         struct TemplateDeclaration: public Declaration {
             Expression* assignment;
 
-            TemplateDeclaration(const char* name, Expression* assignment): Declaration(name) {}
+            TemplateDeclaration(const char* identifier, Expression* assignment): Declaration(identifier) {}
         };
 
         // Statements
@@ -93,6 +115,7 @@ namespace Phi {
             If* elseBlock;
 
             If(Statement* contents, Expression* expression, If* elseBlock): BlockBased(contents), expression(expression), elseBlock(elseBlock) {}
+            MACRO_ELAB_SIG_HDR;
         };
 
         struct ForLoop: public BlockBased {
@@ -106,6 +129,8 @@ namespace Phi {
             std::string identifier;
 
             Namespace(Statement* contents, const char* identifier): BlockBased(contents), identifier(identifier) {}
+
+            MACRO_ELAB_SIG_HDR;
         };
 
         struct LabeledStatementList;
@@ -142,14 +167,14 @@ namespace Phi {
 
             static VariableLengthDeclaration* flattenedList(Type type, Range* bus, DeclarationListItem* list);
 
-            VariableLengthDeclaration(std::string name, Type type, Range* bus, Expression* array, Expression* optionalAssignment): Declaration(name), type(type), bus(bus), array(array), optionalAssignment(optionalAssignment) {}
+            VariableLengthDeclaration(std::string identifier, Type type, Range* bus, Expression* array, Expression* optionalAssignment): Declaration(identifier), type(type), bus(bus), array(array), optionalAssignment(optionalAssignment) {}
         };
 
         struct DeclarationListItem: public Declaration { // TEMP: Flattened in VLD constructor!!
             Expression* array;
             Expression* optionalAssignment;
 
-            DeclarationListItem(const char* name, Expression* array, Expression* optionalAssignment): Declaration(name), array(array), optionalAssignment(optionalAssignment) {}
+            DeclarationListItem(const char* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
 
         };
 
@@ -161,13 +186,13 @@ namespace Phi {
             Expression* array;
             ExpressionIDPair* ports;
 
-            InstanceDeclaration(const char* name, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(name), module(module), parameters(parameters), array(array), ports(ports) {}
+            InstanceDeclaration(const char* identifier, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
         };
 
         struct ExpressionIDPair: Declaration {
             Expression* expression;
 
-            ExpressionIDPair(const char* name, Expression* expression): Declaration(name), expression(expression) {}
+            ExpressionIDPair(const char* identifier, Expression* expression): Declaration(identifier), expression(expression) {}
         };
 
         // Nondeclarative Statements
@@ -197,12 +222,12 @@ namespace Phi {
                 Undefined = 0xFF
             };
             Type type = Type::Undefined;
+
+            std::optional<llvm::APInt> value = std::nullopt;
         };
 
         struct Literal: public Expression {
-            std::string literal;
-            std::string width;
-            uint8 radix;
+            llvm::APInt integer;
 
             Literal(const char* interpretable, bool widthIncluded = true);
         };
