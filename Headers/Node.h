@@ -361,12 +361,16 @@ namespace Phi {
             RepeatConcatenation(Expression* repeatCount, Expression* repeatable) {
                 this->left = repeatCount; this->right = repeatable;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Concatenation: public Expression {
             Concatenation(Expression* of, Expression* with) {
                 this->left = of; this->right = with;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
         
         struct Argument: public Node {};
