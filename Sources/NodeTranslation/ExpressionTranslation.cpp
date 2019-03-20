@@ -42,10 +42,10 @@ void Unary::translate (std::ofstream* stream){
 
 void Binary::translate (std::ofstream* stream){
 
-// note:
-//     $Signed in :
-//     1- signed shift: shiftRightArithmetic
-//     2- signed comparsions: greaterThan, lessThan, greaterThanOrEqual, lessThanOrEqual
+    // note:
+    //     $Signed in :
+    //     1- signed shift: shiftRightArithmetic
+    //     2- signed comparsions: greaterThan, lessThan, greaterThanOrEqual, lessThanOrEqual
 
     if( 
         (operation == Binary::Operation::shiftRightArithmetic) || 
@@ -139,4 +139,28 @@ void Ternary::translate (std::ofstream* stream){
      right->translate(stream);
      *stream << " ) ";
      *stream << " ; ";
+}
+
+void RepeatConcatenation::translate (std::ofstream* stream){
+    //example : {2{3'b110}}
+
+    *stream << "{ ";
+    left->translate(stream); //repeatCount
+
+    *stream << "{ ";
+    right->translate(stream); // repeatable
+    *stream << "}";
+
+    *stream << "}";
+}
+
+void Concatenation::translate (std::ofstream* stream){
+    //example: {2'b11, 4'h8}
+
+    *stream << "{ ";
+    left->translate(stream); 
+    *stream << ",";
+    right->translate(stream); 
+    *stream << "}";
+
 }
