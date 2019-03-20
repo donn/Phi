@@ -28,13 +28,37 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
 
 void If::MACRO_ELAB_SIG_IMP {
     expression->elaborate(table, context);
-    if (expression->type == Expression::Type::CompileTime) {
-        
-    } else if (expression->type == Expression::Type::ParameterSensitive) {
-        // for translation \_(ツ)_/
-    } else {
-        // error
+    if (expression->type == Expression::Type::ParameterSensitive) {
+        // Translate to assert :/
+        return;
     }
+    if (expression->type == Expression::Type::CompileTime) {
+    
+        if (!expression->value.has_value()) {
+            //evaluation prolly failed
+            return;
+        }
+
+        auto value = expression->value.value();
+        if (expression->numBits != 1) {
+            //width mismatch error
+            return;
+        }
+
+        if (value == llvm::APInt(1, 1, false)) {
+            tryElaborate(contents, table, context);
+        } else {
+            tryElaborate(elseBlock, table, context);
+        }
+    }
+}
+
+
+
+void ForLoop::MACRO_ELAB_SIG_IMP {
+    range->elaborate(table, context);
+    // NOTE: POLITICALLY INCORRECT INSPECTION
+    // TODO
 }
 
 void Namespace::MACRO_ELAB_SIG_IMP {
