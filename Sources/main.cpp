@@ -98,7 +98,10 @@ int main(int argc, char* argv[]) {
     Phi::SymbolTable table;
     
     context.elaborate(&table);
-    
+
+    std::ofstream output;
+    output.open(arguments[0] + ".sv");
+    context.translate(&output);
 
 #if YYDEBUG
     auto file = options.find("symTable");

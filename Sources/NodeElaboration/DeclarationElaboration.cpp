@@ -1,6 +1,7 @@
 #include <regex>
 #include <sstream>
 
+#include "Node.h"
 #include "SymbolTable.h"
 
 using namespace Phi::Node;

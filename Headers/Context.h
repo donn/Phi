@@ -35,6 +35,7 @@ namespace Phi {
         bool error();
         void printErrors();
         void elaborate(SymbolTable* table);
+        void translate(std::ofstream* stream);
 
 #if YYDEBUG
         int trace = 0;

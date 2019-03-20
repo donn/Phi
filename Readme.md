@@ -37,6 +37,8 @@ To get a newer version of Flex/Bison, install [Homebrew](https://brew.sh) and th
     brew install flex bison llvm
 ```
 
+This will take some time, llvm is big.
+
 You will need to add flex and bison to PATH, as brew won't. Do this however you want: my personal setup is to just add these to `~/.bash_profile` (or your shell's equivalent):
 ```sh
 export PATH="/usr/local/opt/flex/bin:$PATH"

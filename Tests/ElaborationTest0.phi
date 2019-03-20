@@ -1,10 +1,13 @@
-namespace Alpha {
+namespace Alpha { // Top Level Namespace (NOT INSIDE MODULE)
     namespace Alpha {
         namespace Alpha {
             
         }
     }
     module Beta(a: Input, b: Output) {
+        namespace Gamma { // Namespace (INSIDE MODULE)
+
+        }
     }
     interface Theta(phi: Input, psi: Output);
 }

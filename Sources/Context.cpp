@@ -78,5 +78,10 @@ bool Phi::Context::error() {
 }
 
 void Phi::Context::elaborate(SymbolTable* table) {
-    head->elaborate(table);
+    head->elaborate(table, this);
 }
+
+void Phi::Context::translate(std::ofstream* stream) {
+    head->translate(stream);
+}
+

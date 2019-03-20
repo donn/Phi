@@ -3,13 +3,15 @@
 // Project Headers
 #include "Types.h"
 
+#include <fstream>
+
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/StringRef.h>
 
 // Elaboration Macros
 #define MACRO_ELAB_PARAMS SymbolTable* table, Context* context
-#define MACRO_ELAB_SIG_HDR virtual void elaborate (MACRO_ELAB_PARAMS)
 #define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
+#define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
 
 namespace Phi {
     // Forward declarations
@@ -29,12 +31,18 @@ namespace Phi {
             virtual ~Node() {}
 
             MACRO_ELAB_SIG_HDR {}
-            virtual bool semanticCheck() { return false; }
+            virtual void translate(std::ofstream* stream) { }
         };
 
         inline void tryElaborate(Node* node, MACRO_ELAB_PARAMS) {
             if (node) {
                 node->elaborate(table, context);
+            }
+        }
+
+        inline void tryTranslate(Node* node, std::ofstream* stream) {
+            if (node) {
+                node->translate(stream);
             }
         }
 
@@ -44,14 +52,21 @@ namespace Phi {
         struct Expression; // Fwd Declaration
         struct Range; // Fwd Declaration
 
-        struct Port: public Node {
+
+
+        struct Declaration: public Node {
             std::string identifier;
+
+            Declaration(std::string identifier): identifier(identifier) {}
+        };
+
+        struct Port: public Declaration {
             bool polarity; // polarity ? Input: Output
             Range* bus;
 
             optional<std::string> annotation;
 
-            Port(const char* identifier, bool polarity, Range* bus, const char* annotation): identifier(identifier), polarity(polarity), bus(bus) {
+            Port(const char* identifier, bool polarity, Range* bus, const char* annotation): Declaration(identifier), polarity(polarity), bus(bus) {
                 if (annotation) {
                     this->annotation = std::string(annotation);
                 }
@@ -60,18 +75,13 @@ namespace Phi {
             MACRO_ELAB_SIG_HDR;
         };
 
-        struct Declaration: public Node {
-            std::string identifier;
-
-            Declaration(std::string identifier): identifier(identifier) {}
-        };
-
         struct TopLevelNamespace: public Declaration {
             Node* contents;
 
             TopLevelNamespace(const char* identifier, Node* contents): Declaration(identifier), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR;
+            virtual void translate(std::ofstream* stream);
         };
 
         struct Statement;
@@ -89,6 +99,7 @@ namespace Phi {
             TopLevelDeclaration(std::string identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR;
+            virtual void translate(std::ofstream* stream);
         };
 
         // Templating
@@ -142,7 +153,7 @@ namespace Phi {
         };
 
         struct LabeledStatementList: public Node {
-            bool isDefault;
+            bool isDefault; // Is this the default case in a switch statement?
             Expression* expression;
             Statement* statements;
 

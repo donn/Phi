@@ -5,7 +5,7 @@
 
 using namespace Phi::Node;
 
-using VLD = Phi::Node::VariableLengthDeclaration;
+using VLD = VariableLengthDeclaration;
 
 VLD* VLD::flattenedList(VLD::Type type, Range* bus, DeclarationListItem* item) {
     VLD vld("", VariableLengthDeclaration::Type::wire, nullptr, nullptr, nullptr);

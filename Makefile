@@ -13,7 +13,7 @@ YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cc,$(YACC)))
 
 YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
-CPP_LY_FLAGS = -Wno-deprecated-register -std=c++17
+CPP_LY_FLAGS = -Wno-deprecated-register -std=c++17 $(CPPFLAGS)
 CPP_FLAGS = -Wall -pedantic -std=c++17 $(CPPFLAGS)
 
 SOURCES = 
@@ -83,7 +83,7 @@ $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS)
 	mkdir -p $(@D)
-	c++ $(LDFLAGS) -o $@ $^
+	c++ $(LD_FLAGS) -o $@ $^
 	@echo "\033[1;32m>> Build complete.\033[0m"
 
 .PHONY: clean
