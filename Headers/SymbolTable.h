@@ -16,8 +16,15 @@ namespace Phi {
     struct Symbol {
         std::string id;
         Node::Node* attached;
+        Node::Node* driver = nullptr;
 
-        Symbol(std::string id, Node::Node* attached): id(id), attached(attached) {}
+        Symbol(std::string id, Node::Node* attached, Node::Node* driver = nullptr): id(id), attached(attached), driver(nullptr) {}
+        void drive(Node::Node* newDriver) {
+            if (driver) {
+                throw driver;
+            }
+            driver = newDriver;
+        }
 
         virtual ~Symbol() = default;
     };
@@ -41,8 +48,10 @@ namespace Phi {
         SymbolTable();
         ~SymbolTable();
 
-
-        void add(std::string id, Node::Node* attached, bool space = false);
+        void add(std::string id, Node::Node* attached, bool space = false, Node::Node* driver = nullptr);
+        void add(std::string id, Node::Node* attached, Node::Node* driver) {
+            add(id, attached, false, driver);
+        }
         std::shared_ptr<Symbol>  checkExistence(std::vector<std::string> ids, Node::Node* attached);
         void stepInto(std::string id);
         void stepIntoComb(Node::Node* attached);

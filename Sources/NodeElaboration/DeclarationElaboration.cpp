@@ -39,7 +39,7 @@ void If::MACRO_ELAB_SIG_IMP {
     }
 
     if (expression->type == Expression::Type::RunTime) {
-        context->error(Phi::Error::emptyLocation, "elaboration.softwareExpr");
+        context->errorList.push_back({Phi::Error::emptyLocation, "elaboration.softwareExpr"});
         return;
     }
 
@@ -50,7 +50,7 @@ void If::MACRO_ELAB_SIG_IMP {
 
     auto value = expression->value.value();
     if (expression->numBits != 1) {
-        context->error(Phi::Error::emptyLocation, "expr.notACondition");
+        context->errorList.push_back({Phi::Error::emptyLocation, "expr.notACondition"});
         return;
     }
 
@@ -80,6 +80,9 @@ void Namespace::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, table, context);
 }
 
-void VariableLengthDeclaration::MACRO_ELAB_SIG_TMP {
-    
+void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
+    tryElaborate(optionalAssignment, table, context);
+    tryElaborate(array, table, context);
+    tryElaborate(bus, table, context);
+    table->add(identifier, this, optionalAssignment);
 }

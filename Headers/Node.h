@@ -52,8 +52,6 @@ namespace Phi {
         struct Expression; // Fwd Declaration
         struct Range; // Fwd Declaration
 
-
-
         struct Declaration: public Node {
             std::string identifier;
 

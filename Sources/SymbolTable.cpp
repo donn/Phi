@@ -11,16 +11,19 @@ SymbolTable::SymbolTable() {
 SymbolTable::~SymbolTable() {
 }
 
-void SymbolTable::add(std::string id, Node::Node* attached, bool space) {
+void SymbolTable::add(std::string id, Node::Node* attached, bool space, Node::Node* driver) {
 
     if (top->space.find(id) != top->space.end()) {
         throw std::string("symbol.redefinition(`") + id + "`)";
     }
     
     if (space) {
+        if (driver) {
+            throw std::string("symbol.drivingANamespace");
+        }
         top->space[id] = std::make_shared<SymbolSpace>(id, attached);
     } else {
-        top->space[id] = std::make_shared<Symbol>(id, attached);
+        top->space[id] = std::make_shared<Symbol>(id, attached, driver);
     }
 }
 
