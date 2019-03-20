@@ -23,8 +23,6 @@
     #include "Context.h"
     
     #include "Utils.h"
-
-    void yyerror(char *);
     int yylex();
 
     extern int yylineno;
@@ -68,6 +66,7 @@
 
 %token NUMERIC
 %token FW_NUMERIC
+%token FW_SPECIAL
 %token ANNOTATION
 %token IDENTIFIER
 %token STRING
@@ -101,13 +100,13 @@
 %left '.'
 %right '['
 
-%type<text> NUMERIC FW_NUMERIC IDENTIFIER ANNOTATION STRING optional_annotation
+%type<text> NUMERIC FW_NUMERIC FW_SPECIAL IDENTIFIER ANNOTATION STRING optional_annotation
 
 %type<bin> port_polarity
 
 %type<vldt> dynamic_width
 
-%type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list   statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list 
+%type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list   statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list special_number
 
 %type<expr> expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable
 
@@ -262,6 +261,14 @@ optional_annotation:
     ;
 
 /* Blocks */
+special_number:
+    FW_SPECIAL {
+        $$ = new SpecialNumber($1);
+    }
+    | '(' FW_SPECIAL ')' {
+        $$ = new SpecialNumber($2);
+    }
+    ;
 block_based:
     if {
         $$ = $1;
@@ -272,8 +279,11 @@ block_based:
     | KEYWORD_NAMESPACE IDENTIFIER block {
         $$ = new Namespace((Statement*)$3, $2);
     }
+    | KEYWORD_SWITCH special_number '{' labeled_statement_list '}' {
+        $$ = new Switch(nullptr, (LabeledStatementList*)$4, (SpecialNumber*)$2);
+    }
     | KEYWORD_SWITCH expression '{' labeled_statement_list '}' {
-        $$ = new Switch($2, (LabeledStatementList*)$4);
+        $$ = new Switch($2, (LabeledStatementList*)$4, nullptr);
     }
     | KEYWORD_COMB block {
         $$ = new Combinational((Statement*)$2);

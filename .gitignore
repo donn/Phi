@@ -9,6 +9,7 @@ phi
 *.stackdump
 
 /*.phi
-Examples/*.v
+/*.sv
+Examples/*.sv
 
 *~

@@ -136,6 +136,7 @@ namespace Phi {
             std::string identifier;
 
             ForLoop(Statement* contents, Range* range, const char* identifier): BlockBased(contents), range(range), identifier(identifier) {}
+            MACRO_ELAB_SIG_HDR;
         };
 
         struct Namespace: public BlockBased {
@@ -147,11 +148,19 @@ namespace Phi {
         };
 
         struct LabeledStatementList;
+        struct SpecialNumber: public Node {
+            unsigned int numBits;
+            uint8 radix;
+            std::string number;
+            
+            SpecialNumber(const char* interpretable);
+        };
         struct Switch: public BlockBased {
             Expression* expression;
             LabeledStatementList* list;
+            SpecialNumber* specialNumber;
 
-            Switch(Expression* expression, LabeledStatementList* list): BlockBased(nullptr), expression(expression), list(list) {}
+            Switch(Expression* expression, LabeledStatementList* list, SpecialNumber* specialNumber = nullptr): BlockBased(nullptr), expression(expression), list(list), specialNumber(specialNumber) {}
         };
 
         struct LabeledStatementList: public Node {
@@ -236,6 +245,7 @@ namespace Phi {
             };
             Type type = Type::Undefined;
 
+            unsigned int numBits = 0;
             std::optional<llvm::APInt> value = std::nullopt;
 
             virtual std::string translate(Expression* e);
