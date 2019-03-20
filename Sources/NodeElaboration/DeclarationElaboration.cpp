@@ -53,12 +53,16 @@ void If::MACRO_ELAB_SIG_IMP {
     }
 }
 
-
-
 void ForLoop::MACRO_ELAB_SIG_IMP {
     range->elaborate(table, context);
     // NOTE: POLITICALLY INCORRECT INSPECTION
     // TODO
+}
+
+void Combinational::MACRO_ELAB_SIG_IMP {
+    table->stepIntoComb();
+    tryElaborate(contents);
+    table->stepOut();
 }
 
 void Namespace::MACRO_ELAB_SIG_IMP {
