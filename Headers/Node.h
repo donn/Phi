@@ -247,9 +247,13 @@ namespace Phi {
             };
             Type type = Type::Undefined;
 
-            unsigned int numBits = 0; // number of bits --> like: 32b0100101... --> numBits=32
+            // number of bits --> like: 32b0100101... --> numBits=32
+            // number of bits --> like: 32d51... --> numBits=32
+            unsigned int numBits = 0; 
             
-            std::optional<llvm::APInt> value = std::nullopt; // value=0100101..
+            // value=0100101..
+            // value=51
+            std::optional<llvm::APInt> value = std::nullopt; 
         };
 
         struct Literal: public Expression {
@@ -262,6 +266,8 @@ namespace Phi {
             std::string identifier;
 
             Identifier(const char* identifier): identifier(identifier) {}
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Unary: public Expression {
@@ -273,6 +279,8 @@ namespace Phi {
             };
             Operation operation;
             Unary(Operation operation, Expression* right): operation(operation) { this->right = right; }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Binary: public Expression {
@@ -310,6 +318,8 @@ namespace Phi {
             Binary(Expression* left,  Operation operation, Expression* right): operation(operation) {
                 this->left = left; this->right = right;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Ternary: public Expression {
@@ -318,6 +328,8 @@ namespace Phi {
             Ternary(Expression* condition, Expression* left, Expression* right): condition(condition) {
                 this->left = left; this->right = right;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Access: public Expression {};

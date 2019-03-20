@@ -6,10 +6,10 @@ namespace Alpha { // Top Level Namespace (NOT INSIDE MODULE)
     }
     module Beta(a: Input, b: Output) {
         namespace Gamma { // Namespace (INSIDE MODULE) --> later
-         
-         2b010;
+
 
         }
+        Var[1..0] k = 2b10;
     }
     interface Theta(phi: Input, psi: Output);
 }
