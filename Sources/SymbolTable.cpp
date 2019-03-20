@@ -80,6 +80,10 @@ void SymbolSpace::represent(std::ostream* stream, int nesting) {
     }
 }
 
+bool SymbolSpace::inComb() {
+    return top->isComb();
+}
+
 void SymbolTable::represent(std::ostream* stream) {
     head->represent(stream);
 }
