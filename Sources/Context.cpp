@@ -15,6 +15,9 @@
 #include <fstream>
 #include <exception>
 
+std::string Phi::Error::emptyLocationFileName = "/";
+Location Phi::Error::emptyLocation = Location(&Phi::Error::emptyLocationFileName, 0, 0);
+
 void Phi::Parser::error(Location const& loc, const std::string& string) {
     auto copy = string;
     if (copy == "syntax error") {
@@ -58,7 +61,7 @@ optional<std::string> Phi::Context::setFile(std::string currentFile)  {
 
     auto file = std::ifstream(currentFile);
     if (file.fail()) {
-        errorList.push_back({Location(&currentFile, 0, 0), "io.fileNotFound"});
+        errorList.push_back({Location(&files.back(), 0, 0), "io.fileNotFound"});
         return nullopt;
     }
     

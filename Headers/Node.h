@@ -192,6 +192,8 @@ namespace Phi {
             static VariableLengthDeclaration* flattenedList(Type type, Range* bus, DeclarationListItem* list);
 
             VariableLengthDeclaration(std::string identifier, Type type, Range* bus, Expression* array, Expression* optionalAssignment): Declaration(identifier), type(type), bus(bus), array(array), optionalAssignment(optionalAssignment) {}
+
+            MACRO_ELAB_SIG_HDR;
         };
 
         struct DeclarationListItem: public Declaration { // TEMP: Flattened in VLD constructor!!

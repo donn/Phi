@@ -29,27 +29,35 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
 void If::MACRO_ELAB_SIG_IMP {
     expression->elaborate(table, context);
     if (expression->type == Expression::Type::ParameterSensitive) {
-        // Translate to assert :/
+        // Translate to assert/generate
         return;
     }
-    if (expression->type == Expression::Type::CompileTime) {
     
-        if (!expression->value.has_value()) {
-            //evaluation prolly failed
-            return;
-        }
+    // If NOT in a comb block, we do need to elaborate. Otherwise... nyet.
+    if (table->inComb()) {
+        return;
+    }
 
-        auto value = expression->value.value();
-        if (expression->numBits != 1) {
-            //width mismatch error
-            return;
-        }
+    if (expression->type == Expression::Type::RunTime) {
+        context->error(Phi::Error::emptyLocation, "elaboration.softwareExpr");
+        return;
+    }
 
-        if (value == llvm::APInt(1, 1, false)) {
-            tryElaborate(contents, table, context);
-        } else {
-            tryElaborate(elseBlock, table, context);
-        }
+    if (!expression->value.has_value()) {
+        //evaluation prolly failed
+        return;
+    }
+
+    auto value = expression->value.value();
+    if (expression->numBits != 1) {
+        context->error(Phi::Error::emptyLocation, "expr.notACondition");
+        return;
+    }
+
+    if (value == llvm::APInt(1, 1, false)) {
+        tryElaborate(contents, table, context);
+    } else {
+        tryElaborate(elseBlock, table, context);
     }
 }
 
@@ -70,4 +78,8 @@ void Namespace::MACRO_ELAB_SIG_IMP {
     tryElaborate(contents, table, context);
     table->stepOut();
     tryElaborate(right, table, context);
+}
+
+void VariableLengthDeclaration::MACRO_ELAB_SIG_TMP {
+    
 }

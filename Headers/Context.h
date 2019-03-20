@@ -16,6 +16,8 @@ namespace Phi {
     class SymbolTable;
 
     struct Error {
+        static std::string emptyLocationFileName;
+        static Location emptyLocation;
         Location loc;
         std::string message;
     };

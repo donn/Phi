@@ -15,7 +15,7 @@ SpecialNumber::SpecialNumber(const char* interpretablePtr) {
 
     auto prospectiveWidth = std::stoi(match[1]);
     if (prospectiveWidth < 0 || prospectiveWidth > maxWidth) {
-        throw "§1.1: Width out of range.";
+        throw "expr.tooWide";
     }
 
     std::string radixCharacter = match[2];
@@ -29,16 +29,16 @@ SpecialNumber::SpecialNumber(const char* interpretablePtr) {
             radix = 8;
             break;
         case 'd':
-            throw "§4.3.3.2: Special fixed width binaries (i.e. including 'x') are not supported for decimal values.";
+            throw "specialNumber.decimalNotAllowed";
             break;
         case 'x':
             radix = 16;
             break;
         case 'h':
-            throw "Phi doesn't support 'h'. Use 'x'.";
+            throw "fixedNumber.usedVerilogH";
             break;
         default:
-            throw "Unknown radix.";
+            throw "FATAL";
     }
 }
 
@@ -57,7 +57,7 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
 
         auto prospectiveWidth = std::stoi(match[1]);
         if (prospectiveWidth < 0 || prospectiveWidth > maxWidth) {
-            throw "§1.1: Width out of range.";
+            throw "expr.tooWide";
         }
 
         std::string radixCharacter = match[2];
@@ -77,10 +77,10 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
                 radix = 16;
                 break;
             case 'h':
-                throw "Phi doesn't support 'h'. Use 'x'.";
+                throw "fixedNumber.usedVerilogH";
                 break;
             default:
-                throw "Unknown radix.";
+                throw "FATAL";
         }
         auto ref = llvm::StringRef(match[3]);
         value = llvm::APInt(prospectiveWidth, ref, radix);
