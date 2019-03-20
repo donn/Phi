@@ -26,7 +26,7 @@ namespace Phi {
         std::map< std::string, std::shared_ptr<Symbol> > space;
         bool isComb;
 
-        SymbolSpace(std::string id, Node::Node* attached, bool isComb = false): Symbol(id, attached, isComb(isComb)) {
+        SymbolSpace(std::string id, Node::Node* attached, bool isComb = false): Symbol(id, attached), isComb(isComb) {
             space = std::map<std::string, std::shared_ptr<Symbol> >();
         }
 
@@ -45,7 +45,7 @@ namespace Phi {
         void add(std::string id, Node::Node* attached, bool space = false);
         std::shared_ptr<Symbol>  checkExistence(std::vector<std::string> ids, Node::Node* attached);
         void stepInto(std::string id);
-        void stepIntoComb();
+        void stepIntoComb(Node::Node* attached);
         void stepIntoAndCreate(std::string id, Node::Node* attached);
         void stepOut();
 

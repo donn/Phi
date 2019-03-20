@@ -48,7 +48,7 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
 
     if (!widthIncluded) {
         auto ref = llvm::StringRef(interpretable);
-        integer = llvm::APInt(32, ref, 10);
+        value = llvm::APInt(32, ref, 10);
     } else {
         auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9]+)");
         
@@ -83,6 +83,6 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
                 throw "Unknown radix.";
         }
         auto ref = llvm::StringRef(match[3]);
-        integer = llvm::APInt(prospectiveWidth, ref, radix);
+        value = llvm::APInt(prospectiveWidth, ref, radix);
     }
 }

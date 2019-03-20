@@ -2,7 +2,6 @@
 #include <string>
 #include <fstream>
 
-
 using namespace Phi::Node;
 
 void TopLevelNamespace::translate(std::ofstream* stream) {
@@ -34,9 +33,6 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
     tryTranslate(right, stream);
 }
 
-std::string Expression::translate(Expression* e){ 
-    return e->value.value().toString();
-}
 
 void Port::translate(std::ofstream* stream) {
     // example
@@ -55,14 +51,14 @@ void Port::translate(std::ofstream* stream) {
         // do nothing
     } else {
         *stream << " [ ";
-        bus->left->translate(stream);
+        //bus->left->translate(stream);
         *stream << " : ";
-        bus->right->translate(stream); 
+        //bus->right->translate(stream); 
         *stream << " ] ";
     }
 
     // identifier 
-    //*stream << (*identifier);
+    *stream << identifier;
     *stream << " ; ";
 
 }

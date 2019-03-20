@@ -173,6 +173,8 @@ namespace Phi {
 
         struct Combinational: public BlockBased {
             Combinational(Statement* contents): BlockBased(contents) {}
+
+            MACRO_ELAB_SIG_HDR;
         };
 
         // Subdeclarations
@@ -245,16 +247,15 @@ namespace Phi {
             };
             Type type = Type::Undefined;
 
-            unsigned int numBits = 0;
-            std::optional<llvm::APInt> value = std::nullopt;
-
-            virtual std::string translate(Expression* e);
+            unsigned int numBits = 0; // number of bits --> like: 32b0100101... --> numBits=32
+            
+            std::optional<llvm::APInt> value = std::nullopt; // value=0100101..
         };
 
         struct Literal: public Expression {
-            llvm::APInt integer;
-
             Literal(const char* interpretable, bool widthIncluded = true);
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Identifier: public Expression {

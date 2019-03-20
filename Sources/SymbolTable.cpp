@@ -80,8 +80,13 @@ void SymbolSpace::represent(std::ostream* stream, int nesting) {
     }
 }
 
-bool SymbolSpace::inComb() {
-    return top->isComb();
+void SymbolTable::stepIntoComb(Node::Node* attached) {
+    top->space[""] = std::make_shared<SymbolSpace>("", attached, true);
+    stepInto("");
+}
+
+bool SymbolTable::inComb() {
+    return top->isComb;
 }
 
 void SymbolTable::represent(std::ostream* stream) {

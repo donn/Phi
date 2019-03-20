@@ -60,8 +60,8 @@ void ForLoop::MACRO_ELAB_SIG_IMP {
 }
 
 void Combinational::MACRO_ELAB_SIG_IMP {
-    table->stepIntoComb();
-    tryElaborate(contents);
+    table->stepIntoComb(this);
+    tryElaborate(contents, table, context);
     table->stepOut();
 }
 
