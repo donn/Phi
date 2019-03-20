@@ -1,5 +1,5 @@
 #include "Node.h"
-
+#include <string>
 #include <fstream>
 
 
@@ -32,4 +32,37 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
 
     }
     tryTranslate(right, stream);
+}
+
+std::string Expression::translate(Expression* e){ 
+    return e->value.value().toString();
+}
+
+void Port::translate(std::ofstream* stream) {
+    // example
+    // a: Input [width-1 .. 0]; 
+    // input [width-1 ..0] a;
+
+    // polarity --> polarity ? Input: Output
+    if(polarity==true){
+        *stream << "input ";
+    } else {
+        *stream << "output ";
+    }
+
+    // bus --> bus points to nuclll ? no range : range [from:to] ;
+    if(bus == nullptr){
+        // do nothing
+    } else {
+        *stream << " [ ";
+        bus->left->translate(stream);
+        *stream << " : ";
+        bus->right->translate(stream); 
+        *stream << " ] ";
+    }
+
+    // identifier 
+    //*stream << (*identifier);
+    *stream << " ; ";
+
 }

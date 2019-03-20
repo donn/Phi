@@ -2,7 +2,7 @@
 #define _node_h
 // Project Headers
 #include "Types.h"
-
+#include <string>
 #include <fstream>
 
 #include <llvm/ADT/APInt.h>
@@ -31,7 +31,7 @@ namespace Phi {
             virtual ~Node() {}
 
             MACRO_ELAB_SIG_HDR {}
-            virtual void translate(std::ofstream* stream) { }
+            virtual void translate(std::ofstream* stream) {}
         };
 
         inline void tryElaborate(Node* node, MACRO_ELAB_PARAMS) {
@@ -73,6 +73,8 @@ namespace Phi {
             }
 
             MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct TopLevelNamespace: public Declaration {
@@ -235,6 +237,8 @@ namespace Phi {
             Type type = Type::Undefined;
 
             std::optional<llvm::APInt> value = std::nullopt;
+
+            virtual std::string translate(Expression* e);
         };
 
         struct Literal: public Expression {
