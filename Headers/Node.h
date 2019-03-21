@@ -338,12 +338,16 @@ namespace Phi {
             PropertyAccess(Expression* object, Expression* property) {
                 this->left = object; this->right = property;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct ArrayAccess: public Access {
             ArrayAccess(Expression* object, Expression* width) {
                 this->left = object; this->right = width;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
         
         struct Range: public Node {
@@ -355,6 +359,8 @@ namespace Phi {
             RangeAccess(Expression* object, Range* range) {
                 this->left = object; this->right = range;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct RepeatConcatenation: public Expression {
