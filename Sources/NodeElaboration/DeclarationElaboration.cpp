@@ -59,18 +59,21 @@ void If::MACRO_ELAB_SIG_IMP {
     } else {
         tryElaborate(elseBlock, table, context);
     }
+    tryElaborate(right, table, context);
 }
 
 void ForLoop::MACRO_ELAB_SIG_IMP {
     range->elaborate(table, context);
     // NOTE: POLITICALLY INCORRECT INSPECTION
     // TODO
+    tryElaborate(right, table, context);
 }
 
 void Combinational::MACRO_ELAB_SIG_IMP {
     table->stepIntoComb(this);
     tryElaborate(contents, table, context);
     table->stepOut();
+    tryElaborate(right, table, context);
 }
 
 void Namespace::MACRO_ELAB_SIG_IMP {
@@ -85,4 +88,10 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
     tryElaborate(array, table, context);
     tryElaborate(bus, table, context);
     table->add(identifier, this, optionalAssignment);
+    tryElaborate(right, table, context);
+}
+
+void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
+    tryElaborate(ports, table, context);
+    
 }
