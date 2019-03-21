@@ -40,7 +40,9 @@ int main(int argc, char* argv[]) {
         {"version", 'V', "Show the current version of Phi.", false, [&](){ printVersion(); exit(0); }},
 #if YYDEBUG
         {"trace", 'T', "Trace GNU Bison/Phi semantic analysis operation. (Debug builds only.)", false, nullopt},
-        {"symTable", std::nullopt, "Filename to output symbol table. (Debug builds only, /dev/stdout for stdout)", true, nullopt}
+        {"astGraph", std::nullopt, "Filename to output graphviz of syntax tree. (Debug builds only.)", true, nullopt},
+        {"elabGraph", std::nullopt, "Filename to output graphviz of post-elaboration tree. (Debug builds only.)", true, nullopt},
+        {"symGraph", std::nullopt, "Filename to output graphviz of symbol table. (Debug builds only.)", true, nullopt}
 #endif
     });
     auto opts = getOpt.process(argc, argv);
@@ -95,18 +97,29 @@ int main(int argc, char* argv[]) {
         return EX_DATAERR;
     }
 
+ #if YYDEBUG
+    auto astGraphFile = options.find("astGraph");
+    if (astGraphFile != options.end()) {
+        std::ofstream output(astGraphFile->second);
+        if (output.fail()) {
+            return EX_CANTCREAT;
+        }
+        context.graphPrint(&output);
+    }
+#endif   
+
     Phi::SymbolTable table;
-    
     context.elaborate(&table);
 
     std::ofstream output;
     output.open(arguments[0] + ".sv");
-    context.translate(&output);
+    
+    //context.translate(&output);
 
 #if YYDEBUG
-    auto file = options.find("symTable");
-    if (file != options.end()) {
-        std::ofstream output(file->second);
+    auto symTableFile = options.find("symGraph");
+    if (symTableFile != options.end()) {
+        std::ofstream output(symTableFile->second);
         if (output.fail()) {
             return EX_CANTCREAT;
         }

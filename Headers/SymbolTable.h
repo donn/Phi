@@ -36,8 +36,9 @@ namespace Phi {
         SymbolSpace(std::string id, Node::Node* attached, bool isComb = false): Symbol(id, attached), isComb(isComb) {
             space = std::map<std::string, std::shared_ptr<Symbol> >();
         }
-
-        void represent(std::ostream* stream, int nesting = 1);
+#if YYDEBUG
+        int represent(std::ostream* stream, int* node);
+#endif
     };
 
     class SymbolTable {
@@ -60,7 +61,9 @@ namespace Phi {
 
         bool inComb();
 
+#if YYDEBUG
         void represent(std::ostream* stream);
+#endif
     };
 };
 

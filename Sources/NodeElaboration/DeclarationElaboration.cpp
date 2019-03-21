@@ -8,33 +8,34 @@ using namespace Phi::Node;
 
 void Port::MACRO_ELAB_SIG_IMP {
     table->add(identifier, this);
-    tryElaborate(right, table, context);
+    tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
     table->stepIntoAndCreate(identifier, this);
-    tryElaborate(contents, table, context);
+    tryElaborate(contents, MACRO_ELAB_ARGS);
     table->stepOut();
-    tryElaborate(right, table, context);
+    tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     table->stepIntoAndCreate(identifier, this);
-    tryElaborate(ports, table, context);
-    tryElaborate(contents, table, context);
+    tryElaborate(ports, MACRO_ELAB_ARGS);
+    tryElaborate(contents, MACRO_ELAB_ARGS);
     table->stepOut();
-    tryElaborate(right, table, context);
+    tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void If::MACRO_ELAB_SIG_IMP {
-    expression->elaborate(table, context);
-    if (expression->type == Expression::Type::ParameterSensitive) {
-        // Translate to assert/generate
-        return;
-    }
+    expression->elaborate(MACRO_ELAB_ARGS);
     
     // If NOT in a comb block, we do need to elaborate. Otherwise... nyet.
     if (table->inComb()) {
+        return;
+    }
+    
+    if (expression->type == Expression::Type::ParameterSensitive) {
+        // Translate to assert/generate
         return;
     }
 
@@ -55,43 +56,74 @@ void If::MACRO_ELAB_SIG_IMP {
     }
 
     if (value == llvm::APInt(1, 1, false)) {
-        tryElaborate(contents, table, context);
+        tryElaborate(contents, MACRO_ELAB_ARGS);
     } else {
-        tryElaborate(elseBlock, table, context);
+        tryElaborate(elseBlock, MACRO_ELAB_ARGS);
     }
-    tryElaborate(right, table, context);
+    tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void ForLoop::MACRO_ELAB_SIG_IMP {
-    range->elaborate(table, context);
+    range->elaborate(MACRO_ELAB_ARGS);
     // NOTE: POLITICALLY INCORRECT INSPECTION
     // TODO
-    tryElaborate(right, table, context);
+    tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void Combinational::MACRO_ELAB_SIG_IMP {
     table->stepIntoComb(this);
-    tryElaborate(contents, table, context);
+    tryElaborate(contents, MACRO_ELAB_ARGS);
     table->stepOut();
-    tryElaborate(right, table, context);
+    tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void Namespace::MACRO_ELAB_SIG_IMP {
     table->stepIntoAndCreate(identifier, this);
-    tryElaborate(contents, table, context);
+    tryElaborate(contents, MACRO_ELAB_ARGS);
     table->stepOut();
-    tryElaborate(right, table, context);
+    tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
-    tryElaborate(optionalAssignment, table, context);
-    tryElaborate(array, table, context);
-    tryElaborate(bus, table, context);
+    tryElaborate(optionalAssignment, MACRO_ELAB_ARGS);
+    tryElaborate(array, MACRO_ELAB_ARGS);
+    tryElaborate(bus, MACRO_ELAB_ARGS);
     table->add(identifier, this, optionalAssignment);
-    tryElaborate(right, table, context);
+    tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
-    tryElaborate(ports, table, context);
+    if (array) {
+        tryElaborate(array, MACRO_ELAB_ARGS);
+        if (array->type == Expression::Type::ParameterSensitive) {
+            //Translate to assert and generate
+        } else if (array->type == Expression::Type::RunTime) {
+            context->errorList.push_back({Phi::Error::emptyLocation, "elaboration.softwareExpr"});
+        } else {
+            //unroll
+        }
+    }
+    tryElaborate(module, MACRO_ELAB_ARGS);
+    unless (module->leftHandExpression) {
+        context->errorList.push_back({Phi::Error::emptyLocation, "identifier.rightHand"});
+    }
     
+    tryElaborate(parameters, MACRO_ELAB_ARGS);
+    tryElaborate(ports, MACRO_ELAB_ARGS);
+
+    tryElaborate(right, MACRO_ELAB_ARGS);
+}
+
+void ExpressionIDPair::MACRO_ELAB_SIG_IMP {
+    tryElaborate(expression, MACRO_ELAB_ARGS);
+
+    tryElaborate(right, MACRO_ELAB_ARGS);
+}
+
+void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
+    tryElaborate(expression, MACRO_ELAB_ARGS);
+}
+
+void NondeclarativePorts::MACRO_ELAB_SIG_IMP {
+    tryElaborate(ports, MACRO_ELAB_ARGS);
 }

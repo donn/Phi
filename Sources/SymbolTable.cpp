@@ -70,19 +70,6 @@ void SymbolTable::stepOut() {
     stack.pop_back();
 }
 
-// Debug
-#include <iomanip>
-
-void SymbolSpace::represent(std::ostream* stream, int nesting) {
-    auto& out = *stream;
-    for (auto& symbol: space) {
-        out << std::setw(nesting * 4) << ' ' << symbol.first << std::endl;
-        if (auto spacePointer = std::dynamic_pointer_cast<SymbolSpace>(symbol.second)) {
-            spacePointer->represent(stream, nesting + 1);
-        }
-    }
-}
-
 void SymbolTable::stepIntoComb(Node::Node* attached) {
     top->space[""] = std::make_shared<SymbolSpace>("", attached, true);
     stepInto("");
@@ -92,6 +79,29 @@ bool SymbolTable::inComb() {
     return top->isComb;
 }
 
+#if YYDEBUG
 void SymbolTable::represent(std::ostream* stream) {
-    head->represent(stream);
+    *stream << "strict graph symbolTable {" << std::endl;
+    int counter = 0;
+    *stream << "0 [label=\"Global Namespace\"];" << std::endl;
+    head->represent(stream, &counter);
+    *stream << "}" << std::endl;
 }
+
+// Debug
+#include <iomanip>
+
+int SymbolSpace::represent(std::ostream* stream, int* node) {
+    auto current = *node;
+    for (auto& symbol: space) {
+        *node = *node + 1;
+        *stream << *node << " " << "[label=\"" << symbol.first << "\"]" << ";" << std::endl;
+        auto connection = *node;
+        if (auto spacePointer = std::dynamic_pointer_cast<SymbolSpace>(symbol.second)) {
+            connection = spacePointer->represent(stream, node);
+        }
+        *stream << current << " -- " << connection << ";" << std::endl;
+    }
+    return current;
+}
+#endif
