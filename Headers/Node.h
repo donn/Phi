@@ -99,7 +99,7 @@ namespace Phi {
             TopLevelDeclaration(std::string identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR;
-            
+
             virtual void translate(std::ofstream* stream);
         };
 
@@ -198,6 +198,8 @@ namespace Phi {
             VariableLengthDeclaration(std::string identifier, Type type, Range* bus, Expression* array, Expression* optionalAssignment): Declaration(identifier), type(type), bus(bus), array(array), optionalAssignment(optionalAssignment) {}
 
             MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct DeclarationListItem: public Declaration { // TEMP: Flattened in VLD constructor!!
