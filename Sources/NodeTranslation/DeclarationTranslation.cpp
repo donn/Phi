@@ -4,6 +4,35 @@
 
 using namespace Phi::Node;
 
+void Port::translate(std::ofstream* stream) {
+    // example
+    // a: Input [width-1 .. 0]; 
+    // input [width-1 ..0] a;
+
+    // struct Port: public Declaration {
+    //         bool polarity; // polarity ? Input: Output
+    //         Range* bus;
+
+    //         optional<std::string> annotation;
+    // }
+
+    // polarity --> polarity ? Input: Output
+    if(polarity==true){
+        *stream << "input ";
+    } else {
+        *stream << "output ";
+    }
+
+    // bus --> bus points to null ? no range : range [from:to] ;
+    tryTranslate(bus, stream);
+
+    // identifier 
+    *stream << Declaration::identifier;
+    
+     tryTranslate(right, stream);
+
+}
+
 void TopLevelNamespace::translate(std::ofstream* stream) {
     *stream << "package " << identifier << ";" << std::endl;
     tryTranslate(contents, stream);
@@ -31,34 +60,4 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
 
     }
     tryTranslate(right, stream);
-}
-
-
-void Port::translate(std::ofstream* stream) {
-    // example
-    // a: Input [width-1 .. 0]; 
-    // input [width-1 ..0] a;
-
-    // polarity --> polarity ? Input: Output
-    if(polarity==true){
-        *stream << "input ";
-    } else {
-        *stream << "output ";
-    }
-
-    // bus --> bus points to nuclll ? no range : range [from:to] ;
-    if(bus == nullptr){
-        // do nothing
-    } else {
-        *stream << " [ ";
-        //bus->left->translate(stream);
-        *stream << " : ";
-        //bus->right->translate(stream); 
-        *stream << " ] ";
-    }
-
-    // identifier 
-    *stream << identifier;
-    *stream << " ; ";
-
 }

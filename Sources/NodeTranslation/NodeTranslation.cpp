@@ -45,6 +45,8 @@ void SpecialNumber::translate(std::ofstream* stream){
     }
     *stream << number;
     *stream << ";";
+    
+    tryTranslate(right, stream);
 }
 
 void LabeledStatementList::translate(std::ofstream* stream){
@@ -83,7 +85,15 @@ void LabeledStatementList::translate(std::ofstream* stream){
             default    : case_item_statement5;
         endcase
     */
-    switch(LabeledStatementList::isDefault){
+
+    int isDefaultInt = -1;
+    if(LabeledStatementList::isDefault){
+        isDefaultInt = 1;
+    }else{
+         isDefaultInt = 0;
+    }
+
+    switch(isDefaultInt){
         case 1:
             //default case 
             *stream << "default: ";
@@ -103,10 +113,7 @@ void LabeledStatementList::translate(std::ofstream* stream){
         default:
             break;
     };
-    translate(stream);
-    *stream << ";";
-
-
+    tryTranslate(statements, stream); 
 }
 
 void Range::translate(std::ofstream* stream){
@@ -121,5 +128,7 @@ void Range::translate(std::ofstream* stream){
     left->translate(stream); //from
     *stream << ":";
     right->translate(stream); //to
+
+     tryTranslate(right, stream);
 }
 
