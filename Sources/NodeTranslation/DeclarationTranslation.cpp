@@ -34,9 +34,28 @@ void Port::translate(std::ofstream* stream) {
 }
 
 void TopLevelNamespace::translate(std::ofstream* stream) {
-    *stream << "package " << identifier << ";" << std::endl;
+
+    //example of package in verilog 
+    //  package my_pkg;
+    //   typedef enum bit [1:0] { RED, YELLOW, GREEN, RSVD } e_signal;
+    //   typedef struct { bit [3:0] signal_id;
+    //                      bit       active;
+    //                      bit [1:0] timeout; 
+    //                    } e_sig_param;
+    
+    //   function common ();
+    //       $display ("Called from somewhere");
+    //      endfunction
+    
+    //     task run ( ... );
+    //       ...
+    //     endtask
+    // endpackage
+
+    *stream << "package " << Declaration::identifier << ";" << std::endl;
     tryTranslate(contents, stream);
     *stream  << "endpackage" << std::endl;
+
     tryTranslate(right, stream);
 }
 
