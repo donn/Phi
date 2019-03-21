@@ -359,6 +359,7 @@ namespace Phi {
             Range(Expression* from, Expression* to) {
                 this->left = from; this->right = to;
             }
+            virtual void translate (std::ofstream* stream);
         };
         struct RangeAccess: public Access {
             RangeAccess(Expression* object, Range* range) {
