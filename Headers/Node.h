@@ -170,6 +170,8 @@ namespace Phi {
             Statement* statements;
 
             LabeledStatementList(bool isDefault, Expression* expression, SpecialNumber* specialNumber, Statement* statements): isDefault(isDefault), expression(expression), specialNumber(specialNumber), statements(statements) {}
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct Combinational: public BlockBased {
