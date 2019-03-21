@@ -156,17 +156,18 @@ namespace Phi {
         struct Switch: public BlockBased {
             Expression* expression;
             LabeledStatementList* list;
-            SpecialNumber* specialNumber;
 
-            Switch(Expression* expression, LabeledStatementList* list, SpecialNumber* specialNumber = nullptr): BlockBased(nullptr), expression(expression), list(list), specialNumber(specialNumber) {}
+            Switch(Expression* expression, LabeledStatementList* list): BlockBased(nullptr), expression(expression), list(list) {}
         };
 
         struct LabeledStatementList: public Node {
             bool isDefault; // Is this the default case in a switch statement?
             Expression* expression;
+            SpecialNumber* specialNumber;
+
             Statement* statements;
 
-            LabeledStatementList(bool isDefault, Expression* expression, Statement* statements): isDefault(isDefault), expression(expression), statements(statements) {}
+            LabeledStatementList(bool isDefault, Expression* expression, SpecialNumber* specialNumber, Statement* statements): isDefault(isDefault), expression(expression), specialNumber(specialNumber), statements(statements) {}
         };
 
         struct Combinational: public BlockBased {
@@ -211,6 +212,8 @@ namespace Phi {
             ExpressionIDPair* ports;
 
             InstanceDeclaration(const char* identifier, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
+
+            MACRO_ELAB_SIG_HDR;
         };
 
         struct ExpressionIDPair: Declaration {

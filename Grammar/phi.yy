@@ -279,11 +279,8 @@ block_based:
     | KEYWORD_NAMESPACE IDENTIFIER block {
         $$ = new Namespace((Statement*)$3, $2);
     }
-    | KEYWORD_SWITCH special_number '{' labeled_statement_list '}' {
-        $$ = new Switch(nullptr, (LabeledStatementList*)$4, (SpecialNumber*)$2);
-    }
     | KEYWORD_SWITCH expression '{' labeled_statement_list '}' {
-        $$ = new Switch($2, (LabeledStatementList*)$4, nullptr);
+        $$ = new Switch($2, (LabeledStatementList*)$4);
     }
     | KEYWORD_COMB block {
         $$ = new Combinational((Statement*)$2);
@@ -311,12 +308,17 @@ else:
 labeled_statement_list:
     { $$ = epsilon; }
     | KEYWORD_CASE expression ':' statement_list labeled_statement_list {
-        auto node = new LabeledStatementList(false, $2, (Statement*)$4);
+        auto node = new LabeledStatementList(false, (Expression*)$2, nullptr, (Statement*)$4);
+        node->right = $5;
+        $$ = node;
+    }
+    | KEYWORD_CASE special_number ':' statement_list labeled_statement_list {
+        auto node = new LabeledStatementList(false, nullptr, (SpecialNumber*)$2, (Statement*)$4);
         node->right = $5;
         $$ = node;
     }
     | KEYWORD_DEFAULT ':' statement_list {
-        $$ = new LabeledStatementList(false, nullptr, (Statement*)$3);;
+        $$ = new LabeledStatementList(false, nullptr, nullptr, (Statement*)$3);;
     }
     ;
 
