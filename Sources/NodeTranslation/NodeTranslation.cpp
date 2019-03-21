@@ -86,33 +86,20 @@ void LabeledStatementList::translate(std::ofstream* stream){
         endcase
     */
 
-    int isDefaultInt = -1;
-    if(LabeledStatementList::isDefault){
-        isDefaultInt = 1;
+    if(isDefault){
+        //default case 
+        *stream << "default: ";
     }else{
-         isDefaultInt = 0;
+        //not default case
+        if(LabeledStatementList::specialNumber!=nullptr){
+            //casez specialNumber
+            *stream << "casez: ";
+        }else{
+            //case expression
+            *stream << "case: ";
+        }
     }
-
-    switch(isDefaultInt){
-        case 1:
-            //default case 
-            *stream << "default: ";
-            break;
-
-        case 0:
-            //not default case
-            if(LabeledStatementList::specialNumber!=nullptr){
-                //casez specialNumber
-                *stream << "casez: ";
-            }else{
-                //case expression
-                *stream << "case: ";
-            }
-            break;
-
-        default:
-            break;
-    };
+    
     tryTranslate(statements, stream); 
 }
 
