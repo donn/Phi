@@ -152,6 +152,8 @@ namespace Phi {
             std::string number;
             
             SpecialNumber(const char* interpretable);
+
+            virtual void translate(std::ofstream* stream);
         };
         struct Switch: public BlockBased {
             Expression* expression;
