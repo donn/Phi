@@ -2,16 +2,24 @@
 #define _node_h
 // Project Headers
 #include "Types.h"
-#include <string>
-#include <fstream>
+#include <ostream>
 
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/StringRef.h>
 
 // Elaboration Macros
 #define MACRO_ELAB_PARAMS SymbolTable* table, Context* context
+#define MACRO_ELAB_ARGS table, context
 #define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
 #define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
+
+#if YYDEBUG
+#define DEBUGLABEL virtual std::string debugLabel()
+#define GRAPHPRINT virtual void graphPrint(std::ostream* stream, int* node)
+#else
+#define DEBUGLABEL 
+#define GRAPHPRINT
+#endif
 
 namespace Phi {
     // Forward declarations
@@ -30,13 +38,16 @@ namespace Phi {
             Node(Node* right): right(right) {}
             virtual ~Node() {}
 
+            DEBUGLABEL;
+            GRAPHPRINT;
+
             MACRO_ELAB_SIG_HDR {}
             virtual void translate(std::ofstream* stream) {}
         };
 
         inline void tryElaborate(Node* node, MACRO_ELAB_PARAMS) {
             if (node) {
-                node->elaborate(table, context);
+                node->elaborate(MACRO_ELAB_ARGS);
             }
         }
 
@@ -80,8 +91,11 @@ namespace Phi {
 
             TopLevelNamespace(const char* identifier, Node* contents): Declaration(identifier), contents(contents) {}
             
-            MACRO_ELAB_SIG_HDR;
+            DEBUGLABEL ;
+
             virtual void translate(std::ofstream* stream);
+
+            MACRO_ELAB_SIG_HDR;
         };
 
         struct Statement;
@@ -227,6 +241,8 @@ namespace Phi {
             Expression* expression;
 
             ExpressionIDPair(const char* identifier, Expression* expression): Declaration(identifier), expression(expression) {}
+            
+            MACRO_ELAB_SIG_HDR;
         };
 
         // Nondeclarative Statements
@@ -239,11 +255,15 @@ namespace Phi {
             Expression* expression;
 
             NondeclarativeAssignment(Expression* lhs, Expression* expression): Nondeclarative(lhs), expression(expression) {}
+
+            MACRO_ELAB_SIG_HDR;
         };
         struct NondeclarativePorts: public Nondeclarative {
             ExpressionIDPair* ports;
 
             NondeclarativePorts(Expression* lhs, ExpressionIDPair* ports): Nondeclarative(lhs), ports(ports) {}
+
+            MACRO_ELAB_SIG_HDR;
         };
 
         // Expression
@@ -257,13 +277,10 @@ namespace Phi {
             };
             Type type = Type::Undefined;
 
-            // number of bits --> like: 32b0100101... --> numBits=32
-            // number of bits --> like: 32d51... --> numBits=32
-            unsigned int numBits = 0; 
-            
-            // value=0100101..
-            // value=51
-            std::optional<llvm::APInt> value = std::nullopt; 
+            unsigned int numBits = 0;
+            optional<llvm::APInt> value = nullopt;
+
+            bool leftHandExpression = true;
         };
 
         struct Literal: public Expression {

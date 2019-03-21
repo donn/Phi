@@ -41,6 +41,7 @@ namespace Phi {
 
 #if YYDEBUG
         int trace = 0;
+        void graphPrint(std::ofstream* stream);
 #endif
     };
 }

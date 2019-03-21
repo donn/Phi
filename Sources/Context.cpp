@@ -15,10 +15,12 @@
 #include <fstream>
 #include <exception>
 
-std::string Phi::Error::emptyLocationFileName = "/";
-Location Phi::Error::emptyLocation = Location(&Phi::Error::emptyLocationFileName, 0, 0);
+using namespace Phi;
 
-void Phi::Parser::error(Location const& loc, const std::string& string) {
+std::string Error::emptyLocationFileName = "/";
+Location Error::emptyLocation = Location(&Error::emptyLocationFileName, 0, 0);
+
+void Parser::error(Location const& loc, const std::string& string) {
     auto copy = string;
     if (copy == "syntax error") {
         copy = "parser.syntaxError";
@@ -27,7 +29,7 @@ void Phi::Parser::error(Location const& loc, const std::string& string) {
     context->errorList.push_back({loc, copy});
 }
 
-void Phi::Context::printErrors() {
+void Context::printErrors() {
     auto errorCount = errorList.size();
     if (errorCount > 0) {
         for (size_t i = 0; i < errorCount; i += 1) {
@@ -56,7 +58,7 @@ void Phi::Context::printErrors() {
     }
 }
 
-optional<std::string> Phi::Context::setFile(std::string currentFile)  {
+optional<std::string> Context::setFile(std::string currentFile)  {
     files.push_back(currentFile);
 
     auto file = std::ifstream(currentFile);
@@ -70,21 +72,29 @@ optional<std::string> Phi::Context::setFile(std::string currentFile)  {
     file.close();
 
     auto dump = stringstream.str();
-    currentFileLines = Phi::Utils::split(&dump, '\n');
+    currentFileLines = Utils::split(&dump, '\n');
 
     return dump;
 
 }
 
-bool Phi::Context::error() {
+bool Context::error() {
     return errorList.size() > 0;
 }
 
-void Phi::Context::elaborate(SymbolTable* table) {
+void Context::elaborate(SymbolTable* table) {
     head->elaborate(table, this);
 }
 
-void Phi::Context::translate(std::ofstream* stream) {
+void Context::translate(std::ofstream* stream) {
     head->translate(stream);
 }
 
+#if YYDEBUG
+void Context::graphPrint(std::ofstream* stream) {
+    *stream << "strict graph tree {" << std::endl;
+    int counter = 0;
+    head->graphPrint(stream, &counter);
+    *stream << "}" << std::endl;
+}
+#endif
