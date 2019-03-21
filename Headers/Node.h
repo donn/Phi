@@ -99,6 +99,7 @@ namespace Phi {
             TopLevelDeclaration(std::string identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR;
+            
             virtual void translate(std::ofstream* stream);
         };
 

@@ -60,8 +60,9 @@ void TopLevelNamespace::translate(std::ofstream* stream) {
 }
 
 void TopLevelDeclaration::translate(std::ofstream* stream) {
+    
     if (type == TopLevelDeclaration::Type::module) {
-        *stream << "module " << identifier;
+        *stream << "module " << Declaration::identifier << ";" << std::endl;
 
         // Parameters
         // TODO
@@ -77,6 +78,24 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
 
         *stream << "endmodule" << std::endl;
 
+    } else if (type == TopLevelDeclaration::Type::interface){
+        
+        *stream << "interface " << Declaration::identifier << ";" << std::endl;
+
+        // Parameters
+        // TODO
+
+        // Get ready for ports
+        *stream << "(";
+        tryTranslate(ports, stream);
+        *stream << ");";
+        *stream << std::endl;
+
+        // Contents
+        tryTranslate(contents, stream);
+
+        *stream << "endinterface" << std::endl;
     }
+    
     tryTranslate(right, stream);
 }
