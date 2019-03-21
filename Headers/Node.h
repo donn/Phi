@@ -167,6 +167,8 @@ namespace Phi {
             std::string number;
             
             SpecialNumber(const char* interpretable);
+
+            virtual void translate(std::ofstream* stream);
         };
         struct Switch: public BlockBased {
             Expression* expression;
@@ -183,6 +185,8 @@ namespace Phi {
             Statement* statements;
 
             LabeledStatementList(bool isDefault, Expression* expression, SpecialNumber* specialNumber, Statement* statements): isDefault(isDefault), expression(expression), specialNumber(specialNumber), statements(statements) {}
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct Combinational: public BlockBased {
@@ -208,6 +212,8 @@ namespace Phi {
             VariableLengthDeclaration(std::string identifier, Type type, Range* bus, Expression* array, Expression* optionalAssignment): Declaration(identifier), type(type), bus(bus), array(array), optionalAssignment(optionalAssignment) {}
 
             MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct DeclarationListItem: public Declaration { // TEMP: Flattened in VLD constructor!!
@@ -375,6 +381,8 @@ namespace Phi {
             Range(Expression* from, Expression* to) {
                 this->left = from; this->right = to;
             }
+            
+            virtual void translate (std::ofstream* stream);
         };
         struct RangeAccess: public Access {
             RangeAccess(Expression* object, Range* range) {

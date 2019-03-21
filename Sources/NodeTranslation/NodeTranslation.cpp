@@ -1,0 +1,134 @@
+#include "Node.h"
+#include <fstream>
+
+using namespace Phi::Node;
+
+void SpecialNumber::translate(std::ofstream* stream){
+    //why it called SpecialNumber?
+    //because of the existence of z in number like 0101010x0101
+
+    // example
+    // case 32b0101010z.. 
+    // description --> 32: numBits, 2 equivalent to b:radix, 0101010x..: number
+
+
+    //note about radix:
+    // radix is uint. So, it needs to be converted to character
+    // 2 --> b
+    // 8 --> O
+    // 10 --> d
+    // 16 --> h
+
+    // struct SpecialNumber: public Node {
+    //             unsigned int numBits;
+    //             uint8 radix;
+    //             std::string number;
+    // }
+
+    *stream << numBits;
+    *stream << "'";
+    switch(SpecialNumber::radix){
+        case 2:
+            *stream << "b";
+            break;
+        case 8:
+            *stream << "O";
+            break;
+        case 10:
+            *stream << "d";
+            break;
+        case 16:
+            *stream << "h";
+            break;
+        default:
+            break;
+    }
+    *stream << number;
+    *stream << ";";
+    
+    tryTranslate(right, stream);
+}
+
+void LabeledStatementList::translate(std::ofstream* stream){
+    // note about LabeledStatementList --> relate to CASE only
+
+    //example1:
+    //case expression: 
+    // statement1 
+    // statment2
+
+    //example2:
+    //case 3b010100x00:  // 3b010100x00 --> SpecialNumber
+    // statement1 
+    // statment2
+
+    // struct LabeledStatementList: public Node {
+    //         bool isDefault; // Is this the default case in a switch statement?
+    //         Expression* expression;
+    //         SpecialNumber* specialNumber;
+
+    //         Statement* statements;
+    // }
+
+    //note:
+    //http://www.sunburst-design.com/papers/CummingsSNUG1999Boston_FullParallelCase.pdf
+    //Guideline: Do not use casex for synthesizable code [2].
+    //So, we decided to use casez instead of using casex
+    
+    /*
+    example of case in verilog:
+        case (case_expression)
+            case_item1 : case_item_statement1;
+            case_item2 : case_item_statement2;
+            case_item3 : case_item_statement3;
+            case_item4 : case_item_statement4;
+            default    : case_item_statement5;
+        endcase
+    */
+
+    int isDefaultInt = -1;
+    if(LabeledStatementList::isDefault){
+        isDefaultInt = 1;
+    }else{
+         isDefaultInt = 0;
+    }
+
+    switch(isDefaultInt){
+        case 1:
+            //default case 
+            *stream << "default: ";
+            break;
+
+        case 0:
+            //not default case
+            if(LabeledStatementList::specialNumber!=nullptr){
+                //casez specialNumber
+                *stream << "casez: ";
+            }else{
+                //case expression
+                *stream << "case: ";
+            }
+            break;
+
+        default:
+            break;
+    };
+    tryTranslate(statements, stream); 
+}
+
+void Range::translate(std::ofstream* stream){
+    // example
+    //  3:4 
+    //  description--> 3: from, 4: to
+
+    // Range(Expression* from, Expression* to) {
+    //                 this->left = from; this->right = to;
+    //             }
+
+    left->translate(stream); //from
+    *stream << ":";
+    right->translate(stream); //to
+
+     tryTranslate(right, stream);
+}
+
