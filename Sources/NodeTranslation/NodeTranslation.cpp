@@ -115,22 +115,11 @@ void Range::translate(std::ofstream* stream){
     //                 this->left = from; this->right = to;
     //             }
 
-    left->translate(stream); //from
+    tryTranslate(left, stream); //from
     *stream << ":";
-    right->translate(stream); //to
+    tryTranslate(right, stream); //to
 
-     tryTranslate(right, stream);
+    tryTranslate(right, stream);
 }
 
-void Argument::translate(std::ofstream* stream){
-}
-
-void StringArgument::translate(std::ofstream* stream){
-}
-
-void ExpressionArgument::translate(std::ofstream* stream){
-}
-
-void ExpressionPair::translate(std::ofstream* stream){
-}
 
