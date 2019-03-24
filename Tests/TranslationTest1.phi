@@ -1,10 +1,10 @@
-module Alpha (
-    a: Input[2..0],
-    b: Output[11..0]
-    )
-{ 
-    Wire[2..0] k1 = a;
-    Wire[2..0] k2 = a;
-    
-    b = [2 [[k1,k2]] ];
+module alwaysss(
+x: Input,
+y: Input,
+z: Output
+)
+{
+    Register p, q;
 }
+
+

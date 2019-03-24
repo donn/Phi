@@ -2,7 +2,7 @@
 
 #include <regex>
 #include <sstream>
-
+#include <iostream>
 using namespace Phi::Node;
 
 using VLD = VariableLengthDeclaration;
@@ -20,5 +20,7 @@ VLD* VLD::flattenedList(VLD::Type type, Range* bus, DeclarationListItem* item) {
         delete current;
     }
 
-    return (VLD*)vld.right;
+    VLD* right = (VLD*)vld.right;
+
+    return right;
 }

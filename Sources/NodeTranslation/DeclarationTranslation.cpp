@@ -82,22 +82,22 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
         *stream << "endmodule" << std::endl;
 
     } else if (type == TopLevelDeclaration::Type::interface){
-        
-        *stream << "interface " << Declaration::identifier << ";" << std::endl;
+        // Interfaces are elaboration-only
+        // *stream << "interface " << Declaration::identifier << ";" << std::endl;
 
-        // Parameters
-        // TODO
+        // // Parameters
+        // // TODO
 
-        // Get ready for ports
-        *stream << "(";
-        tryTranslate(ports, stream);
-        *stream << ");";
-        *stream << std::endl;
+        // // Get ready for ports
+        // *stream << "(";
+        // tryTranslate(ports, stream);
+        // *stream << ");";
+        // *stream << std::endl;
 
-        // Contents
-        tryTranslate(contents, stream);
+        // // Contents
+        // tryTranslate(contents, stream);
 
-        *stream << "endinterface" << std::endl;
+        // *stream << "endinterface" << std::endl;
     }
     
     tryTranslate(right, stream);

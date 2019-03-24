@@ -41,8 +41,8 @@ namespace Phi {
             DEBUGLABEL;
             GRAPHPRINT;
 
-            MACRO_ELAB_SIG_HDR {}
-            virtual void translate(std::ofstream* stream) {}
+            MACRO_ELAB_SIG_HDR;
+            virtual void translate(std::ofstream* stream);
         };
 
         inline void tryElaborate(Node* node, MACRO_ELAB_PARAMS) {
