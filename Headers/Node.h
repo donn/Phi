@@ -83,7 +83,7 @@ namespace Phi {
                 }
             }
 
-            MACRO_ELAB_SIG_HDR override;
+            MACRO_ELAB_SIG_HDR;
 
             virtual void translate(std::ofstream* stream);
         };
