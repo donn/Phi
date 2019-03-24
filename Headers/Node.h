@@ -133,6 +133,7 @@ namespace Phi {
         // Statements
         struct Statement: public Node {
             optional<std::string> annotation = nullopt;
+            bool insideCombBlock = false;
         };
 
         // Block-Based Statements
