@@ -151,7 +151,8 @@ void Ternary::translate (std::ofstream* stream){
 }
 
 void RepeatConcatenation::translate (std::ofstream* stream){
-    //example : {2{3'b110}}
+    //example in phi : [2 [[3'b110]] ]
+    //example in verilog : {2 {3'b110} }
 
     *stream << "{";
     tryTranslate(left, stream); //repeatCount
