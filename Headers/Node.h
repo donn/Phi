@@ -200,6 +200,7 @@ namespace Phi {
         };
 
         struct Combinational: public BlockBased {
+            
             Combinational(Statement* contents): BlockBased(contents) {}
 
             MACRO_ELAB_SIG_HDR;
