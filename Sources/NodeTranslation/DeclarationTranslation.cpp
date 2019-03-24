@@ -66,7 +66,17 @@ void TopLevelNamespace::translate(std::ofstream* stream) {
 void TopLevelDeclaration::translate(std::ofstream* stream) {
     
     if (type == TopLevelDeclaration::Type::module) {
-        *stream << "module " << Declaration::identifier << ";" << std::endl;
+        *stream << "module " << Declaration::identifier;
+        *stream << "(" << std::endl;
+        auto pointer = ports;
+        while (pointer) {
+            *stream << pointer->identifier << ", " << std::endl;
+            pointer = (Port*)pointer->right;
+        }
+        *stream << ")";
+
+
+        *stream << ";" << std::endl;
 
         // Parameters
         // TODO
@@ -188,13 +198,15 @@ void InstanceDeclaration::translate(std::ofstream* stream){
 
     tryTranslate(module, stream);
 
-    *stream << "#";
-    *stream << "(";
-    tryTranslate(parameters, stream);
-    *stream << ")";
+    if (parameters) {
+        *stream << " #(";
+        tryTranslate(parameters, stream);
+        *stream << ")";
+    }
 
+    *stream << " ";
     *stream << Declaration::identifier;
-     *stream << "(";
+    *stream << "(";
     tryTranslate(ports, stream);
     *stream << ");";
 
@@ -218,5 +230,8 @@ void ExpressionIDPair::translate(std::ofstream* stream){
     tryTranslate(expression, stream);
     *stream << ")";
 
-    tryTranslate(right, stream);
+    if (right) {
+        *stream << "," << std::endl;
+        tryTranslate(right, stream);
+    }
 }

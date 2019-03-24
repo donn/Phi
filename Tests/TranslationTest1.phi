@@ -1,17 +1,19 @@
-module alwaysss(
-x: Input,
-y: Input,
-z: Output
+module a(
+a: Input,
+b: Input,
+c: Output
 )
 {
-    Register p;
-    Register q;
-
-    comb{
-        p = (~x & ~y);
-        q =  x & y;
-    }
-    Register p[8], q;
+    c = a+b;
 }
 
+
+module aa2(
+a: Input,
+b: Input,
+c: Output
+)
+{
+    a ss (a:a, b:b , c:c);
+}
 

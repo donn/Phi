@@ -2,7 +2,7 @@
 %defines
 %locations
 
-%define parser_class_name {Parser}
+%define api.parser.class {Parser}
 %define api.namespace {Phi}
 
 %code requires {
