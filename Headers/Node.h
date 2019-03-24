@@ -282,8 +282,6 @@ namespace Phi {
             NondeclarativePorts(Expression* lhs, ExpressionIDPair* ports): Nondeclarative(lhs), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR;
-
-             virtual void translate(std::ofstream* stream);
         };
 
         // Expression
