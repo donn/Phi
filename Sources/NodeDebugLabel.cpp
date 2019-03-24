@@ -17,7 +17,7 @@ std::string TopLevelNamespace::debugLabel() {
 void Node::graphPrint(std::ostream* stream, int* node) {
     auto current = *node;
     *node = current + 1;
-
+    
     *stream << current << " " << "[label=\"" << debugLabel() << "\"]" << ";" << std::endl;
 
     if (left) {
@@ -28,5 +28,19 @@ void Node::graphPrint(std::ostream* stream, int* node) {
     }
 }
 
+
+void TopLevelNamespace::graphPrint(std::ostream* stream, int* node) {
+    auto current = *node;
+    *node = current + 1;
+
+    *stream << current << " " << "[label=\"" << debugLabel() << "\\n" << identifier << "\"]" << ";" << std::endl;
+
+    if (left) {
+        left->graphPrint(stream, node);
+    }
+    if (right) {
+        right->graphPrint(stream, node);
+    }
+}
 
 #endif

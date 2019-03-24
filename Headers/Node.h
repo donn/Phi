@@ -83,7 +83,7 @@ namespace Phi {
                 }
             }
 
-            MACRO_ELAB_SIG_HDR;
+            MACRO_ELAB_SIG_HDR override;
 
             virtual void translate(std::ofstream* stream);
         };
@@ -93,7 +93,8 @@ namespace Phi {
 
             TopLevelNamespace(const char* identifier, Node* contents): Declaration(identifier), contents(contents) {}
             
-            DEBUGLABEL ;
+            DEBUGLABEL;
+            GRAPHPRINT;
 
             virtual void translate(std::ofstream* stream);
 
