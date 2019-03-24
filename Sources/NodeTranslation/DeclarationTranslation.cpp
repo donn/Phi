@@ -100,9 +100,6 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
     tryTranslate(right, stream);
 }
 
-void TemplateDeclaration::translate(std::ofstream* stream){
-}
-
 void VariableLengthDeclaration::translate(std::ofstream* stream){
 
     // struct VariableLengthDeclaration: public Declaration {
@@ -145,11 +142,25 @@ void VariableLengthDeclaration::translate(std::ofstream* stream){
 
 }
 
-void DeclarationListItem::translate(std::ofstream* stream){
-}
-
 void InstanceDeclaration::translate(std::ofstream* stream){
 }
 
 void ExpressionIDPair::translate(std::ofstream* stream){
+
+    //example 
+    //calling another module
+    // A (.b(b_in), ... ) 
+    // b: Declaration::identifier, b_in: expression
+
+    // struct ExpressionIDPair: public Declaration {
+    //         Expression* expression;
+    // }
+
+    *stream << ".";
+    *stream << Declaration::identifier;
+    *stream << "(";
+    tryTranslate(expression, stream);
+    *stream << ")";
+
+    tryTranslate(right, stream);
 }

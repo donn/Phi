@@ -124,8 +124,6 @@ namespace Phi {
             Expression* assignment;
 
             TemplateDeclaration(const char* identifier, Expression* assignment): Declaration(identifier) {}
-
-            virtual void translate(std::ofstream* stream);
         };
 
         // Statements
@@ -236,7 +234,6 @@ namespace Phi {
 
             DeclarationListItem(const char* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
 
-            virtual void translate(std::ofstream* stream);
         };
 
         struct ExpressionIDPair;
