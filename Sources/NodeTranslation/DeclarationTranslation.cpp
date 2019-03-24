@@ -100,6 +100,8 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
     tryTranslate(right, stream);
 }
 
+void TemplateDeclaration::translate(std::ofstream* stream){
+}
 
 void VariableLengthDeclaration::translate(std::ofstream* stream){
 
@@ -141,4 +143,13 @@ void VariableLengthDeclaration::translate(std::ofstream* stream){
 
     tryTranslate(right, stream);
 
+}
+
+void DeclarationListItem::translate(std::ofstream* stream){
+}
+
+void InstanceDeclaration::translate(std::ofstream* stream){
+}
+
+void ExpressionIDPair::translate(std::ofstream* stream){
 }

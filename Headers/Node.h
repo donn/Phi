@@ -122,6 +122,8 @@ namespace Phi {
             Expression* assignment;
 
             TemplateDeclaration(const char* identifier, Expression* assignment): Declaration(identifier) {}
+
+            virtual void translate(std::ofstream* stream);
         };
 
         // Statements
@@ -232,6 +234,7 @@ namespace Phi {
 
             DeclarationListItem(const char* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
 
+            virtual void translate(std::ofstream* stream);
         };
 
         struct ExpressionIDPair;
@@ -245,6 +248,8 @@ namespace Phi {
             InstanceDeclaration(const char* identifier, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct ExpressionIDPair: Declaration {
@@ -253,6 +258,8 @@ namespace Phi {
             ExpressionIDPair(const char* identifier, Expression* expression): Declaration(identifier), expression(expression) {}
             
             MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         // Nondeclarative Statements
