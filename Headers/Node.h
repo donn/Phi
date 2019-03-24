@@ -142,6 +142,8 @@ namespace Phi {
 
             If(Statement* contents, Expression* expression, If* elseBlock): BlockBased(contents), expression(expression), elseBlock(elseBlock) {}
             MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct ForLoop: public BlockBased {
@@ -150,6 +152,8 @@ namespace Phi {
 
             ForLoop(Statement* contents, Range* range, const char* identifier): BlockBased(contents), range(range), identifier(identifier) {}
             MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct Namespace: public BlockBased {
@@ -158,6 +162,8 @@ namespace Phi {
             Namespace(Statement* contents, const char* identifier): BlockBased(contents), identifier(identifier) {}
 
             MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct LabeledStatementList;
@@ -175,6 +181,8 @@ namespace Phi {
             LabeledStatementList* list;
 
             Switch(Expression* expression, LabeledStatementList* list): BlockBased(nullptr), expression(expression), list(list) {}
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct LabeledStatementList: public Node {
@@ -193,6 +201,8 @@ namespace Phi {
             Combinational(Statement* contents): BlockBased(contents) {}
 
             MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         // Subdeclarations
@@ -257,6 +267,8 @@ namespace Phi {
             NondeclarativeAssignment(Expression* lhs, Expression* expression): Nondeclarative(lhs), expression(expression) {}
 
             MACRO_ELAB_SIG_HDR;
+
+             virtual void translate(std::ofstream* stream);
         };
         struct NondeclarativePorts: public Nondeclarative {
             ExpressionIDPair* ports;
@@ -264,6 +276,8 @@ namespace Phi {
             NondeclarativePorts(Expression* lhs, ExpressionIDPair* ports): Nondeclarative(lhs), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR;
+
+             virtual void translate(std::ofstream* stream);
         };
 
         // Expression
