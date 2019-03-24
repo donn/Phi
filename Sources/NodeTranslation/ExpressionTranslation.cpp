@@ -131,14 +131,23 @@ void Binary::translate (std::ofstream* stream){
 
 void Ternary::translate (std::ofstream* stream){
 
-     condition->translate(stream);
-     *stream << "?";
-     tryTranslate(left, stream);
-     *stream << ":";
-     tryTranslate(right, stream);
+     *stream << "(";
+     tryTranslate(condition, stream);
      *stream << ")";
 
-     *stream << std::endl;
+     *stream << " ";
+     *stream << "?";
+     *stream << " ";
+     *stream << "(";
+     tryTranslate(left, stream);
+     *stream << ")";
+     
+     *stream << " ";
+     *stream << ":";
+     *stream << " ";
+     *stream << "(";
+     tryTranslate(right, stream);
+     *stream << ")";
 }
 
 void RepeatConcatenation::translate (std::ofstream* stream){
