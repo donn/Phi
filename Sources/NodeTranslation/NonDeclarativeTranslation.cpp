@@ -9,6 +9,11 @@ void NondeclarativeAssignment::translate (std::ofstream* stream){
     // a = b;
     // a: Nondeclarative::lhs, b: expression
 
+    // struct Statement: public Node {
+    //         optional<std::string> annotation = nullopt;
+    //         bool insideCombBlock = false;
+    //     };
+
     // struct Nondeclarative: public Statement {
     //         Expression* lhs;
     // }
@@ -18,6 +23,10 @@ void NondeclarativeAssignment::translate (std::ofstream* stream){
     // }
 
     
+    if(Statement::insideCombBlock==false){
+        *stream << "assign ";
+    }
+
     tryTranslate(lhs, stream); 
     *stream << " = ";
     tryTranslate(expression, stream); 
