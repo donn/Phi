@@ -23,13 +23,13 @@ void Unary::translate (std::ofstream* stream){
             //two's complement
             *stream << "-";
             *stream << " ( ";
-            right->translate(stream);
+            tryTranslate(right, stream);
             *stream << " ) ";
     }else if(operation == Unary::Operation::bitwiseNot){
             //one's complement 
             *stream << "~";
             *stream << " ( ";
-            right->translate(stream);
+            tryTranslate(right, stream);
             *stream << " ) ";
     }else if (operation == Unary::Operation::allAnd){
             //handled in elaboration phase
@@ -56,10 +56,10 @@ void Binary::translate (std::ofstream* stream){
     ){
         //handle if the operation is for signed numbers
         *stream << "$Signed(";
-        left->translate(stream);
+        tryTranslate(left, stream);
         *stream << ")";
     }else{
-        left->translate(stream);
+        tryTranslate(left, stream);
     }
     
 
@@ -120,11 +120,11 @@ void Binary::translate (std::ofstream* stream){
         (operation == Binary::Operation::lessThanOrEqual) 
     ){
         //handle if the operation is for signed numbers
-        *stream << "$Signed(";
-        right->translate(stream);
+        *stream << "$signed(";
+        tryTranslate(right, stream);
         *stream << ")";
     }else{
-        right->translate(stream);
+        tryTranslate(right, stream);
     }
     
 
@@ -134,9 +134,9 @@ void Ternary::translate (std::ofstream* stream){
 
      condition->translate(stream);
      *stream << "?";
-     left->translate(stream);
+     tryTranslate(left, stream);
      *stream << ":";
-     right->translate(stream);
+     tryTranslate(right, stream);
      *stream << " ) ";
      *stream << " ; ";
 }
@@ -145,10 +145,10 @@ void RepeatConcatenation::translate (std::ofstream* stream){
     //example : {2{3'b110}}
 
     *stream << "{ ";
-    left->translate(stream); //repeatCount
+    tryTranslate(left, stream); //repeatCount
 
     *stream << "{ ";
-    right->translate(stream); // repeatable
+    tryTranslate(right, stream); // repeatable
     *stream << "}";
 
     *stream << "}";
@@ -158,9 +158,9 @@ void Concatenation::translate (std::ofstream* stream){
     //example: {2'b11, 4'h8}
 
     *stream << "{ ";
-    left->translate(stream); 
+    tryTranslate(left, stream); 
     *stream << ",";
-    right->translate(stream); 
+    tryTranslate(right, stream); 
     *stream << "}";
 
 }
