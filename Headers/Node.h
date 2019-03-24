@@ -57,7 +57,9 @@ namespace Phi {
             }
         }
 
-        struct ErrorNode: public Node {};
+        struct ErrorNode: public Node {
+            virtual void translate(std::ofstream* stream);
+        };
 
         // Declarations
         struct Expression; // Fwd Declaration
@@ -429,16 +431,22 @@ namespace Phi {
             virtual void translate (std::ofstream* stream);
         };
         
-        struct Argument: public Node {};
+        struct Argument: public Node {
+            virtual void translate(std::ofstream* stream);
+        };
 
         struct StringArgument: public Node {
             std::string argument;
             StringArgument(const char* argument): argument(argument) {}
+
+            virtual void translate(std::ofstream* stream);
         };
         
         struct ExpressionArgument: public Node {
             Expression* argument;
             ExpressionArgument(Expression* argument): argument(argument) {}
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct ProceduralCall: public Expression {
@@ -451,6 +459,8 @@ namespace Phi {
             Expression* label; // If nullptr, default
             Expression* result;
             ExpressionPair(Expression* label, Expression* result): label(label), result(result) {}
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct Multiplexer: public Expression {

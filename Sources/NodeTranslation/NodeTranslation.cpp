@@ -3,6 +3,9 @@
 
 using namespace Phi::Node;
 
+void ErrorNode::translate(std::ofstream* stream){
+}
+
 void SpecialNumber::translate(std::ofstream* stream){
     //why it called SpecialNumber?
     //because of the existence of z in number like 0101010x0101
@@ -117,5 +120,17 @@ void Range::translate(std::ofstream* stream){
     right->translate(stream); //to
 
      tryTranslate(right, stream);
+}
+
+void Argument::translate(std::ofstream* stream){
+}
+
+void StringArgument::translate(std::ofstream* stream){
+}
+
+void ExpressionArgument::translate(std::ofstream* stream){
+}
+
+void ExpressionPair::translate(std::ofstream* stream){
 }
 
