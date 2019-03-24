@@ -85,9 +85,14 @@ void Namespace::MACRO_ELAB_SIG_IMP {
 }
 
 void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
-    tryElaborate(optionalAssignment, MACRO_ELAB_ARGS);
-    tryElaborate(array, MACRO_ELAB_ARGS);
     tryElaborate(bus, MACRO_ELAB_ARGS);
+    tryElaborate(declarationList, MACRO_ELAB_ARGS);
+    tryElaborate(right, MACRO_ELAB_ARGS);
+}
+
+void DeclarationListItem::MACRO_ELAB_SIG_IMP {
+    tryElaborate(array, MACRO_ELAB_ARGS);
+    tryElaborate(optionalAssignment, MACRO_ELAB_ARGS);
     table->add(identifier, this, optionalAssignment);
     tryElaborate(right, MACRO_ELAB_ARGS);
 }

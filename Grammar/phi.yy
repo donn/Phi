@@ -340,7 +340,7 @@ statement_list:
 /* Subdeclarations */
 subdeclaration:
     dynamic_width optional_bus_declaration declaration_list {
-        $$ = VariableLengthDeclaration::flattenedList($1, (Range*)$2, (DeclarationListItem*)$3);
+        $$ = new VariableLengthDeclaration($1, (Range*)$2, (DeclarationListItem*)$3);
     }
     | expression optional_template IDENTIFIER optional_array_declaration optional_ports {
         $$ = new InstanceDeclaration($3, $1, (ExpressionIDPair*)$2, $4, (ExpressionIDPair*)$5);
