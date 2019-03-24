@@ -585,7 +585,7 @@ concatenatable:
     expression {
         $$ = $1;
     }
-    | expression LEFT_REPEAT_CAT expression ']' ']' {
+    | expression LEFT_REPEAT_CAT concatenation ']' ']' {
         $$ = new RepeatConcatenation($1, $3);
     }
     ;

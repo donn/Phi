@@ -48,6 +48,7 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
 
     if (!widthIncluded) {
         auto ref = llvm::StringRef(interpretable);
+        numBits = 32;
         value = llvm::APInt(32, ref, 10);
     } else {
         auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9]+)");
@@ -59,6 +60,8 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
         if (prospectiveWidth < 0 || prospectiveWidth > maxWidth) {
             throw "expr.tooWide";
         }
+
+        numBits = prospectiveWidth;
 
         std::string radixCharacter = match[2];
         uint8_t radix;
