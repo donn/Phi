@@ -254,7 +254,7 @@ namespace Phi {
             virtual void translate(std::ofstream* stream);
         };
 
-        struct ExpressionIDPair: Declaration {
+        struct ExpressionIDPair: public Declaration {
             Expression* expression;
 
             ExpressionIDPair(const char* identifier, Expression* expression): Declaration(identifier), expression(expression) {}
