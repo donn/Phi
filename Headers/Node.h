@@ -72,12 +72,17 @@ namespace Phi {
         };
 
         struct Port: public Declaration {
-            bool polarity; // polarity ? Input: Output
+            enum class Polarity {
+                input = 0,
+                output,
+                output_reg
+            };
+            Polarity polarity;
             Range* bus;
 
             optional<std::string> annotation;
 
-            Port(const char* identifier, bool polarity, Range* bus, const char* annotation): Declaration(identifier), polarity(polarity), bus(bus) {
+            Port(const char* identifier, bool polarity, Range* bus, const char* annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus) {
                 if (annotation) {
                     this->annotation = std::string(annotation);
                 }
@@ -133,7 +138,7 @@ namespace Phi {
         // Statements
         struct Statement: public Node {
             optional<std::string> annotation = nullopt;
-            bool insideCombBlock = false;
+            bool inComb = false;
         };
 
         // Block-Based Statements
@@ -218,7 +223,9 @@ namespace Phi {
         struct VariableLengthDeclaration: public Node {
             enum class Type {
                 var = 0,
-                wire, reg, latch
+                wire, reg, latch,
+
+                wire_reg // For things that are Wires in Phi and Registers in Verilog (i.e. assigned to inside a comb block)
             };
             Type type;
             Range* bus;
@@ -230,7 +237,9 @@ namespace Phi {
             virtual void translate(std::ofstream* stream);
         };
 
-        struct DeclarationListItem: public Declaration { 
+        struct DeclarationListItem: public Declaration {
+            VariableLengthDeclaration::Type type;
+            Range* bus;
             Expression* array;
             Expression* optionalAssignment;
 

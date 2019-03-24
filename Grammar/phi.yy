@@ -178,10 +178,10 @@ populated_port_declaration_list:
     ;
 port_polarity:
     KEYWORD_INPUT {
-        $$ = true;
+        $$ = false;
     }
     | KEYWORD_OUTPUT {
-        $$ = false;
+        $$ = true;
     }
     ;
 

@@ -1,15 +1,10 @@
-namespace Alpha { // Top Level Namespace (NOT INSIDE MODULE)
-    namespace Alpha {
-        namespace Alpha {
-            
-        }
-    }
-    module Beta(a: Input, b: Output) {
-        namespace Gamma { // Namespace (INSIDE MODULE) --> later
+module Beta(a: Input, b: Output, c: Output) {
+    Wire[1..0] theta;
 
-
-        }
-        Var[1..0] k = 2b10;
+    comb {
+        theta = [2[[a]]];
+        c = theta[0];
     }
-    interface Theta(phi: Input, psi: Output);
+
+    b = theta[1];
 }

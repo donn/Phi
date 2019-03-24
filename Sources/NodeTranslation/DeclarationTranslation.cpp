@@ -9,18 +9,16 @@ void Port::translate(std::ofstream* stream) {
     // a: Input [width-1 .. 0]; 
     // input [width-1 ..0] a;
 
-    // struct Port: public Declaration {
-    //         bool polarity; // polarity ? Input: Output
-    //         Range* bus;
-
-    //         optional<std::string> annotation;
-    // }
-
-    // polarity --> polarity ? Input: Output
-    if(polarity==true){
-        *stream << "input";
-    } else {
-        *stream << "output";
+    switch (polarity) {
+        case Port::Polarity::input:
+            *stream << "input";
+            break;
+        case Port::Polarity::output:
+            *stream << "output";
+            break;
+        case Port::Polarity::output_reg:
+            *stream << "output reg";
+            break;
     }
     
     // bus --> bus points to null ? no range : range [from:to] ;
@@ -115,49 +113,35 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
 
 void VariableLengthDeclaration::translate(std::ofstream* stream){
 
-    // struct VariableLengthDeclaration: public Declaration {
-    //         enum class Type {
-    //             var = 0,
-    //             wire, reg, latch
-    //         };
-    //         Type type;
-    //         Range* bus;
-    //         Expression* array;
-    //         Expression* optionalAssignment;
-    // }
+    tryTranslate(declarationList, stream);
+    tryTranslate(right, stream);
+}
+
+void DeclarationListItem::translate(std::ofstream* stream) {
+    using VLD = VariableLengthDeclaration;
 
     switch(type){
-        case Type::var:    
+        case VLD::Type::var:    
             //var --> leave for final presentation ?? 
-            *stream << "integer";
+            *stream << "/* phi error */";
             break;
-        case Type::wire:
+        case VLD::Type::wire:
             //wire
             *stream << "wire";
             break;
-        case Type::reg:
+        case VLD::Type::reg:
+        case VLD::Type::wire_reg:
             //reg
             *stream << "reg";
             break;
-        case Type::latch:
+        case VLD::Type::latch:
             //latch --> leave for final presentation ??
             break;
     };
 
     tryTranslate(bus, stream);
 
-    *stream << " ";
-    
-    tryTranslate(declarationList, stream);
-
-    *stream << ";" << std::endl;
-
-    tryTranslate(right, stream);
-
-}
-
-void DeclarationListItem::translate(std::ofstream* stream) {
-    *stream << Declaration::identifier;
+    *stream << " " <<  Declaration::identifier;
 
     // Expression* array;
     if (array) {
@@ -175,10 +159,9 @@ void DeclarationListItem::translate(std::ofstream* stream) {
         *stream << ")";
     }
 
-    if (right) {
-        *stream << ", " << std::endl;
-        tryTranslate(right, stream);
-    }
+    *stream << "; " << std::endl;
+
+    tryTranslate(right, stream);
 }
 
 void InstanceDeclaration::translate(std::ofstream* stream){
@@ -209,7 +192,6 @@ void InstanceDeclaration::translate(std::ofstream* stream){
     *stream << "(";
     tryTranslate(ports, stream);
     *stream << ");";
-
     tryTranslate(right, stream);
 }
 

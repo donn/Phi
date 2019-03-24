@@ -1,4 +1,3 @@
-#include <regex>
 #include <sstream>
 
 #include "Node.h"
@@ -65,7 +64,7 @@ void If::MACRO_ELAB_SIG_IMP {
 
 void ForLoop::MACRO_ELAB_SIG_IMP {
     range->elaborate(MACRO_ELAB_ARGS);
-    // NOTE: POLITICALLY INCORRECT INSPECTION
+    // PII
     // TODO
     tryElaborate(right, MACRO_ELAB_ARGS);
 }
@@ -85,7 +84,10 @@ void Namespace::MACRO_ELAB_SIG_IMP {
 }
 
 void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
+    // PII
     tryElaborate(bus, MACRO_ELAB_ARGS);
+    declarationList->type = type;
+    declarationList->bus = bus;
     tryElaborate(declarationList, MACRO_ELAB_ARGS);
     tryElaborate(right, MACRO_ELAB_ARGS);
 }
@@ -94,7 +96,12 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     tryElaborate(array, MACRO_ELAB_ARGS);
     tryElaborate(optionalAssignment, MACRO_ELAB_ARGS);
     table->add(identifier, this, optionalAssignment);
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    if (right) {
+        auto rightDLI = (DeclarationListItem*)right;
+        rightDLI->type = type;
+        rightDLI->bus = bus;
+        tryElaborate(right, MACRO_ELAB_ARGS);
+    }
 }
 
 void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
@@ -126,12 +133,73 @@ void ExpressionIDPair::MACRO_ELAB_SIG_IMP {
 }
 
 void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
+    // Declaration block because I'm using goto here
+    std::vector<std::string> ids;
+    auto pointer = lhs;
+    auto identifierPointer = dynamic_cast<Identifier*>(pointer);
+    auto propertyAccessPointer = dynamic_cast<PropertyAccess*>(pointer);
+    Identifier* left;
+    std::shared_ptr<Symbol> symbol;
+    DeclarationListItem* dliAttache;
+    Port* portAttache;
+
     tryElaborate(lhs, MACRO_ELAB_ARGS);
+
     unless (lhs->leftHandExpression) {
         context->errorList.push_back({Phi::Error::emptyLocation, "identifier.rightHand"});
+        goto exit;
+    }
+    while (pointer) {
+        if (identifierPointer) {
+            ids.push_back(identifierPointer->identifier);
+            pointer = nullptr;
+        } else if (propertyAccessPointer) {
+            left = (Identifier*)identifierPointer->left; // LHExpression association should mandate this
+            ids.push_back(left->identifier);
+            pointer = (Expression*)identifierPointer->right;
+        } else {
+            context->errorList.push_back({Phi::Error::emptyLocation, "identifier.invalidAccess"});
+            goto exit;
+        }
+    }
+
+    symbol = table->checkExistence(ids);
+    unless (symbol) {
+        context->errorList.push_back({Phi::Error::emptyLocation, "symbol.dne"});
+        goto exit;
+    }
+
+
+    dliAttache = dynamic_cast<DeclarationListItem*>(symbol->attached);
+    portAttache = dynamic_cast<Port*>(symbol->attached);
+    unless (dliAttache && dliAttache->type == VariableLengthDeclaration::Type::wire) {
+        unless (portAttache && portAttache->polarity == Port::Polarity::output) {
+            context->errorList.push_back({Phi::Error::emptyLocation, "symbol.notAWire"});
+            goto exit;
+        }
+    } 
+
+    if (symbol->driver) {
+        context->errorList.push_back({Phi::Error::emptyLocation, "symbol.driverExists"});
+        goto exit;
+    }
+
+    symbol->driver = this;
+
+    if (table->inComb()) {
+        if (dliAttache) {
+            dliAttache->type = VariableLengthDeclaration::Type::wire_reg;
+        }
+        if (portAttache) {
+            portAttache->polarity = Port::Polarity::output_reg;
+        }
+        inComb = true;
     }
 
     tryElaborate(expression, MACRO_ELAB_ARGS);
+
+exit:
+    tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void NondeclarativePorts::MACRO_ELAB_SIG_IMP {

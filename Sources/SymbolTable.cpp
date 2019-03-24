@@ -41,29 +41,28 @@ void SymbolTable::stepIntoAndCreate(std::string space, Node::Node* attached) {
     stepInto(space);
 }
 
-std::shared_ptr<Symbol>  SymbolTable::checkExistence(std::vector<std::string> ids, Node::Node* attached) {
-    std::shared_ptr<Symbol> found = nullptr;
-    for (auto i = stack.rbegin(); i != stack.rend() && (found == nullptr); i++) {
+std::shared_ptr<Symbol>  SymbolTable::checkExistence(std::vector<std::string> ids) {
+    for (auto i = stack.rbegin(); i != stack.rend(); i++) {
         auto pointer = *i;
         bool flag = true;
         for (auto j = ids.begin(); j != ids.end() && flag; j++) {
             auto next = pointer->space.find(*j);
             auto& target = *next;
-#if 0 // Fix later
-            std::cout << (*j) << " in " << (pointer->id) << ": " << (next != pointer->space.end() ? "Found" : "Not Found") << std::endl;
-#endif
+            // std::cout << (*j) << " in " << (pointer->id) << ": " << (next != pointer->space.end() ? "Found" : "Not Found") << std::endl;
             if (next == pointer->space.end()) {
                 flag = false;
             } else {
+                if (std::next(j) == ids.end()) {
+                    return next->second;
+                }
                 pointer = std::dynamic_pointer_cast<SymbolSpace>(target.second);
-                if (pointer == nullptr && std::next(j) != ids.end()) {
+                if (pointer == nullptr) {
                     flag = false;
                 }
             }
         }
-        found = flag ? pointer : NULL;
     }
-    return found;
+    return nullptr;
 }
 
 void SymbolTable::stepOut() {

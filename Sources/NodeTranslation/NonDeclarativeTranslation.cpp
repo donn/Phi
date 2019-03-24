@@ -23,7 +23,7 @@ void NondeclarativeAssignment::translate (std::ofstream* stream){
     // }
 
     
-    if(Statement::insideCombBlock==false){
+    unless (Statement::inComb) {
         *stream << "assign ";
     }
 

@@ -8,17 +8,17 @@ void ErrorNode::translate(std::ofstream* stream){
 
 void SpecialNumber::translate(std::ofstream* stream){
     //why it called SpecialNumber?
-    //because of the existence of z in number like 0101010x0101
+    //because of the existence of z in number like 0101010z0101
 
     // example
     // case 32b0101010z.. 
-    // description --> 32: numBits, 2 equivalent to b:radix, 0101010x..: number
+    // description --> 32: numBits, 2 equivalent to b:radix, 0101010z..: number
 
 
     //note about radix:
     // radix is uint. So, it needs to be converted to character
     // 2 --> b
-    // 8 --> O
+    // 8 --> o
     // 10 --> d
     // 16 --> h
 
@@ -35,7 +35,7 @@ void SpecialNumber::translate(std::ofstream* stream){
             *stream << "b";
             break;
         case 8:
-            *stream << "O";
+            *stream << "o";
             break;
         case 10:
             *stream << "d";

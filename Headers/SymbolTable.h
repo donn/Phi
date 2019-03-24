@@ -53,7 +53,7 @@ namespace Phi {
         void add(std::string id, Node::Node* attached, Node::Node* driver) {
             add(id, attached, false, driver);
         }
-        std::shared_ptr<Symbol> checkExistence(std::vector<std::string> ids, Node::Node* attached);
+        std::shared_ptr<Symbol> checkExistence(std::vector<std::string> ids);
         void stepInto(std::string id);
         void stepIntoComb(Node::Node* attached);
         void stepIntoAndCreate(std::string id, Node::Node* attached);

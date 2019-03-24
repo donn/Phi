@@ -38,6 +38,7 @@ int main(int argc, char* argv[]) {
     SSCO::Options getOpt({
         {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(); exit(0); }},
         {"version", 'V', "Show the current version of Phi.", false, [&](){ printVersion(); exit(0); }},
+        {"ignoreErrors", std::nullopt, "Attempt best translation despite errors.", false, [&](){ printVersion(); exit(0); }},
 #if YYDEBUG
         {"trace", 'T', "Trace GNU Bison/Phi semantic analysis operation. (Debug builds only.)", false, nullopt},
         {"astGraph", std::nullopt, "Filename to output graphviz of syntax tree. (Debug builds only.)", true, nullopt},
@@ -94,12 +95,14 @@ int main(int argc, char* argv[]) {
 
     if (context.error()) {
         context.printErrors();
-        return EX_DATAERR;
+        unless (options.find("ignoreErrors") == options.end()) {
+            return EX_DATAERR;
+        }
     }
 
  #if YYDEBUG
     auto astGraphFile = options.find("astGraph");
-    if (astGraphFile != options.end()) {
+    unless (astGraphFile == options.end()) {
         std::ofstream output(astGraphFile->second);
         if (output.fail()) {
             return EX_CANTCREAT;
@@ -110,6 +113,12 @@ int main(int argc, char* argv[]) {
 
     Phi::SymbolTable table;
     context.elaborate(&table);
+    if (context.error()) {
+        context.printErrors();
+        unless (options.find("ignoreErrors") == options.end()) {
+            return EX_DATAERR;
+        }
+    }
 
     std::ofstream output;
     output.open(arguments[0] + ".sv");
@@ -118,7 +127,7 @@ int main(int argc, char* argv[]) {
 
 #if YYDEBUG
     auto symTableFile = options.find("symGraph");
-    if (symTableFile != options.end()) {
+    unless (symTableFile == options.end()) {
         std::ofstream output(symTableFile->second);
         if (output.fail()) {
             return EX_CANTCREAT;
