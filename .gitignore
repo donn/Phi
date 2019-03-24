@@ -10,6 +10,7 @@ phi
 
 /*.phi
 /*.sv
-Examples/*.sv
+
+*.dot
 
 *~

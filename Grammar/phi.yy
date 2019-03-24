@@ -330,14 +330,10 @@ block:
 
 statement_list:
     { $$ = epsilon; }
-    | statement_list statement {
-        if ($1) {
-            auto node = $1;
-            node->right = $2;
-            $$ = $1;
-        } else {
-            $$ = $2;
-        }
+    | statement statement_list {
+        auto node = $1;
+        node->right = $2;
+        $$ = $1;
     }
     ;
 

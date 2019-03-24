@@ -14,33 +14,53 @@ std::string TopLevelNamespace::debugLabel() {
     return Node::debugLabel() + "\\n" + identifier;
 }
 
-void Node::graphPrint(std::ostream* stream, int* node) {
+std::string TopLevelDeclaration::debugLabel() {
+    std::string typeString;
+    switch (type) {
+        case TopLevelDeclaration::Type::module:
+            typeString = "Module";
+        case TopLevelDeclaration::Type::interface:
+            typeString = "Interface";
+        default:
+            typeString = "Unknown";
+    }
+    return Node::debugLabel() + "\\n" + typeString + "\\n" + identifier;
+}
+
+int Node::graphPrint(std::ostream* stream, int* node) {
     auto current = *node;
     *node = current + 1;
     
     *stream << current << " " << "[label=\"" << debugLabel() << "\"]" << ";" << std::endl;
 
     if (left) {
-        left->graphPrint(stream, node);
+        auto nodeID = left->graphPrint(stream, node);
+        *stream << current << " -- " << nodeID << ";" << std::endl;
     }
     if (right) {
-        right->graphPrint(stream, node);
+        auto nodeID = right->graphPrint(stream, node);
+        *stream << current << " -- " << nodeID << ";" << std::endl;
     }
+
+    return current;
 }
 
-
-void TopLevelNamespace::graphPrint(std::ostream* stream, int* node) {
-    auto current = *node;
-    *node = current + 1;
-
-    *stream << current << " " << "[label=\"" << debugLabel() << "\\n" << identifier << "\"]" << ";" << std::endl;
-
-    if (left) {
-        left->graphPrint(stream, node);
+int TopLevelNamespace::graphPrint(std::ostream* stream, int* node) {
+    auto current = Node::graphPrint(stream, node);
+    if (contents) {
+        auto nodeID = contents->graphPrint(stream, node);
+        *stream << current << " -- " << nodeID << ";" << std::endl;
     }
-    if (right) {
-        right->graphPrint(stream, node);
+    return current;
+}
+
+int TopLevelDeclaration::graphPrint(std::ostream* stream, int* node) {
+    auto current = Node::graphPrint(stream, node);
+    if (contents) {
+        auto nodeID = contents->graphPrint(stream, node);
+        *stream << current << " -- " << nodeID << ";" << std::endl;
     }
+    return current;
 }
 
 #endif

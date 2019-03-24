@@ -15,7 +15,7 @@
 
 #if YYDEBUG
 #define DEBUGLABEL virtual std::string debugLabel()
-#define GRAPHPRINT virtual void graphPrint(std::ostream* stream, int* node)
+#define GRAPHPRINT virtual int graphPrint(std::ostream* stream, int* node)
 #else
 #define DEBUGLABEL 
 #define GRAPHPRINT
@@ -112,6 +112,9 @@ namespace Phi {
             Port* ports;
             Expression* inheritance;
             Statement* contents;
+
+            DEBUGLABEL;
+            GRAPHPRINT;
 
             TopLevelDeclaration(std::string identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             

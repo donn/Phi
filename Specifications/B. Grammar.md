@@ -77,7 +77,7 @@
 * **{** statement-list **}**
 
 *statement-list*:
-* *statement_list* *statement*
+* *statement* *statement_list* 
 * ε
 
 ## Subdeclarations
