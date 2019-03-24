@@ -39,7 +39,7 @@ void Context::printErrors() {
 
             std::string highlight = "";
             if (loc.end.column > loc.begin.column) {
-                highlight = std::string(loc.end.column - loc.begin.column - 2, '~');
+                highlight = std::string(loc.end.column - loc.begin.column - 1, '~');
             }
 
             std::cerr << termcolor::bold << *loc.begin.filename;
@@ -50,7 +50,7 @@ void Context::printErrors() {
             unless (loc.begin.line == 0) {
                 std::cerr << currentFileLines[loc.begin.line - 1] << std::endl;
                 std::cerr << termcolor::bold << termcolor::green <<
-                    std::setw(loc.begin.column + 1) << "^" <<
+                    std::setw(loc.begin.column) << "^" <<
                     highlight << termcolor::reset << std::endl;
             }
         }
