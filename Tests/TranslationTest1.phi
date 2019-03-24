@@ -4,7 +4,13 @@ y: Input,
 z: Output
 )
 {
-    Register p, q;
+    Register p;
+    Register q;
+
+    comb{
+        p = (~x & ~y);
+        q =  x & y;
+    }
 }
 
 

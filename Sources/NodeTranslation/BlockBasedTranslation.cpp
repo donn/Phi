@@ -23,7 +23,7 @@ void Combinational::translate (std::ofstream* stream){
     //         Statement* contents;
     // }
 
-    *stream << "always_comb \n";
+    *stream << "always @* \n";
     *stream << "begin \n";
     tryTranslate(contents, stream);
     *stream << "end \n";
