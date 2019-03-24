@@ -1,0 +1,8 @@
+module Alpha (
+    a: Input,
+    b: Output
+    )
+{ 
+    Wire k = a;
+    b = ~k;
+}

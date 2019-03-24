@@ -22,14 +22,17 @@ void Port::translate(std::ofstream* stream) {
     } else {
         *stream << "output ";
     }
-
+    
     // bus --> bus points to null ? no range : range [from:to] ;
     tryTranslate(bus, stream);
 
     // identifier 
     *stream << Declaration::identifier;
+
+    *stream << ";";
+    *stream << std::endl;
     
-     tryTranslate(right, stream);
+    tryTranslate(right, stream);
 
 }
 
@@ -68,14 +71,13 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
         // TODO
 
         // Get ready for ports
-        *stream << "(";
         tryTranslate(ports, stream);
-        *stream << ");";
         *stream << std::endl;
 
         // Contents
         tryTranslate(contents, stream);
 
+        *stream <<std::endl;
         *stream << "endmodule" << std::endl;
 
     } else if (type == TopLevelDeclaration::Type::interface){
@@ -116,15 +118,15 @@ void VariableLengthDeclaration::translate(std::ofstream* stream){
     switch(type){
         case Type::var:    
             //var --> leave for final presentation ?? 
-            *stream << "integer";
+            *stream << "integer ";
             break;
         case Type::wire:
             //wire
-            *stream << "wire";
+            *stream << "wire ";
             break;
         case Type::reg:
             //reg
-            *stream << "reg";
+            *stream << "reg ";
             break;
         case Type::latch:
             //latch --> leave for final presentation ??
@@ -137,6 +139,14 @@ void VariableLengthDeclaration::translate(std::ofstream* stream){
     // leave those two parts for the final pres. 
     // Expression* array;
     // Expression* optionalAssignment;
+    if (optionalAssignment) {
+        *stream << " = ";
+        *stream << "(";
+        tryTranslate(optionalAssignment, stream);
+        *stream << ")";
+    }
+
+    *stream << ";" << std::endl;
 
     tryTranslate(right, stream);
 

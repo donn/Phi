@@ -12,25 +12,28 @@ void Literal::translate (std::ofstream* stream){
 }
 
 void Identifier::translate (std::ofstream* stream){
-    //variable name 
+    //variable name
 
     *stream << identifier;
+    *stream << " ";
 }
 
 void Unary::translate (std::ofstream* stream){
 
     if(operation == Unary::Operation::negate){
             //two's complement
+            *stream << " ";
             *stream << "-";
-            *stream << " ( ";
+            *stream << "(";
             tryTranslate(right, stream);
-            *stream << " ) ";
+            *stream << ")";
     }else if(operation == Unary::Operation::bitwiseNot){
-            //one's complement 
+            //one's complement
+            *stream << " "; 
             *stream << "~";
-            *stream << " ( ";
+            *stream << "(";
             tryTranslate(right, stream);
-            *stream << " ) ";
+            *stream << ")";
     }else if (operation == Unary::Operation::allAnd){
             //handled in elaboration phase
             //do nothing 
@@ -38,6 +41,7 @@ void Unary::translate (std::ofstream* stream){
             //handled in elaboration phase
             //do nothing 
     }
+
 }
 
 void Binary::translate (std::ofstream* stream){
@@ -55,7 +59,7 @@ void Binary::translate (std::ofstream* stream){
         (operation == Binary::Operation::lessThanOrEqual) 
     ){
         //handle if the operation is for signed numbers
-        *stream << "$Signed(";
+        *stream << "$signed(";
         tryTranslate(left, stream);
         *stream << ")";
     }else{
@@ -126,8 +130,6 @@ void Binary::translate (std::ofstream* stream){
     }else{
         tryTranslate(right, stream);
     }
-    
-
 }
 
 void Ternary::translate (std::ofstream* stream){
@@ -137,8 +139,9 @@ void Ternary::translate (std::ofstream* stream){
      tryTranslate(left, stream);
      *stream << ":";
      tryTranslate(right, stream);
-     *stream << " ) ";
-     *stream << " ; ";
+     *stream << ")";
+
+     *stream << std::endl;
 }
 
 void RepeatConcatenation::translate (std::ofstream* stream){
@@ -162,5 +165,4 @@ void Concatenation::translate (std::ofstream* stream){
     *stream << ",";
     tryTranslate(right, stream); 
     *stream << "}";
-
 }

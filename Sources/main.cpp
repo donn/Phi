@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
     std::ofstream output;
     output.open(arguments[0] + ".sv");
     
-    //context.translate(&output);
+    context.translate(&output);
 
 #if YYDEBUG
     auto symTableFile = options.find("symGraph");
