@@ -143,6 +143,33 @@ void VariableLengthDeclaration::translate(std::ofstream* stream){
 }
 
 void InstanceDeclaration::translate(std::ofstream* stream){
+
+    //example
+    // flipflop #(.max(4000), .width(18)) id(.b(b), ...);
+    // flipflop:module, .max(4000), .width(18), ..:parameters, 
+    // id:identifier, .b(b), ...:ports
+
+    // struct InstanceDeclaration: public Declaration {
+    //         Expression* module;
+    //         ExpressionIDPair* parameters;
+
+    //         Expression* array; 
+    //         ExpressionIDPair* ports;
+    // }
+
+    tryTranslate(module, stream);
+
+    *stream << "#";
+    *stream << "(";
+    tryTranslate(parameters, stream);
+    *stream << ")";
+
+    *stream << Declaration::identifier;
+     *stream << "(";
+    tryTranslate(ports, stream);
+    *stream << ");";
+
+    tryTranslate(right, stream);
 }
 
 void ExpressionIDPair::translate(std::ofstream* stream){
