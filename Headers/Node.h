@@ -215,30 +215,29 @@ namespace Phi {
 
         // Subdeclarations
         struct DeclarationListItem;
-        struct VariableLengthDeclaration: public Declaration {
+        struct VariableLengthDeclaration: public Node {
             enum class Type {
                 var = 0,
                 wire, reg, latch
             };
             Type type;
             Range* bus;
-            Expression* array;
-            Expression* optionalAssignment;
+            DeclarationListItem* declarationList;
 
-            static VariableLengthDeclaration* flattenedList(Type type, Range* bus, DeclarationListItem* list);
-
-            VariableLengthDeclaration(std::string identifier, Type type, Range* bus, Expression* array, Expression* optionalAssignment): Declaration(identifier), type(type), bus(bus), array(array), optionalAssignment(optionalAssignment) {}
+            VariableLengthDeclaration(Type type, Range* bus, DeclarationListItem* declarationList): type(type), bus(bus), declarationList(declarationList) {}
 
             MACRO_ELAB_SIG_HDR;
-
             virtual void translate(std::ofstream* stream);
         };
 
-        struct DeclarationListItem: public Declaration { // TEMP: Flattened in VLD constructor!!
+        struct DeclarationListItem: public Declaration { 
             Expression* array;
             Expression* optionalAssignment;
 
             DeclarationListItem(const char* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
+
+            MACRO_ELAB_SIG_HDR;
+            virtual void translate(std::ofstream* stream);
 
         };
 

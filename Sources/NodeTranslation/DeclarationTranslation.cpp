@@ -137,11 +137,25 @@ void VariableLengthDeclaration::translate(std::ofstream* stream){
     tryTranslate(bus, stream);
 
     *stream << " ";
+    
+    tryTranslate(declarationList, stream);
+
+    *stream << ";" << std::endl;
+
+    tryTranslate(right, stream);
+
+}
+
+void DeclarationListItem::translate(std::ofstream* stream) {
     *stream << Declaration::identifier;
 
-    // leave those two parts for the final pres. 
     // Expression* array;
-    // Expression* optionalAssignment;
+    if (array) {
+        *stream << "[";
+        tryTranslate(array, stream);
+        *stream << "]";
+    }
+
     if (optionalAssignment) {
         *stream << " ";
         *stream << "=";
@@ -151,10 +165,10 @@ void VariableLengthDeclaration::translate(std::ofstream* stream){
         *stream << ")";
     }
 
-    *stream << ";" << std::endl;
-
-    tryTranslate(right, stream);
-
+    if (right) {
+        *stream << ", " << std::endl;
+        tryTranslate(right, stream);
+    }
 }
 
 void InstanceDeclaration::translate(std::ofstream* stream){

@@ -11,6 +11,7 @@ z: Output
         p = (~x & ~y);
         q =  x & y;
     }
+    Register p[8], q;
 }
 
 
