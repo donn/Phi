@@ -18,15 +18,16 @@ void Port::translate(std::ofstream* stream) {
 
     // polarity --> polarity ? Input: Output
     if(polarity==true){
-        *stream << "input ";
+        *stream << "input";
     } else {
-        *stream << "output ";
+        *stream << "output";
     }
     
     // bus --> bus points to null ? no range : range [from:to] ;
     tryTranslate(bus, stream);
 
     // identifier 
+    *stream << " ";
     *stream << Declaration::identifier;
 
     *stream << ";";
@@ -118,29 +119,33 @@ void VariableLengthDeclaration::translate(std::ofstream* stream){
     switch(type){
         case Type::var:    
             //var --> leave for final presentation ?? 
-            *stream << "integer ";
+            *stream << "integer";
             break;
         case Type::wire:
             //wire
-            *stream << "wire ";
+            *stream << "wire";
             break;
         case Type::reg:
             //reg
-            *stream << "reg ";
+            *stream << "reg";
             break;
         case Type::latch:
             //latch --> leave for final presentation ??
             break;
     };
-    *stream << Declaration::identifier;
 
     tryTranslate(bus, stream);
+
+    *stream << " ";
+    *stream << Declaration::identifier;
 
     // leave those two parts for the final pres. 
     // Expression* array;
     // Expression* optionalAssignment;
     if (optionalAssignment) {
-        *stream << " = ";
+        *stream << " ";
+        *stream << "=";
+        *stream << " ";
         *stream << "(";
         tryTranslate(optionalAssignment, stream);
         *stream << ")";

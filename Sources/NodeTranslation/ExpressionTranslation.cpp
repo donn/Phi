@@ -15,21 +15,18 @@ void Identifier::translate (std::ofstream* stream){
     //variable name
 
     *stream << identifier;
-    *stream << " ";
 }
 
 void Unary::translate (std::ofstream* stream){
 
     if(operation == Unary::Operation::negate){
             //two's complement
-            *stream << " ";
             *stream << "-";
             *stream << "(";
             tryTranslate(right, stream);
             *stream << ")";
     }else if(operation == Unary::Operation::bitwiseNot){
             //one's complement
-            *stream << " "; 
             *stream << "~";
             *stream << "(";
             tryTranslate(right, stream);
@@ -147,10 +144,10 @@ void Ternary::translate (std::ofstream* stream){
 void RepeatConcatenation::translate (std::ofstream* stream){
     //example : {2{3'b110}}
 
-    *stream << "{ ";
+    *stream << "{";
     tryTranslate(left, stream); //repeatCount
 
-    *stream << "{ ";
+    *stream << "{";
     tryTranslate(right, stream); // repeatable
     *stream << "}";
 
@@ -160,7 +157,7 @@ void RepeatConcatenation::translate (std::ofstream* stream){
 void Concatenation::translate (std::ofstream* stream){
     //example: {2'b11, 4'h8}
 
-    *stream << "{ ";
+    *stream << "{";
     tryTranslate(left, stream); 
     *stream << ",";
     tryTranslate(right, stream); 

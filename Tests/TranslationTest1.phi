@@ -1,8 +1,9 @@
 module Alpha (
-    a: Input,
-    b: Output
+    a: Input[2..0],
+    b: Output[5..0]
     )
 { 
-    Wire k = a;
-    b = ~k;
+    Wire[2..0] k1 = a;
+    Wire[2..0] k2 = a;
+    b = [k1,k2];
 }

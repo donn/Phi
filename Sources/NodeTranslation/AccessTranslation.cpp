@@ -45,7 +45,5 @@ void RangeAccess::translate (std::ofstream* stream){
 
 
     tryTranslate(left, stream); //object
-    *stream << "[";
     tryTranslate(right, stream); //range
-    *stream << "]";
 }

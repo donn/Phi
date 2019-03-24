@@ -115,11 +115,11 @@ void Range::translate(std::ofstream* stream){
     //                 this->left = from; this->right = to;
     //             }
 
+    *stream << "[";
     tryTranslate(left, stream); //from
     *stream << ":";
     tryTranslate(right, stream); //to
-
-    tryTranslate(right, stream);
+    *stream << "]";
 }
 
 
