@@ -7,5 +7,4 @@ module Alpha (
     Wire[2..0] k2 = a;
     
     b = (a==b) ? 1 : 0;
-    b = [2[[k1,k2]]];
 }

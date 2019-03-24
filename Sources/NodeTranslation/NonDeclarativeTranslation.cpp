@@ -17,11 +17,12 @@ void NondeclarativeAssignment::translate (std::ofstream* stream){
     //         Expression* expression;
     // }
 
+    
     tryTranslate(lhs, stream); 
     *stream << " = ";
     tryTranslate(expression, stream); 
     *stream << ";";
-
+    *stream << std::endl;
 
     tryTranslate(right, stream); 
 }
