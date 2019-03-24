@@ -126,6 +126,11 @@ void ExpressionIDPair::MACRO_ELAB_SIG_IMP {
 }
 
 void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
+    tryElaborate(lhs, MACRO_ELAB_ARGS);
+    unless (lhs->leftHandExpression) {
+        context->errorList.push_back({Phi::Error::emptyLocation, "identifier.rightHand"});
+    }
+
     tryElaborate(expression, MACRO_ELAB_ARGS);
 }
 

@@ -108,7 +108,7 @@
 
 %type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list   statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list special_number
 
-%type<expr> expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable
+%type<expr> lhexpression expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -449,6 +449,20 @@ nondeclarative_statement:
     ;
 
 /* Expressions */
+lhexpression:
+    IDENTIFIER {
+        $$ = new Identifier($1);
+    } 
+    | IDENTIFIER '.' lhexpression {
+        $$ = new PropertyAccess(new Identifier($1), $3);
+    }
+    | lhexpression '[' range ']' {
+        $$ = new RangeAccess($1, (Range*)$3);
+    }
+    | lhexpression '[' expression ']' {
+        $$ = new ArrayAccess($1, $3);;
+    }
+    ;
 
 expression:
     expression '?' expression ':' expression {
@@ -535,15 +549,6 @@ expression:
     | '~' expression %prec UNARY {
         $$ = new Unary(Unary::Operation::bitwiseNot, $2);
     }
-    | expression '.' expression {
-        $$ = new PropertyAccess($1, $3);
-    }
-    | expression '[' range ']' {
-        $$ = new RangeAccess($1, (Range*)$3);
-    }
-    | expression '[' expression ']' {
-        $$ = new ArrayAccess($1, $3);;
-    }
     | '[' concatenation ']' {
         $$ = $2;
     }
@@ -556,14 +561,14 @@ expression:
     | KEYWORD_MUX expression mux_block {
         $$ = epsilon;
     }
-    | IDENTIFIER {
-        $$ = new Identifier($1);
-    }
     | FW_NUMERIC {
         $$ = new Literal($1, true);
     }
     | NUMERIC  {
         $$ = new Literal($1, false);
+    }
+    | lhexpression {
+        $$ = $1;
     }
     ;
 
