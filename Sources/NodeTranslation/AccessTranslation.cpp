@@ -16,9 +16,9 @@ void PropertyAccess::translate (std::ofstream* stream){
     //             this->left = object; this->right = property;
     //         }
 
-    left->translate(stream); //object
+    tryTranslate(left, stream); //object
     *stream << ".";
-    right->translate(stream); //property
+    tryTranslate(right, stream); //property
     
     tryTranslate(right, stream);
 }
@@ -31,9 +31,9 @@ void ArrayAccess::translate (std::ofstream* stream){
     //             this->left = object; this->right = width;
     //         }
 
-    left->translate(stream); //object
+    tryTranslate(left, stream); //object
     *stream << "[";
-    right->translate(stream); //width
+    tryTranslate(right, stream); //width
     *stream << "]";
     
     tryTranslate(right, stream);
@@ -48,9 +48,9 @@ void RangeAccess::translate (std::ofstream* stream){
     //         }
 
 
-    left->translate(stream); //object
+    tryTranslate(left, stream); //object
     *stream << "[";
-    right->translate(stream); //range
+    tryTranslate(right, stream); //range
     *stream << "]";
     
     tryTranslate(right, stream);
