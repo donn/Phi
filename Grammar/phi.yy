@@ -453,7 +453,7 @@ lhexpression:
     IDENTIFIER {
         $$ = new Identifier($1);
     } 
-    | IDENTIFIER '.' lhexpression {
+    | lhexpression '.' lhexpression {
         $$ = new PropertyAccess(new Identifier($1), $3);
     }
     | lhexpression '[' range ']' {
@@ -465,10 +465,7 @@ lhexpression:
     ;
 
 expression:
-    expression '?' expression ':' expression {
-        $$ = new Ternary($1, $3, $5);
-    }
-    | expression OP_EQ expression {
+    expression OP_EQ expression {
         $$ = new Binary($1, Binary::Operation::equal, $3);
     }
     | expression OP_NEQ expression {

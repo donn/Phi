@@ -109,7 +109,7 @@
     yylval->text = strdup(yytext);
     return token::IDENTIFIER;
 }
-[0-9]+[bodxh][A-Fa-f0-9z]+ {
+[0-9]+[bodxh][A-Fa-f0-9?]+ {
     yylval->text = strdup(yytext);
     auto temp = std::string(yylval->text);
     auto pureRegex = std::regex("^([0-9]+)([bodxh])([A-F0-9]+)$");

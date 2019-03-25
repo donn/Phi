@@ -1,5 +1,5 @@
 namespace RiscBEE {
-    moldule ALU<width>(
+    module ALU<width>(
         a: Input[width - 1..0],
         b: Input[width - 1..0],
         allPurposeSwitch: Input,
@@ -21,7 +21,7 @@ namespace RiscBEE {
         sra = s >> b[bits - 1..0];
 
         result = mux operation (
-            3b11x: shift,
+            3b11z: shift,
             3b101: slt,
             3b100: ~a,
             3b011: a ^ b,

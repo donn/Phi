@@ -122,7 +122,7 @@ void DeclarationListItem::translate(std::ofstream* stream) {
 
     switch(type){
         case VLD::Type::var:    
-            //var --> leave for final presentation ?? 
+            // Handled during elaboration
             *stream << "/* phi error */";
             break;
         case VLD::Type::wire:
