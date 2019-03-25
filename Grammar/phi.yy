@@ -454,7 +454,7 @@ lhexpression:
         $$ = new Identifier($1);
     } 
     | lhexpression '.' lhexpression {
-        $$ = new PropertyAccess(new Identifier($1), $3);
+        $$ = new PropertyAccess($1, $3);
     }
     | lhexpression '[' range ']' {
         $$ = new RangeAccess($1, (Range*)$3);

@@ -82,6 +82,9 @@ namespace Phi {
 
             optional<std::string> annotation;
 
+            DEBUGLABEL;
+            GRAPHPRINT;
+
             Port(const char* identifier, bool polarity, Range* bus, const char* annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus) {
                 if (annotation) {
                     this->annotation = std::string(annotation);
@@ -225,11 +228,15 @@ namespace Phi {
                 var = 0,
                 wire, reg, latch,
 
-                wire_reg // For things that are Wires in Phi and Registers in Verilog (i.e. assigned to inside a comb block)
+                wire_reg, // For things that are Wires in Phi and Registers in Verilog (i.e. assigned to inside a comb block),
+                undefined
             };
-            Type type;
+            Type type = Type::undefined;
             Range* bus;
             DeclarationListItem* declarationList;
+
+            GRAPHPRINT;
+            DEBUGLABEL;
 
             VariableLengthDeclaration(Type type, Range* bus, DeclarationListItem* declarationList): type(type), bus(bus), declarationList(declarationList) {}
 
@@ -242,6 +249,8 @@ namespace Phi {
             Range* bus;
             Expression* array;
             Expression* optionalAssignment;
+
+            DEBUGLABEL;
 
             DeclarationListItem(const char* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
 

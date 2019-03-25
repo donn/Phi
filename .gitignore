@@ -9,7 +9,7 @@ phi
 *.stackdump
 
 /*.phi
-/*.sv
+*.phi.sv
 
 *.dot
 
