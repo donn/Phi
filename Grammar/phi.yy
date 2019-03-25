@@ -106,9 +106,9 @@
 
 %type<vldt> dynamic_width
 
-%type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list   statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list special_number
+%type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list special_number
 
-%type<expr> lhexpression expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable
+%type<expr> lhexpression expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable mux
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -555,8 +555,8 @@ expression:
     | '$' expression '(' procedural_call ')' {
         $$ = new ProceduralCall($2, (Argument*)$4);
     }
-    | KEYWORD_MUX expression mux_block {
-        $$ = epsilon;
+    | mux {
+        $$ = $1;
     }
     | FW_NUMERIC {
         $$ = new Literal($1, true);
@@ -589,6 +589,15 @@ concatenatable:
     }
     | expression LEFT_REPEAT_CAT concatenation ']' ']' {
         $$ = new RepeatConcatenation($1, $3);
+    }
+    ;
+
+mux:
+    KEYWORD_MUX expression mux_block {
+        $$ = epsilon;
+    }
+    | KEYWORD_MUX FW_SPECIAL mux_block {
+        $$ = epsilon;
     }
     ;
 

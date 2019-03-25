@@ -76,11 +76,12 @@ These cannot be separated by spaces.
 * *fixed-width-numeric*
 
 *decimal*:
-* *decimal* *digit*
-* *digit*
+* *decimal* *decimal-digit*
+* *decimal-digit*
 
 *fixed-width-numeric*:
 * *decimal* *separator* *state-number*
+> if *state-number* contains **?**, the token *fixed-width-special* is created, otherwise, the token *fixed-width-numeric* is created
 
 *state-number*: any of
 * *state-number* *state-digit*
@@ -90,13 +91,13 @@ These cannot be separated by spaces.
 * **b o d x**
 
 *state-digit*: any of
-* **x** *digit*
+* **?** *digit*
 
 *digit*: any of
-*  **A B C D E F**
+*  **A B C D E F** *decimal-digit*
 
-*decimal digit*: any of
+*decimal-digit*: any of
 * **0 1 2 3 4 5 6 7 8 9**
 
 *punctuator*: any of
-* **$ ! ~ + - * < > / % | & ^ ? : ; , = . { } [ ] ( ) >= <= &+ &- &> &< &>= &<=**
+* **$ ! ~ + - * < > / % | & ^ : ; , = . { } [ ] ( ) >= <= &+ &- &> &< &>= &<=**

@@ -1,0 +1,17 @@
+#!/bin/sh
+if [ "$1" = "light" ]; then
+edgecolor="#000000"
+elif [ "$1" = "dark" ]; then
+edgecolor="#ffffff"
+else
+echo "DOT graph renderer"
+echo "Usage: ./render <light|dark> <path to graph>"
+exit 64
+fi
+
+if [ "$2" = "" ]; then
+echo "File missing."
+exit 66
+fi
+
+dot -Tpng -Gdpi=256 -Ecolor=$edgecolor -Nstyle=filled -Nfillcolor=#ffffff -Gbgcolor=#ffffff00 $2 -o outfile.png

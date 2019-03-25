@@ -58,6 +58,7 @@
 * **for** *identifer* **in** *range* *block*
 * **namespace** *identifier* *block*
 * **switch** *expression* **{** *labeled-statement-list* **}**
+* **switch** *fixed-width-special* **{** *labeled-statement-list* **}**
 * **comb** *block*
 
 *if*:
@@ -133,9 +134,6 @@
 * *expression* **=** *expression*
 * *expression* *ports*
 
-*switch-block*:
-* **{** *labeled-statement-list* **}**
-
 *labeled-statement-list*:
 * **case** number **:** *statement-list* *labeled-statement-list*
 * **default** **:** *statement-list*
@@ -143,8 +141,13 @@
 
 ## Expressions
 
+*lhexpression*:
+* *identifier*
+* *lhexpression* **.** *lhexpression*
+* *lhexpression* **[** *range* **]**
+* *lhexpression* **[** *expression* **]**
+
 *expression*:
-* *expression* **?** *expression* **:** *expression*
 * *expression* **||** *expression*
 * *expression* **&&** *expression*
 * *expression* **==** *expression*
@@ -173,16 +176,12 @@
 * **&** *expression*
 * **|** *expression*
 * **~** *expression*
-* *expression* **.** *expression*
-* *expression* **[** *range* **]**
-* *expression* **[** *expression* **]**
 * **[** *concatenation* **]**
-* **mux** *expression* *mux-block*
 * **$** *expression* **(** *procedural-call* **)**
 * **(** *expression* **)**
-* *identifier*
 * *fixed-width-numeric*
 * *numeric*
+* *lhexpression*
 
 *range*:
 * *expression* **..** *expression*
@@ -194,6 +193,10 @@
 *concatenatable*:
 * *expression*
 * *expression* **[[** *expression* **]** **]**
+
+*mux*:
+* **mux** *expression* *mux-block*
+* **mux** *fixed-width-special* *mux-block*
 
 *procedural-call*:
 * *procedural-call-list*

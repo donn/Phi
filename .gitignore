@@ -12,6 +12,7 @@ phi
 *.phi.sv
 
 *.dot
+*.png
 
 *.out
 
