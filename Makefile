@@ -94,3 +94,4 @@ clean:
 	rm -f Examples/*.v
 	rm -f ./*.phi
 	rm -f *.exe *.stackdump # MSYS2/Windows
+	rm -f *.out *.phi.*sv *.dot ./*.png

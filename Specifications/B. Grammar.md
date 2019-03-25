@@ -44,8 +44,8 @@
 * ε
 
 *inheritance-list*:
-* *lh-expression* **,** *inheritance-list*
-* *lh-expression*
+* *lhexpression* **,** *inheritance-list*
+* *lhexpression*
 
 ## Statements
 *statement*:

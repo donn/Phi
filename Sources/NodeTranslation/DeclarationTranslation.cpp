@@ -121,10 +121,6 @@ void DeclarationListItem::translate(std::ofstream* stream) {
     using VLD = VariableLengthDeclaration;
 
     switch(type){
-        case VLD::Type::var:    
-            // Handled during elaboration
-            *stream << "/* phi error */";
-            break;
         case VLD::Type::wire:
             //wire
             *stream << "wire";
@@ -136,6 +132,10 @@ void DeclarationListItem::translate(std::ofstream* stream) {
             break;
         case VLD::Type::latch:
             //latch --> leave for final presentation ??
+            break;
+        default:
+            // Var handled during elaboration
+            *stream << "/* phi error */";
             break;
     };
 

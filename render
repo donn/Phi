@@ -14,4 +14,4 @@ echo "File missing."
 exit 66
 fi
 
-dot -Tpng -Gdpi=256 -Ecolor=$edgecolor -Nstyle=filled -Nfillcolor=#ffffff -Gbgcolor=#ffffff00 $2 -o outfile.png
+dot -Tpng -Gdpi=256 -Ecolor=$edgecolor -Nfontname=SpaceMono-Regular -Nstyle=filled -Nfillcolor="#ffffff" -Gbgcolor="#ffffff00" $2 -o /dev/stdout

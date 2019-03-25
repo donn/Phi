@@ -217,12 +217,12 @@ inheritance:
     }
     ;
 inheritance_list:
-    expression ',' inheritance_list {
+    lhexpression ',' inheritance_list {
         auto node = $1;
         node->right = $3;
         $$ = node;
     }
-    | expression {
+    | lhexpression {
         $$ = $1;
     }
     ;

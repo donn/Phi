@@ -70,8 +70,8 @@ void SymbolTable::stepOut() {
 }
 
 void SymbolTable::stepIntoComb(Node::Node* attached) {
-    top->space[""] = std::make_shared<SymbolSpace>("", attached, true);
-    stepInto("");
+    top->space["\\comb"] = std::make_shared<SymbolSpace>("", attached, true);
+    stepInto("\\comb");
 }
 
 bool SymbolTable::inComb() {

@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
- #if YYDEBUG
+#if YYDEBUG
     auto astGraphFile = options.find("astGraph");
     unless (astGraphFile == options.end()) {
         std::ofstream output(astGraphFile->second);
@@ -119,6 +119,17 @@ int main(int argc, char* argv[]) {
             return EX_DATAERR;
         }
     }
+
+#if YYDEBUG
+    auto elabGraphFile = options.find("elabGraph");
+    unless (elabGraphFile == options.end()) {
+        std::ofstream output(elabGraphFile->second);
+        if (output.fail()) {
+            return EX_CANTCREAT;
+        }
+        context.graphPrint(&output);
+    }
+#endif   
 
     std::ofstream output;
     output.open(arguments[0] + ".sv");
