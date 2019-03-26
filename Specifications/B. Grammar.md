@@ -90,6 +90,7 @@
 * **Var**
 * **Wire** 
 * **Register**
+* **Latch**
 
 *optional-bus-declaration*:
 * **[** *range* **]**
@@ -192,7 +193,7 @@
 
 *concatenatable*:
 * *expression*
-* *expression* **[[** *expression* **]** **]**
+* *expression* **[[** *concatenation* **]** **]**
 
 *mux*:
 * **mux** *expression* *mux-block*

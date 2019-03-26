@@ -16,7 +16,7 @@ module testbench;
             b = $urandom;
             #100;
         end
-        $stop();
+        $finish;
     end
 
 endmodule
