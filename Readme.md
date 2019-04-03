@@ -16,11 +16,10 @@ Building Phi requires:
 * A C++17 compiler that supports **standard** C++17
     * No GCC or Clang specific extensions are used. Any used by accident are a bug we are interested in fixing.
 * LLVM
-* [Genivia's RE-flex](https://github.com/Genivia/RE-flex)
 * GNU Bison
 * Make
 
-Some helper scripts are written in Ruby.
+Some helper scripts are written in Ruby. Other dependencies compiled.
 
 ## Usage
 ### All: After Cloning

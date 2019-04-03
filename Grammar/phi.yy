@@ -1,5 +1,4 @@
 %language "C++"
-%defines
 %locations
 %require "3.2"
 
@@ -7,6 +6,9 @@
 %define api.namespace {Phi}
 
 %code requires {
+    namespace Phi {
+        class Lexer;
+    }
     #include "Node.h"
     using namespace Phi::Node;
 }
@@ -20,21 +22,21 @@
     // CPP STL
     #include <sstream>
 
+    //Lex
+    #include "phi.l.hh"
+
     // Project Headers
     #include "Context.h"
-    
     #include "Utils.h"
-    int yylex();
 
-    extern int yylineno;
-    extern char* yytext;
+    #undef yylex
+    #define yylex lexer->yylex
 
     #define catchIntoContext catch (const char* error) { context->errorList.push_back({yylhs.location, std::string(error)}); };
     #define epsilon nullptr
 %}
 
-%parse-param { Phi::Context* context }
-%lex-param   { Phi::Context* context }
+%parse-param { Phi::Lexer* lexer } { Phi::Context* context }
 
 %union {
     char* text;
@@ -111,12 +113,12 @@
 
 %type<expr> lhexpression expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable mux
 
-%{
-    extern int yylex(Phi::Parser::semantic_type* yylval,
-                     Phi::Parser::location_type* yylloc,
-                     Phi::Context* context
-    );
-%}
+// %{
+//     extern int yylex(Phi::Parser::semantic_type* yylval,
+//                      Phi::Parser::location_type* yylloc,
+//                      Phi::Context* context
+//     );
+// %}
 
 %initial-action {
     @$.begin.filename = @$.end.filename = &context->files.back();

@@ -33,7 +33,7 @@ namespace Phi {
         using Node = Phi::Node::Node;
         Node* head = nullptr;
 
-        optional<std::string> setFile(std::string currentFile);
+        void setFile(std::string currentFile);
         bool error();
         void printErrors();
         void elaborate(SymbolTable* table);

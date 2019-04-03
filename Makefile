@@ -89,7 +89,7 @@ Intermediates/reflex: $(REFLEX_MESS)
 
 $(LEX_OUT): $(LEX) $(YACC_OUT) Intermediates/reflex
 	mkdir -p $(@D)
-	Intermediates/reflex --flex --bison-bridge -o $@ --header-file=$(LEX_HEADER) $<
+	Intermediates/reflex -o $@ --header-file=$(LEX_HEADER) $<
 
 $(LEX_HEADER): $(LEX_OUT)
 	@echo "\033[1;32m>> Lex header generated.\033[0m"
@@ -106,7 +106,7 @@ $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $
 	mkdir -p $(@D)
 	c++ $(CPP_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
 
-$(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS)
+$(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(REFLEX_UNICODE_OBJECTS)
 	mkdir -p $(@D)
 	c++ $(LD_FLAGS) -o $@ $^
 	@echo "\033[1;32m>> Build complete.\033[0m"

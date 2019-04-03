@@ -12,8 +12,9 @@
 #include "BSDExits.h"
 #include "SymbolTable.h"
 
-// Flex/Bison Headers
+// Re-Flex/Bison Headers
 #include <phi.yy.hh>
+#include <phi.l.hh>
 
 // Libraries
 #include <StupidSimpleCPPOpts.h>
@@ -80,21 +81,23 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    optional<std::string> input = context.setFile(filename);
-    unless (input.has_value()) {
+    context.setFile(filename);
+    if (context.error()) {
         context.printErrors();
         return EX_NOINPUT;
     }
 
-    // yy_scan_string(input.value().c_str());
+    // Lex
+    auto file = std::ifstream(filename);
+    auto lexer = Phi::Lexer(file);
 
     // Parse
-    auto parser = Phi::Parser(&context);
+    auto parser = Phi::Parser(&lexer, &context);
     parser.parse();
 
     if (context.error()) {
         context.printErrors();
-        unless (options.find("ignoreErrors") == options.end()) {
+        unless (options.find("ignoreErrors") != options.end()) {
             return EX_DATAERR;
         }
     }
@@ -114,7 +117,7 @@ int main(int argc, char* argv[]) {
     context.elaborate(&table);
     if (context.error()) {
         context.printErrors();
-        unless (options.find("ignoreErrors") == options.end()) {
+        unless (options.find("ignoreErrors") != options.end()) {
             return EX_DATAERR;
         }
     }

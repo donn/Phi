@@ -2,7 +2,7 @@
 #include "Context.h"
 #include "Utils.h"
 
-// Flex/Bison
+// Bison
 #include <phi.yy.hh>
 
 // Libraries
@@ -25,8 +25,10 @@ void Parser::error(Location const& loc, const std::string& string) {
     if (copy == "syntax error") {
         copy = "parser.syntaxError";
     }
+
+    auto copyloc = loc;
     
-    context->errorList.push_back({loc, copy});
+    context->errorList.push_back({copyloc, copy});
 }
 
 void Context::printErrors() {
@@ -38,8 +40,8 @@ void Context::printErrors() {
             auto message = error.message;
 
             std::string highlight = "";
-            if (loc.end.column > loc.begin.column) {
-                highlight = std::string(loc.end.column - loc.begin.column - 1, '~');
+            if (loc.end.column > loc.begin.column + 1) {
+                highlight = std::string(loc.end.column - loc.begin.column - 2, '~');
             }
 
             std::cerr << termcolor::bold << *loc.begin.filename;
@@ -50,7 +52,7 @@ void Context::printErrors() {
             unless (loc.begin.line == 0) {
                 std::cerr << currentFileLines[loc.begin.line - 1] << std::endl;
                 std::cerr << termcolor::bold << termcolor::green <<
-                    std::setw(loc.begin.column) << "^" <<
+                    std::setw(loc.begin.column + 1) << "^" <<
                     highlight << termcolor::reset << std::endl;
             }
         }
@@ -58,24 +60,21 @@ void Context::printErrors() {
     }
 }
 
-optional<std::string> Context::setFile(std::string currentFile)  {
+void Context::setFile(std::string currentFile)  {
     files.push_back(currentFile);
 
     auto file = std::ifstream(currentFile);
     if (file.fail()) {
         errorList.push_back({Location(&files.back(), 0, 0), "io.fileNotFound"});
-        return nullopt;
+        return;
     }
-    
+
     std::stringstream stringstream;
     stringstream << file.rdbuf();
     file.close();
 
     auto dump = stringstream.str();
     currentFileLines = Utils::split(&dump, '\n');
-
-    return dump;
-
 }
 
 bool Context::error() {
