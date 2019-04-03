@@ -4,6 +4,7 @@
 %}
 %{
     #include <cstdlib>
+    #include <regex>
 
     #include "Context.h"
 
@@ -110,9 +111,16 @@
     yylval->text = strdup(yytext);
     return token::IDENTIFIER;
 }
-[0-9]+[bodxh][A-F0-9zx]+ {
+[0-9]+[bodxh][A-Fa-f0-9?]+ {
     yylval->text = strdup(yytext);
-    return token::FW_NUMERIC;
+    auto temp = std::string(yylval->text);
+    auto pureRegex = std::regex("^([0-9]+)([bodxh])([A-F0-9]+)$");
+    auto match = std::smatch();
+    if (std::regex_match(temp, match, pureRegex)) {
+        return token::FW_NUMERIC;
+    } else {
+        return token::FW_SPECIAL;
+    }
 }
 [0-9]+ {
     yylval->text = strdup(yytext);
@@ -178,4 +186,5 @@
     return yytext[0];
 }
 
+%%
 %%

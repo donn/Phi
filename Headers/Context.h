@@ -8,31 +8,40 @@
 
 // Project Headers
 #include "Types.h"
+#include "Node.h"
 
 using Location = Phi::location;
 
 namespace Phi {
+    class SymbolTable;
+
     struct Error {
+        static std::string emptyLocationFileName;
+        static Location emptyLocation;
         Location loc;
-        String message;
+        std::string message;
     };
 
     class Context {
-        String executableName;
+        std::string executableName;
     public:
         Context(const char* argv0): executableName(argv0) {}
 
         std::vector<Error> errorList;
-        std::vector<String> files;
-        std::vector<String> currentFileLines;
-        char* top = NULL;
+        std::vector<std::string> files;
+        std::vector<std::string> currentFileLines;
+        using Node = Phi::Node::Node;
+        Node* head = nullptr;
 
-        String setFile(String currentFile);
+        optional<std::string> setFile(std::string currentFile);
         bool error();
         void printErrors();
+        void elaborate(SymbolTable* table);
+        void translate(std::ofstream* stream);
 
 #if YYDEBUG
         int trace = 0;
+        void graphPrint(std::ofstream* stream);
 #endif
     };
 }

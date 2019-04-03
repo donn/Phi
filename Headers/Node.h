@@ -1,11 +1,31 @@
 #ifndef _node_h
 #define _node_h
-
 // Project Headers
 #include "Types.h"
-#include "Context.h"
+#include <ostream>
+
+#include <llvm/ADT/APInt.h>
+#include <llvm/ADT/StringRef.h>
+
+// Elaboration Macros
+#define MACRO_ELAB_PARAMS SymbolTable* table, Context* context
+#define MACRO_ELAB_ARGS table, context
+#define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
+#define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
+
+#if YYDEBUG
+#define DEBUGLABEL virtual std::string debugLabel()
+#define GRAPHPRINT virtual int graphPrint(std::ostream* stream, int* node)
+#else
+#define DEBUGLABEL 
+#define GRAPHPRINT
+#endif
 
 namespace Phi {
+    // Forward declarations
+    class SymbolTable;
+    class Context;
+
     namespace Node {
         using Width = uint16;
         static const Width maxWidth = UINT16_MAX;
@@ -13,44 +33,80 @@ namespace Phi {
         struct Node {
             Node* left = nullptr;
             Node* right = nullptr;
-            virtual Node* traverse() {
-                return NULL;
-            }
+
             Node() {}
             Node(Node* right): right(right) {}
             virtual ~Node() {}
+
+            DEBUGLABEL;
+            GRAPHPRINT;
+
+            MACRO_ELAB_SIG_HDR;
+            virtual void translate(std::ofstream* stream);
         };
 
-        struct ErrorNode: public Node {};
+        inline void tryElaborate(Node* node, MACRO_ELAB_PARAMS) {
+            if (node) {
+                node->elaborate(MACRO_ELAB_ARGS);
+            }
+        }
+
+        inline void tryTranslate(Node* node, std::ofstream* stream) {
+            if (node) {
+                node->translate(stream);
+            }
+        }
+
+        struct ErrorNode: public Node {
+            virtual void translate(std::ofstream* stream);
+        };
 
         // Declarations
         struct Expression; // Fwd Declaration
         struct Range; // Fwd Declaration
 
         struct Declaration: public Node {
-            String name;
+            std::string identifier;
 
-            Declaration(String name): name(name) {}
+            Declaration(std::string identifier): identifier(identifier) {}
         };
 
-        struct Port: public Node {
-            String name;
-            bool polarity; // polarity ? Input: Output
+        struct Port: public Declaration {
+            enum class Polarity {
+                input = 0,
+                output,
+                output_reg
+            };
+            Polarity polarity;
             Range* bus;
 
-            std::optional<String> annotation;
+            optional<std::string> annotation;
 
-            Port(const char* name, bool polarity, Range* bus, const char* annotation): name(name), polarity(polarity), bus(bus) {
+            DEBUGLABEL;
+            GRAPHPRINT;
+
+            Port(const char* identifier, bool polarity, Range* bus, const char* annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus) {
                 if (annotation) {
-                    this->annotation = String(annotation);
+                    this->annotation = std::string(annotation);
                 }
             }
+
+            MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct TopLevelNamespace: public Declaration {
             Node* contents;
 
-            TopLevelNamespace(const char* name, Node* contents): Declaration(name), contents(contents) {}
+            TopLevelNamespace(const char* identifier, Node* contents): Declaration(identifier), contents(contents) {}
+            
+            DEBUGLABEL;
+            GRAPHPRINT;
+
+            virtual void translate(std::ofstream* stream);
+
+            MACRO_ELAB_SIG_HDR;
         };
 
         struct Statement;
@@ -65,19 +121,27 @@ namespace Phi {
             Expression* inheritance;
             Statement* contents;
 
-            TopLevelDeclaration(String name, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(name), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
+            DEBUGLABEL;
+            GRAPHPRINT;
+
+            TopLevelDeclaration(std::string identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
+            
+            MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         // Templating
         struct TemplateDeclaration: public Declaration {
             Expression* assignment;
 
-            TemplateDeclaration(const char* name, Expression* assignment): Declaration(name) {}
+            TemplateDeclaration(const char* identifier, Expression* assignment): Declaration(identifier) {}
         };
 
         // Statements
         struct Statement: public Node {
-            std::optional<String> annotation = std::nullopt;
+            optional<std::string> annotation = nullopt;
+            bool inComb = false;
         };
 
         // Block-Based Statements
@@ -92,63 +156,106 @@ namespace Phi {
             If* elseBlock;
 
             If(Statement* contents, Expression* expression, If* elseBlock): BlockBased(contents), expression(expression), elseBlock(elseBlock) {}
+            MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct ForLoop: public BlockBased {
             Range* range;
-            String identifier;
+            std::string identifier;
 
             ForLoop(Statement* contents, Range* range, const char* identifier): BlockBased(contents), range(range), identifier(identifier) {}
+            MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct Namespace: public BlockBased {
-            String identifier;
+            std::string identifier;
 
             Namespace(Statement* contents, const char* identifier): BlockBased(contents), identifier(identifier) {}
+
+            MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct LabeledStatementList;
+        struct SpecialNumber: public Node {
+            unsigned int numBits;
+            uint8 radix;
+            std::string number;
+            
+            SpecialNumber(const char* interpretable);
+
+            virtual void translate(std::ofstream* stream);
+        };
         struct Switch: public BlockBased {
             Expression* expression;
             LabeledStatementList* list;
 
             Switch(Expression* expression, LabeledStatementList* list): BlockBased(nullptr), expression(expression), list(list) {}
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct LabeledStatementList: public Node {
-            bool isDefault;
+            bool isDefault; // Is this the default case in a switch statement?
             Expression* expression;
+            SpecialNumber* specialNumber;
+
             Statement* statements;
 
-            LabeledStatementList(bool isDefault, Expression* expression, Statement* statements): isDefault(isDefault), expression(expression), statements(statements) {}
+            LabeledStatementList(bool isDefault, Expression* expression, SpecialNumber* specialNumber, Statement* statements): isDefault(isDefault), expression(expression), specialNumber(specialNumber), statements(statements) {}
+
+            virtual void translate(std::ofstream* stream);
         };
 
         struct Combinational: public BlockBased {
+            
             Combinational(Statement* contents): BlockBased(contents) {}
+
+            MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         // Subdeclarations
         struct DeclarationListItem;
-        struct VariableLengthDeclaration: public Declaration {
+        struct VariableLengthDeclaration: public Node {
             enum class Type {
                 var = 0,
-                wire, reg, latch
+                wire, reg, latch,
+
+                wire_reg, // For things that are Wires in Phi and Registers in Verilog (i.e. assigned to inside a comb block),
+                undefined
             };
-            Type type;
+            Type type = Type::undefined;
+            Range* bus;
+            DeclarationListItem* declarationList;
+
+            GRAPHPRINT;
+            DEBUGLABEL;
+
+            VariableLengthDeclaration(Type type, Range* bus, DeclarationListItem* declarationList): type(type), bus(bus), declarationList(declarationList) {}
+
+            MACRO_ELAB_SIG_HDR;
+            virtual void translate(std::ofstream* stream);
+        };
+
+        struct DeclarationListItem: public Declaration {
+            VariableLengthDeclaration::Type type;
             Range* bus;
             Expression* array;
             Expression* optionalAssignment;
 
-            static VariableLengthDeclaration* flattenedList(Type type, Range* bus, DeclarationListItem* list);
+            DEBUGLABEL;
 
-            VariableLengthDeclaration(String name, Type type, Range* bus, Expression* array, Expression* optionalAssignment): Declaration(name), type(type), bus(bus), array(array), optionalAssignment(optionalAssignment) {}
-        };
+            DeclarationListItem(const char* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
 
-        struct DeclarationListItem: public Declaration { // TEMP: Flattened in VLD constructor!!
-            Expression* array;
-            Expression* optionalAssignment;
-
-            DeclarationListItem(const char* name, Expression* array, Expression* optionalAssignment): Declaration(name), array(array), optionalAssignment(optionalAssignment) {}
+            MACRO_ELAB_SIG_HDR;
+            virtual void translate(std::ofstream* stream);
 
         };
 
@@ -160,13 +267,21 @@ namespace Phi {
             Expression* array;
             ExpressionIDPair* ports;
 
-            InstanceDeclaration(const char* name, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(name), module(module), parameters(parameters), array(array), ports(ports) {}
+            InstanceDeclaration(const char* identifier, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
+
+            MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
-        struct ExpressionIDPair: Declaration {
+        struct ExpressionIDPair: public Declaration {
             Expression* expression;
 
-            ExpressionIDPair(const char* name, Expression* expression): Declaration(name), expression(expression) {}
+            ExpressionIDPair(const char* identifier, Expression* expression): Declaration(identifier), expression(expression) {}
+            
+            MACRO_ELAB_SIG_HDR;
+
+            virtual void translate(std::ofstream* stream);
         };
 
         // Nondeclarative Statements
@@ -179,11 +294,17 @@ namespace Phi {
             Expression* expression;
 
             NondeclarativeAssignment(Expression* lhs, Expression* expression): Nondeclarative(lhs), expression(expression) {}
+
+            MACRO_ELAB_SIG_HDR;
+
+             virtual void translate(std::ofstream* stream);
         };
         struct NondeclarativePorts: public Nondeclarative {
             ExpressionIDPair* ports;
 
             NondeclarativePorts(Expression* lhs, ExpressionIDPair* ports): Nondeclarative(lhs), ports(ports) {}
+
+            MACRO_ELAB_SIG_HDR;
         };
 
         // Expression
@@ -196,20 +317,25 @@ namespace Phi {
                 Undefined = 0xFF
             };
             Type type = Type::Undefined;
+
+            unsigned int numBits = 0;
+            optional<llvm::APInt> value = nullopt;
+
+            bool leftHandExpression = true;
         };
 
         struct Literal: public Expression {
-            String literal;
-            String width;
-            uint8 radix;
-
             Literal(const char* interpretable, bool widthIncluded = true);
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Identifier: public Expression {
-            String identifier;
+            std::string identifier;
 
             Identifier(const char* identifier): identifier(identifier) {}
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Unary: public Expression {
@@ -221,6 +347,8 @@ namespace Phi {
             };
             Operation operation;
             Unary(Operation operation, Expression* right): operation(operation) { this->right = right; }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Binary: public Expression {
@@ -258,6 +386,8 @@ namespace Phi {
             Binary(Expression* left,  Operation operation, Expression* right): operation(operation) {
                 this->left = left; this->right = right;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Ternary: public Expression {
@@ -266,6 +396,8 @@ namespace Phi {
             Ternary(Expression* condition, Expression* left, Expression* right): condition(condition) {
                 this->left = left; this->right = right;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Access: public Expression {};
@@ -274,41 +406,54 @@ namespace Phi {
             PropertyAccess(Expression* object, Expression* property) {
                 this->left = object; this->right = property;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct ArrayAccess: public Access {
             ArrayAccess(Expression* object, Expression* width) {
                 this->left = object; this->right = width;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
         
         struct Range: public Node {
             Range(Expression* from, Expression* to) {
                 this->left = from; this->right = to;
             }
+            
+            virtual void translate (std::ofstream* stream);
         };
         struct RangeAccess: public Access {
             RangeAccess(Expression* object, Range* range) {
                 this->left = object; this->right = range;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct RepeatConcatenation: public Expression {
             RepeatConcatenation(Expression* repeatCount, Expression* repeatable) {
                 this->left = repeatCount; this->right = repeatable;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
 
         struct Concatenation: public Expression {
             Concatenation(Expression* of, Expression* with) {
                 this->left = of; this->right = with;
             }
+
+            virtual void translate (std::ofstream* stream);
         };
         
-        struct Argument: public Node {};
+        struct Argument: public Node {
+        };
 
         struct StringArgument: public Node {
-            String argument;
+            std::string argument;
             StringArgument(const char* argument): argument(argument) {}
         };
         
@@ -324,7 +469,7 @@ namespace Phi {
         };
 
         struct ExpressionPair: public Node {
-            Expression* label; // If NULL, default
+            Expression* label; // If nullptr, default
             Expression* result;
             ExpressionPair(Expression* label, Expression* result): label(label), result(result) {}
         };

@@ -1,0 +1,19 @@
+module a(
+a: Input,
+b: Input,
+c: Output
+)
+{
+    c = a+b;
+}
+
+
+module aa2(
+a: Input,
+b: Input,
+c: Output
+)
+{
+    a ss (a:a, b:b , c:c);
+}
+

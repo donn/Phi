@@ -1,0 +1,10 @@
+module Beta(a: Input, b: Output, c: Output) {
+    Wire[1..0] theta;
+
+    comb {
+        theta = [2[[a]]];
+        c = theta[0];
+    }
+
+    b = theta[1];
+}

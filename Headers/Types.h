@@ -2,9 +2,10 @@
 #define _types_h
 
 #include <string>
-using String = std::string;
 
 #include <optional>
+using std::nullopt;
+using std::optional;
 
 #ifndef uint
     typedef unsigned int uint;
@@ -17,5 +18,7 @@ typedef int32_t int32;
 typedef uint32_t uint32;
 typedef int64_t int64;
 typedef int64_t uint64;
+
+#define unless(x) if(!(x))
 
 #endif // _types_h

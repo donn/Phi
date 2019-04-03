@@ -1,8 +1,9 @@
 %language "C++"
 %defines
 %locations
+%require "3.2"
 
-%define parser_class_name {Parser}
+%define api.parser.class {Parser}
 %define api.namespace {Phi}
 
 %code requires {
@@ -23,8 +24,6 @@
     #include "Context.h"
     
     #include "Utils.h"
-
-    void yyerror(char *);
     int yylex();
 
     extern int yylineno;
@@ -68,6 +67,7 @@
 
 %token NUMERIC
 %token FW_NUMERIC
+%token FW_SPECIAL
 %token ANNOTATION
 %token IDENTIFIER
 %token STRING
@@ -101,15 +101,15 @@
 %left '.'
 %right '['
 
-%type<text> NUMERIC FW_NUMERIC IDENTIFIER ANNOTATION STRING optional_annotation
+%type<text> NUMERIC FW_NUMERIC FW_SPECIAL IDENTIFIER ANNOTATION STRING optional_annotation
 
 %type<bin> port_polarity
 
 %type<vldt> dynamic_width
 
-%type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list   statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list 
+%type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list special_number
 
-%type<expr> expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable
+%type<expr> lhexpression expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable mux
 
 %{
     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -135,11 +135,13 @@ description:
         auto node = $1;
         node->right = $2;
         $$ = node;
+        context->head = node;
     }
     | KEYWORD_NAMESPACE IDENTIFIER '{' description '}' description {
         auto node = new TopLevelNamespace($2, $4);
         node->right = $6;
         $$ = node;
+        context->head = node;
     }
     ;
 
@@ -177,10 +179,10 @@ populated_port_declaration_list:
     ;
 port_polarity:
     KEYWORD_INPUT {
-        $$ = true;
+        $$ = false;
     }
     | KEYWORD_OUTPUT {
-        $$ = false;
+        $$ = true;
     }
     ;
 
@@ -216,12 +218,12 @@ inheritance:
     }
     ;
 inheritance_list:
-    expression ',' inheritance_list {
+    lhexpression ',' inheritance_list {
         auto node = $1;
         node->right = $3;
         $$ = node;
     }
-    | expression {
+    | lhexpression {
         $$ = $1;
     }
     ;
@@ -260,6 +262,14 @@ optional_annotation:
     ;
 
 /* Blocks */
+special_number:
+    FW_SPECIAL {
+        $$ = new SpecialNumber($1);
+    }
+    | '(' FW_SPECIAL ')' {
+        $$ = new SpecialNumber($2);
+    }
+    ;
 block_based:
     if {
         $$ = $1;
@@ -299,12 +309,17 @@ else:
 labeled_statement_list:
     { $$ = epsilon; }
     | KEYWORD_CASE expression ':' statement_list labeled_statement_list {
-        auto node = new LabeledStatementList(false, $2, (Statement*)$4);
+        auto node = new LabeledStatementList(false, (Expression*)$2, nullptr, (Statement*)$4);
+        node->right = $5;
+        $$ = node;
+    }
+    | KEYWORD_CASE special_number ':' statement_list labeled_statement_list {
+        auto node = new LabeledStatementList(false, nullptr, (SpecialNumber*)$2, (Statement*)$4);
         node->right = $5;
         $$ = node;
     }
     | KEYWORD_DEFAULT ':' statement_list {
-        $$ = new LabeledStatementList(false, nullptr, (Statement*)$3);;
+        $$ = new LabeledStatementList(false, nullptr, nullptr, (Statement*)$3);;
     }
     ;
 
@@ -316,21 +331,17 @@ block:
 
 statement_list:
     { $$ = epsilon; }
-    | statement_list statement {
-        if ($1) {
-            auto node = $1;
-            node->right = $2;
-            $$ = $1;
-        } else {
-            $$ = $2;
-        }
+    | statement statement_list {
+        auto node = $1;
+        node->right = $2;
+        $$ = $1;
     }
     ;
 
 /* Subdeclarations */
 subdeclaration:
     dynamic_width optional_bus_declaration declaration_list {
-        $$ = VariableLengthDeclaration::flattenedList($1, (Range*)$2, (DeclarationListItem*)$3);
+        $$ = new VariableLengthDeclaration($1, (Range*)$2, (DeclarationListItem*)$3);
     }
     | expression optional_template IDENTIFIER optional_array_declaration optional_ports {
         $$ = new InstanceDeclaration($3, $1, (ExpressionIDPair*)$2, $4, (ExpressionIDPair*)$5);
@@ -439,12 +450,23 @@ nondeclarative_statement:
     ;
 
 /* Expressions */
+lhexpression:
+    IDENTIFIER {
+        $$ = new Identifier($1);
+    } 
+    | lhexpression '.' lhexpression {
+        $$ = new PropertyAccess($1, $3);
+    }
+    | lhexpression '[' range ']' {
+        $$ = new RangeAccess($1, (Range*)$3);
+    }
+    | lhexpression '[' expression ']' {
+        $$ = new ArrayAccess($1, $3);;
+    }
+    ;
 
 expression:
-    expression '?' expression ':' expression {
-        $$ = new Ternary($1, $3, $5);
-    }
-    | expression OP_EQ expression {
+    expression OP_EQ expression {
         $$ = new Binary($1, Binary::Operation::equal, $3);
     }
     | expression OP_NEQ expression {
@@ -525,15 +547,6 @@ expression:
     | '~' expression %prec UNARY {
         $$ = new Unary(Unary::Operation::bitwiseNot, $2);
     }
-    | expression '.' expression {
-        $$ = new PropertyAccess($1, $3);
-    }
-    | expression '[' range ']' {
-        $$ = new RangeAccess($1, (Range*)$3);
-    }
-    | expression '[' expression ']' {
-        $$ = new ArrayAccess($1, $3);;
-    }
     | '[' concatenation ']' {
         $$ = $2;
     }
@@ -543,17 +556,17 @@ expression:
     | '$' expression '(' procedural_call ')' {
         $$ = new ProceduralCall($2, (Argument*)$4);
     }
-    | KEYWORD_MUX expression mux_block {
-        $$ = epsilon;
-    }
-    | IDENTIFIER {
-        $$ = new Identifier($1);
+    | mux {
+        $$ = $1;
     }
     | FW_NUMERIC {
         $$ = new Literal($1, true);
     }
     | NUMERIC  {
         $$ = new Literal($1, false);
+    }
+    | lhexpression {
+        $$ = $1;
     }
     ;
 
@@ -575,8 +588,17 @@ concatenatable:
     expression {
         $$ = $1;
     }
-    | expression LEFT_REPEAT_CAT expression ']' ']' {
+    | expression LEFT_REPEAT_CAT concatenation ']' ']' {
         $$ = new RepeatConcatenation($1, $3);
+    }
+    ;
+
+mux:
+    KEYWORD_MUX expression mux_block {
+        $$ = epsilon;
+    }
+    | KEYWORD_MUX FW_SPECIAL mux_block {
+        $$ = epsilon;
     }
     ;
 
