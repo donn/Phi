@@ -26,12 +26,12 @@ std::string Port::debugLabel() {
         default:
             polarityString = "Unknown";
     }
-    return Node::debugLabel() + "\\n" + polarityString + "\\n" + identifier;
+    return Node::debugLabel() + "\\n" + polarityString + "\\n" + identifier->idString;
     
 }
 
 std::string TopLevelNamespace::debugLabel() {
-    return Node::debugLabel() + "\\n" + identifier;
+    return Node::debugLabel() + "\\n" + identifier->idString;
 }
 
 std::string TopLevelDeclaration::debugLabel() {
@@ -47,7 +47,7 @@ std::string TopLevelDeclaration::debugLabel() {
         default:
             typeString = "Unknown";
     }
-    return Node::debugLabel() + "\\n" + typeString + "\\n" + identifier;
+    return Node::debugLabel() + "\\n" + typeString + "\\n" + identifier->idString;
 }
 
 std::string VariableLengthDeclaration::debugLabel() {
@@ -85,7 +85,7 @@ std::string DeclarationListItem::debugLabel() {
         default:
             typeString = "Unknown";
     }
-    return Node::debugLabel() + "\\n" + typeString + "\\n" + identifier;
+    return Node::debugLabel() + "\\n" + typeString + "\\n" + identifier->idString;
 }
 
 int Node::graphPrint(std::ostream* stream, int* node) {

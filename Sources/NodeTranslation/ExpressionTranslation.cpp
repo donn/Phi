@@ -11,10 +11,9 @@ void Literal::translate (std::ofstream* stream){
     *stream << numBits << "'h" <<  value.value().toString(16, false);
 }
 
-void Identifier::translate (std::ofstream* stream){
+void IdentifierExpression::translate (std::ofstream* stream){
     //variable name
-
-    *stream << identifier;
+    tryTranslate(identifier, stream);
 }
 
 void Unary::translate (std::ofstream* stream){

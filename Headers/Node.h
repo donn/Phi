@@ -61,14 +61,23 @@ namespace Phi {
             virtual void translate(std::ofstream* stream);
         };
 
+        // Molecular
+        struct Identifier: public Node {
+            std::string idString;
+
+            Identifier(const char* identifier);
+
+            virtual void translate(std::ofstream* stream);
+        };
+
         // Declarations
         struct Expression; // Fwd Declaration
         struct Range; // Fwd Declaration
 
         struct Declaration: public Node {
-            std::string identifier;
+            Identifier* identifier;
 
-            Declaration(std::string identifier): identifier(identifier) {}
+            Declaration(const char* identifier): identifier(new Identifier(identifier)) {}
         };
 
         struct Port: public Declaration {
@@ -124,7 +133,7 @@ namespace Phi {
             DEBUGLABEL;
             GRAPHPRINT;
 
-            TopLevelDeclaration(std::string identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
+            TopLevelDeclaration(const char* identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR;
 
@@ -163,18 +172,18 @@ namespace Phi {
 
         struct ForLoop: public BlockBased {
             Range* range;
-            std::string identifier;
+            Identifier* identifier;
 
-            ForLoop(Statement* contents, Range* range, const char* identifier): BlockBased(contents), range(range), identifier(identifier) {}
+            ForLoop(Statement* contents, Range* range, const char* identifier): BlockBased(contents), range(range), identifier(new Identifier(identifier)) {}
             MACRO_ELAB_SIG_HDR;
 
             virtual void translate(std::ofstream* stream);
         };
 
         struct Namespace: public BlockBased {
-            std::string identifier;
+            Identifier* identifier;
 
-            Namespace(Statement* contents, const char* identifier): BlockBased(contents), identifier(identifier) {}
+            Namespace(Statement* contents, const char* identifier): BlockBased(contents), identifier(new Identifier(identifier)) {}
 
             MACRO_ELAB_SIG_HDR;
 
@@ -327,15 +336,15 @@ namespace Phi {
         struct Literal: public Expression {
             Literal(const char* interpretable, bool widthIncluded = true);
 
-            virtual void translate (std::ofstream* stream);
+            virtual void translate(std::ofstream* stream);
         };
 
-        struct Identifier: public Expression {
-            std::string identifier;
+        struct IdentifierExpression: public Expression {
+            Identifier* identifier;
 
-            Identifier(const char* identifier): identifier(identifier) {}
+            IdentifierExpression(const char* identifier): identifier(new Identifier(identifier)) {}
 
-            virtual void translate (std::ofstream* stream);
+            virtual void translate(std::ofstream* stream);
         };
 
         struct Unary: public Expression {

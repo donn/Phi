@@ -454,7 +454,7 @@ nondeclarative_statement:
 /* Expressions */
 lhexpression:
     IDENTIFIER {
-        $$ = new Identifier($1);
+        $$ = new IdentifierExpression($1);
     } 
     | lhexpression '.' lhexpression {
         $$ = new PropertyAccess($1, $3);

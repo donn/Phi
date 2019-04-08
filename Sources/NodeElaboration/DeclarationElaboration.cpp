@@ -6,19 +6,19 @@
 using namespace Phi::Node;
 
 void Port::MACRO_ELAB_SIG_IMP {
-    table->add(identifier, this);
+    table->add(identifier->idString, this);
     tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
-    table->stepIntoAndCreate(identifier, this);
+    table->stepIntoAndCreate(identifier->idString, this);
     tryElaborate(contents, MACRO_ELAB_ARGS);
     table->stepOut();
     tryElaborate(right, MACRO_ELAB_ARGS);
 }
 
 void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
-    table->stepIntoAndCreate(identifier, this);
+    table->stepIntoAndCreate(identifier->idString, this);
     tryElaborate(ports, MACRO_ELAB_ARGS);
     tryElaborate(contents, MACRO_ELAB_ARGS);
     table->stepOut();
@@ -77,7 +77,7 @@ void Combinational::MACRO_ELAB_SIG_IMP {
 }
 
 void Namespace::MACRO_ELAB_SIG_IMP {
-    table->stepIntoAndCreate(identifier, this);
+    table->stepIntoAndCreate(identifier->idString, this);
     tryElaborate(contents, MACRO_ELAB_ARGS);
     table->stepOut();
     tryElaborate(right, MACRO_ELAB_ARGS);
@@ -95,7 +95,7 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     tryElaborate(array, MACRO_ELAB_ARGS);
     tryElaborate(optionalAssignment, MACRO_ELAB_ARGS);
-    table->add(identifier, this, optionalAssignment);
+    table->add(identifier->idString, this, optionalAssignment);
     if (right) {
         auto rightDLI = (DeclarationListItem*)right;
         rightDLI->type = type;
@@ -136,9 +136,9 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     // Declaration block because I'm using goto here
     std::vector<std::string> ids;
     auto pointer = lhs;
-    auto identifierPointer = dynamic_cast<Identifier*>(pointer);
+    auto identifierPointer = dynamic_cast<IdentifierExpression*>(pointer);
     auto propertyAccessPointer = dynamic_cast<PropertyAccess*>(pointer);
-    Identifier* left;
+    IdentifierExpression* left;
     std::shared_ptr<Symbol> symbol;
     DeclarationListItem* dliAttache;
     Port* portAttache;
@@ -151,11 +151,11 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     }
     while (pointer) {
         if (identifierPointer) {
-            ids.push_back(identifierPointer->identifier);
+            ids.push_back(identifierPointer->identifier->idString);
             pointer = nullptr;
         } else if (propertyAccessPointer) {
-            left = (Identifier*)identifierPointer->left; // LHExpression association should mandate this
-            ids.push_back(left->identifier);
+            left = (IdentifierExpression*)identifierPointer->left; // LHExpression association should mandate this
+            ids.push_back(left->identifier->idString);
             pointer = (Expression*)identifierPointer->right;
         } else {
             context->errorList.push_back({Phi::Error::emptyLocation, "identifier.invalidAccess"});

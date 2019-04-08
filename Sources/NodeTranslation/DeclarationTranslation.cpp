@@ -26,7 +26,7 @@ void Port::translate(std::ofstream* stream) {
 
     // identifier 
     *stream << " ";
-    *stream << Declaration::identifier;
+    tryTranslate(identifier, stream);
 
     *stream << ";";
     *stream << std::endl;
@@ -36,39 +36,20 @@ void Port::translate(std::ofstream* stream) {
 }
 
 void TopLevelNamespace::translate(std::ofstream* stream) {
-
-    //example of package in verilog 
-    //  package my_pkg;
-    //   typedef enum bit [1:0] { RED, YELLOW, GREEN, RSVD } e_signal;
-    //   typedef struct { bit [3:0] signal_id;
-    //                      bit       active;
-    //                      bit [1:0] timeout; 
-    //                    } e_sig_param;
-    
-    //   function common ();
-    //       $display ("Called from somewhere");
-    //      endfunction
-    
-    //     task run ( ... );
-    //       ...
-    //     endtask
-    // endpackage
-
-    *stream << "package " << Declaration::identifier << ";" << std::endl;
     tryTranslate(contents, stream);
-    *stream  << "endpackage" << std::endl;
-
     tryTranslate(right, stream);
 }
 
 void TopLevelDeclaration::translate(std::ofstream* stream) {
     
     if (type == TopLevelDeclaration::Type::module) {
-        *stream << "module " << Declaration::identifier;
-        *stream << "(" << std::endl;
+        *stream << "module ";
+        tryTranslate(identifier, stream);
+        *stream << " (" << std::endl;
         auto pointer = ports;
+        // PII
         while (pointer) {
-            *stream << pointer->identifier << ", " << std::endl;
+            *stream << pointer->identifier->idString << ", " << std::endl;
             pointer = (Port*)pointer->right;
         }
         *stream << ")";
@@ -141,7 +122,8 @@ void DeclarationListItem::translate(std::ofstream* stream) {
 
     tryTranslate(bus, stream);
 
-    *stream << " " <<  Declaration::identifier;
+    *stream << " ";
+    tryTranslate(identifier, stream);
 
     // Expression* array;
     if (array) {
@@ -188,7 +170,7 @@ void InstanceDeclaration::translate(std::ofstream* stream){
     }
 
     *stream << " ";
-    *stream << Declaration::identifier;
+    tryTranslate(identifier, stream);
     *stream << "(";
     tryTranslate(ports, stream);
     *stream << ");";
@@ -207,7 +189,7 @@ void ExpressionIDPair::translate(std::ofstream* stream){
     // }
 
     *stream << ".";
-    *stream << Declaration::identifier;
+    tryTranslate(identifier, stream);
     *stream << "(";
     tryTranslate(expression, stream);
     *stream << ")";
