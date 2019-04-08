@@ -49,7 +49,8 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
         auto pointer = ports;
         // PII
         while (pointer) {
-            *stream << pointer->identifier->idString << ", " << std::endl;
+            tryTranslate(pointer->identifier, stream);
+            *stream << ", " << std::endl;
             pointer = (Port*)pointer->right;
         }
         *stream << ")";
