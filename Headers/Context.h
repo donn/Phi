@@ -35,7 +35,7 @@ namespace Phi {
 
         void setFile(std::string currentFile);
         bool error();
-        void printErrors();
+        void prettyPrintErrors(std::ostream* out);
         void elaborate(SymbolTable* table);
         void translate(std::ofstream* stream);
 

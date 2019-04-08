@@ -2,7 +2,6 @@
 
 #include <regex>
 #include <sstream>
-#include <iostream>
 using namespace Phi::Node;
 
 Identifier::Identifier(const char* identifier) {

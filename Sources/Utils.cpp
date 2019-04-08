@@ -1,6 +1,5 @@
 #include "Utils.h"
 
-#include <iostream>
 #include <sstream>
 
 std::vector<std::string> Phi::Utils::split(const std::string* string, char delimiter) {

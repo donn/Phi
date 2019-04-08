@@ -3,72 +3,57 @@ Phi is a hardware description language that aims to succeed Verilog using concep
 
 It is our goal to design a well-defined language with:
 * No behavioral ambiguity
-* Powerful meta-definition constructs
 * A clear definition and meta-definition divide
 
-One that is unsurprising to newcomers yet one that is close enough to Verilog to not be as shocking to veteran engineers as languages such as MyHDL and Scala.
+It's basically a mix of Swift/C++'s syntax with Verilog's semantics.
 
 # Dependencies
 Building Phi requires:
 
-* Git
-* A POSIX-compliant system
+* A POSIX environment
 * A C++17 compiler that supports **standard** C++17
     * No GCC or Clang specific extensions are used. Any used by accident are a bug we are interested in fixing.
+* Git
 * LLVM
 * GNU Bison
 * Make
-
-Some helper scripts are written in Ruby. Other dependencies compiled.
 
 ## Usage
 ### All: After Cloning
 Run `git submodule update --init --recursive`.
 
-We use open source libraries for various functions, and they're all imported using git submodule.
+We use open source libraries for various functions, and they're all imported using git submodules.
 
 ### macOS
 Install Xcode from the App Store.
 
-You need Re-Flex alongside a newer version of Bison, install [Homebrew](https://brew.sh) and then...
+For the other dependencies, we recommend [Homebrew](https://brew.sh). Install it using the command in the link provided, then invoke:
 
 ```bash
-    brew install flex bison llvm
+    brew install bison llvm
 ```
 
 This will take some time, llvm is big.
 
-You will need to add flex and bison to PATH, as brew won't. Do this however you want: my personal setup is to just add these to `~/.bash_profile` (or your shell's equivalent):
+You will need to add bison to PATH, as brew won't. Do this however you want: a recommended setup is to add this to `~/.bash_profile` (or your shell's equivalent):
 ```sh
-export PATH="/usr/local/opt/flex/bin:$PATH"
 export PATH="/usr/local/opt/bison/bin:$PATH"
 ```
 
-You also need to expose LLVM to the compiler, as brew also won't. The Makefile supports $LDFLAGS and $CPPFLAGS, so I just do this too:
+You also need to expose LLVM to the compiler, as brew also won't. The Makefile supports $LDFLAGS and $CPPFLAGS, so you can just add these to your `~/.bash_profile` too:
 ```sh
 export LDFLAGS="-L/usr/local/opt/llvm/lib"
 export CPPFLAGS="-I/usr/local/opt/llvm/include"
 ```
 
 ### GNU/Linux
-Install git, gcc, make and bison toolchain other using your software repository.
-
-You will need to install Re-Flex **manually** from its repository.
+Install git, gcc, make and buson using your package manager.
 
 #### Debian-based OSes (incl. Ubuntu, elementary...)
 Use apt.
 
 ```bash
-    sudo apt-get install git gcc bison make ruby llvm
-```
-
-### Windows
-Get [MSYS2](https://www.msys2.org/).
-
-In the MSYS2 terminal, invoke:
-
-```bash
-    pacman -Syu git gcc flex bison make ruby llvm
+    sudo apt-get install build-essential bison llvm
 ```
 
 # License

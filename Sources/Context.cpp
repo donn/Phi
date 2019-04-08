@@ -9,7 +9,6 @@
 #include <termcolor/termcolor.hpp>
 
 // CPP STL
-#include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <fstream>
@@ -31,7 +30,7 @@ void Parser::error(Location const& loc, const std::string& string) {
     context->errorList.push_back({copyloc, copy});
 }
 
-void Context::printErrors() {
+void Context::prettyPrintErrors(std::ostream* out) {
     auto errorCount = errorList.size();
     if (errorCount > 0) {
         for (size_t i = 0; i < errorCount; i += 1) {
@@ -44,19 +43,19 @@ void Context::printErrors() {
                 highlight = std::string(loc.end.column - loc.begin.column - 2, '~');
             }
 
-            std::cerr << termcolor::bold << *loc.begin.filename;
+            *out << termcolor::bold << *loc.begin.filename;
             unless (loc.begin.line == 0) {
-                std::cerr << ":" << loc.begin.line << ":" << loc.begin.column;
+                *out << ":" << loc.begin.line << ":" << loc.begin.column;
             }
-            std::cerr << ": " << termcolor::red << message << termcolor::reset << std::endl;
+            *out << ": " << termcolor::red << message << termcolor::reset << std::endl;
             unless (loc.begin.line == 0) {
-                std::cerr << currentFileLines[loc.begin.line - 1] << std::endl;
-                std::cerr << termcolor::bold << termcolor::green <<
+                *out << currentFileLines[loc.begin.line - 1] << std::endl;
+                *out << termcolor::bold << termcolor::green <<
                     std::setw(loc.begin.column + 1) << "^" <<
                     highlight << termcolor::reset << std::endl;
             }
         }
-        std::cerr << errorCount << ((errorCount == 1) ? " error" : " errors") << " generated." << std::endl;
+        *out << errorCount << ((errorCount == 1) ? " error" : " errors") << " generated." << std::endl;
     }
 }
 

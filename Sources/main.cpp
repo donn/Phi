@@ -1,5 +1,7 @@
+#undef stdout
+#undef stderr
+
 // CPP STL
-#include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
@@ -27,18 +29,19 @@ std::string versionString() {
     }
     return std::string(Phi::GIT_TAG) + dev + " (" + Phi::GIT_VER_STRING + ")";
 }
-
-void printVersion() {
-    std::cout << "Phi Compiler version " << versionString() << std::endl;
-    std::cout << "All rights reserved. Licensed under the Apache License 2.0." << std::endl;
-}
-
 int main(int argc, char* argv[]) {
+    auto stdout = std::ofstream("/dev/stdout");
+    auto stderr = std::ofstream("/dev/stderr");
+
     // CLI Option parsing
     SSCO::Options getOpt({
-        {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(); exit(0); }},
-        {"version", 'V', "Show the current version of Phi.", false, [&](){ printVersion(); exit(0); }},
-        {"ignoreErrors", std::nullopt, "Attempt best translation despite errors.", false, [&](){ printVersion(); exit(0); }},
+        {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(stdout); exit(0); }},
+        {"version", 'V', "Show the current version of Phi.", false, [&](){   
+            stdout << "Phi Compiler version " << versionString() << std::endl;
+            stdout << "All rights reserved. Licensed under the Apache License 2.0." << std::endl;
+            exit(0);
+        }},
+        {"ignoreErrors", std::nullopt, "Attempt best translation despite errors.", false, std::nullopt},
 #if YYDEBUG
         {"trace", 'T', "Trace GNU Bison/Phi semantic analysis operation. (Debug builds only.)", false, nullopt},
         {"astGraph", std::nullopt, "Filename to output graphviz of syntax tree. (Debug builds only.)", true, nullopt},
@@ -49,7 +52,7 @@ int main(int argc, char* argv[]) {
     auto opts = getOpt.process(argc, argv);
 
     if (!opts.has_value()) {
-        getOpt.printHelp();
+        getOpt.printHelp(stdout);
         return EX_USAGE;
     }
 
@@ -58,8 +61,8 @@ int main(int argc, char* argv[]) {
 
     // Read input file
     if (arguments.size() < 1) {
-        std::cout << "No files provided." << std::endl;
-        getOpt.printHelp();
+        stdout << "No files provided." << std::endl;
+        getOpt.printHelp(stdout);
         return EX_USAGE;
     }
 
@@ -83,7 +86,7 @@ int main(int argc, char* argv[]) {
 
     context.setFile(filename);
     if (context.error()) {
-        context.printErrors();
+        context.prettyPrintErrors(&stderr);
         return EX_NOINPUT;
     }
 
@@ -96,7 +99,7 @@ int main(int argc, char* argv[]) {
     parser.parse();
 
     if (context.error()) {
-        context.printErrors();
+        context.prettyPrintErrors(&stderr);
         unless (options.find("ignoreErrors") != options.end()) {
             return EX_DATAERR;
         }
@@ -116,7 +119,7 @@ int main(int argc, char* argv[]) {
     Phi::SymbolTable table;
     context.elaborate(&table);
     if (context.error()) {
-        context.printErrors();
+        context.prettyPrintErrors(&stderr);
         unless (options.find("ignoreErrors") != options.end()) {
             return EX_DATAERR;
         }
@@ -158,7 +161,6 @@ int main(int argc, char* argv[]) {
     auto currentTime = *std::localtime(&timeObject);
     output << "   Generated on: " <<  std::put_time(&currentTime, "%Y-%m-%d %H:%M:%S") << std::endl;
     output << "*/" << std::endl << std::endl;
-    output << context.top;
     context.translate(&output);
     output.close();
 
