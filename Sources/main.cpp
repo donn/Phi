@@ -100,14 +100,14 @@ int main(int argc, char* argv[]) {
 
     if (context.error()) {
         context.prettyPrintErrors(&stderr);
-        unless (options.find("ignoreErrors") != options.end()) {
+        if (options.find("ignoreErrors") == options.end()) {
             return EX_DATAERR;
         }
     }
 
 #if YYDEBUG
     auto astGraphFile = options.find("astGraph");
-    unless (astGraphFile == options.end()) {
+    if (astGraphFile != options.end()) {
         std::ofstream output(astGraphFile->second);
         if (output.fail()) {
             return EX_CANTCREAT;
@@ -120,14 +120,14 @@ int main(int argc, char* argv[]) {
     context.elaborate(&table);
     if (context.error()) {
         context.prettyPrintErrors(&stderr);
-        unless (options.find("ignoreErrors") != options.end()) {
+        if (options.find("ignoreErrors") == options.end()) {
             return EX_DATAERR;
         }
     }
 
 #if YYDEBUG
     auto elabGraphFile = options.find("elabGraph");
-    unless (elabGraphFile == options.end()) {
+    if (elabGraphFile != options.end()) {
         std::ofstream output(elabGraphFile->second);
         if (output.fail()) {
             return EX_CANTCREAT;
@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
 
 #if YYDEBUG
     auto symTableFile = options.find("symGraph");
-    unless (symTableFile == options.end()) {
+    if (symTableFile != options.end()) {
         std::ofstream output(symTableFile->second);
         if (output.fail()) {
             return EX_CANTCREAT;

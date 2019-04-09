@@ -84,7 +84,7 @@
 ## Subdeclarations
 *subdeclaration*:
 * *dynamic-width* *optional-bus-declaration* *declaration-list*
-* *expression* *optional-template* *identifier* *ports*
+* *lhexpression* *optional-template* *identifier* *ports*
 
 *dynamic-width*:
 * **Var**
@@ -132,8 +132,8 @@
 ## Nondeclarative Statements
 
 *nondeclarative-statement*:
-* *expression* **=** *expression*
-* *expression* *ports*
+* *lhexpression* **=** *expression*
+* *lhexpression* *ports*
 
 *labeled-statement-list*:
 * **case** number **:** *statement-list* *labeled-statement-list*

@@ -16,18 +16,20 @@
 
 using namespace Phi;
 
-std::string Error::emptyLocationFileName = "/";
-Location Error::emptyLocation = Location(&Error::emptyLocationFileName, 0, 0);
-
-void Parser::error(Location const& loc, const std::string& string) {
+void Parser::error(Location const& location, const std::string& string) {
     auto copy = string;
     if (copy == "syntax error") {
         copy = "parser.syntaxError";
     }
 
-    auto copyloc = loc;
+    auto copyloc = location;
     
-    context->errorList.push_back({copyloc, copy});
+    context->addError(copyloc, copy);
+}
+
+void Context::addError(const optional<Location> location, const std::string message) {
+    auto trueLocation = location.has_value() ? location.value() : Location(&files.front(), 0, 0);
+    errorList.push_back({trueLocation, message});
 }
 
 void Context::prettyPrintErrors(std::ostream* out) {
@@ -44,11 +46,11 @@ void Context::prettyPrintErrors(std::ostream* out) {
             }
 
             *out << termcolor::bold << *loc.begin.filename;
-            unless (loc.begin.line == 0) {
+            if (loc.begin.line != 0) {
                 *out << ":" << loc.begin.line << ":" << loc.begin.column;
             }
             *out << ": " << termcolor::red << message << termcolor::reset << std::endl;
-            unless (loc.begin.line == 0) {
+            if (loc.begin.line != 0) {
                 *out << currentFileLines[loc.begin.line - 1] << std::endl;
                 *out << termcolor::bold << termcolor::green <<
                     std::setw(loc.begin.column + 1) << "^" <<
@@ -64,7 +66,7 @@ void Context::setFile(std::string currentFile)  {
 
     auto file = std::ifstream(currentFile);
     if (file.fail()) {
-        errorList.push_back({Location(&files.back(), 0, 0), "io.fileNotFound"});
+        addError(nullopt, "io.fileNotFound");
         return;
     }
 

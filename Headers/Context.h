@@ -2,6 +2,7 @@
 #define _context_h
 // C++ STL
 #include <vector>
+#include <list>
 
 // Flex/Bison
 #include <location.hh>
@@ -15,27 +16,31 @@ using Location = Phi::location;
 namespace Phi {
     class SymbolTable;
 
-    struct Error {
-        static std::string emptyLocationFileName;
-        static Location emptyLocation;
-        Location loc;
-        std::string message;
-    };
-
     class Context {
-        std::string executableName;
-    public:
-        Context(const char* argv0): executableName(argv0) {}
 
+        struct Error {
+            Location loc;
+            std::string message;
+        };
+
+        std::string executableName;
         std::vector<Error> errorList;
-        std::vector<std::string> files;
+    public:
+        Context(const char* argv0): executableName(argv0) {
+            files.push_back("\\");
+        }
+
+        std::list<std::string> files;
         std::vector<std::string> currentFileLines;
         using Node = Phi::Node::Node;
         Node* head = nullptr;
 
         void setFile(std::string currentFile);
+
+        void addError(const optional<Location> location, const std::string message);
         bool error();
         void prettyPrintErrors(std::ostream* out);
+
         void elaborate(SymbolTable* table);
         void translate(std::ofstream* stream);
 

@@ -89,3 +89,7 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
         value = llvm::APInt(prospectiveWidth, ref, radix);
     }
 }
+
+void IdentifierExpression::MACRO_ELAB_SIG_IMP {
+    
+}

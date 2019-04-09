@@ -88,7 +88,11 @@ std::string DeclarationListItem::debugLabel() {
     return Node::debugLabel() + "\\n" + typeString + "\\n" + identifier->idString;
 }
 
-int Node::graphPrint(std::ostream* stream, int* node) {
+std::string Identifier::debugLabel() {
+    return Node::debugLabel() + "\\n" + idString;
+}
+
+int Node::MACRO_GRAPHPRINT_SIG_IMP {
     auto current = *node;
     *node = current + 1;
     
@@ -106,7 +110,7 @@ int Node::graphPrint(std::ostream* stream, int* node) {
     return current;
 }
 
-int Port::graphPrint(std::ostream* stream, int* node) {
+int Port::MACRO_GRAPHPRINT_SIG_IMP {
     auto current = Node::graphPrint(stream, node);
     if (bus) {
         auto nodeID = bus->graphPrint(stream, node);
@@ -115,7 +119,7 @@ int Port::graphPrint(std::ostream* stream, int* node) {
     return current;
 }
 
-int TopLevelNamespace::graphPrint(std::ostream* stream, int* node) {
+int TopLevelNamespace::MACRO_GRAPHPRINT_SIG_IMP {
     auto current = Node::graphPrint(stream, node);
     if (contents) {
         auto nodeID = contents->graphPrint(stream, node);
@@ -124,7 +128,7 @@ int TopLevelNamespace::graphPrint(std::ostream* stream, int* node) {
     return current;
 }
 
-int TopLevelDeclaration::graphPrint(std::ostream* stream, int* node) {
+int TopLevelDeclaration::MACRO_GRAPHPRINT_SIG_IMP {
     auto current = Node::graphPrint(stream, node);
     if (ports) {
         auto nodeID = ports->graphPrint(stream, node);
@@ -137,7 +141,7 @@ int TopLevelDeclaration::graphPrint(std::ostream* stream, int* node) {
     return current;
 }
 
-int VariableLengthDeclaration::graphPrint(std::ostream* stream, int* node) {
+int VariableLengthDeclaration::MACRO_GRAPHPRINT_SIG_IMP {
     auto current = Node::graphPrint(stream, node);
     if (bus) {
         auto nodeID = bus->graphPrint(stream, node);
@@ -147,4 +151,21 @@ int VariableLengthDeclaration::graphPrint(std::ostream* stream, int* node) {
     *stream << current << " -- " << nodeID << ";" << std::endl;
     return current;
 }
+
+int NondeclarativeAssignment::MACRO_GRAPHPRINT_SIG_IMP {
+    auto current = Node::graphPrint(stream, node);
+    auto lhsID = lhs->graphPrint(stream, node);
+    *stream << current << " -- " << lhsID << ";" << std::endl;
+    auto exprID = expression->graphPrint(stream, node);
+    *stream << current << " -- " << exprID << ";" << std::endl;
+    return current;
+}
+
+int IdentifierExpression::MACRO_GRAPHPRINT_SIG_IMP {
+    auto current = Node::graphPrint(stream, node);
+    auto nodeID = identifier->graphPrint(stream, node);
+    *stream << current << " -- " << nodeID << ";" << std::endl;
+    return current;
+}
+
 #endif

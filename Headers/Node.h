@@ -9,16 +9,26 @@
 
 // Elaboration Macros
 #define MACRO_ELAB_PARAMS SymbolTable* table, Context* context
-#define MACRO_ELAB_ARGS table, context
 #define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
 #define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
 
 #if YYDEBUG
-#define DEBUGLABEL virtual std::string debugLabel()
-#define GRAPHPRINT virtual int graphPrint(std::ostream* stream, int* node)
+
+#define MACRO_DEBUGLABEL_PARAMS
+#define MACRO_DEBUGLABEL_SIG_IMP debugLabel (MACRO_DEBUGLABEL_PARAMS)
+#define MACRO_DEBUGLABEL_SIG_HDR virtual std::string MACRO_DEBUGLABEL_SIG_IMP
+
+#define MACRO_GRAPHPRINT_PARAMS std::ostream* stream, int* node
+#define MACRO_GRAPHPRINT_SIG_IMP graphPrint (MACRO_GRAPHPRINT_PARAMS)
+#define MACRO_GRAPHPRINT_SIG_HDR virtual int MACRO_GRAPHPRINT_SIG_IMP
 #else
-#define DEBUGLABEL 
-#define GRAPHPRINT
+#define MACRO_DEBUGLABEL_PARAMS
+#define MACRO_DEBUGLABEL_SIG_IMP
+#define MACRO_DEBUGLABEL_SIG_HDR 
+
+#define MACRO_GRAPHPRINT_PARAMS
+#define MACRO_GRAPHPRINT_SIG_IMP 
+#define MACRO_GRAPHPRINT_SIG_HDR
 #endif
 
 namespace Phi {
@@ -38,8 +48,8 @@ namespace Phi {
             Node(Node* right): right(right) {}
             virtual ~Node() {}
 
-            DEBUGLABEL;
-            GRAPHPRINT;
+            MACRO_DEBUGLABEL_SIG_HDR;
+            MACRO_GRAPHPRINT_SIG_HDR;
 
             MACRO_ELAB_SIG_HDR;
             virtual void translate(std::ofstream* stream);
@@ -47,7 +57,7 @@ namespace Phi {
 
         inline void tryElaborate(Node* node, MACRO_ELAB_PARAMS) {
             if (node) {
-                node->elaborate(MACRO_ELAB_ARGS);
+                node->elaborate(table, context);
             }
         }
 
@@ -67,12 +77,17 @@ namespace Phi {
 
             Identifier(const char* identifier);
 
+            MACRO_DEBUGLABEL_SIG_HDR;
+
             virtual void translate(std::ofstream* stream);
         };
 
+        // Some forward declarations
+        struct Expression;
+        struct LHExpression;
+        struct Range;
+
         // Declarations
-        struct Expression; // Fwd Declaration
-        struct Range; // Fwd Declaration
 
         struct Declaration: public Node {
             Identifier* identifier;
@@ -91,8 +106,8 @@ namespace Phi {
 
             optional<std::string> annotation;
 
-            DEBUGLABEL;
-            GRAPHPRINT;
+            MACRO_DEBUGLABEL_SIG_HDR;
+            MACRO_GRAPHPRINT_SIG_HDR;
 
             Port(const char* identifier, bool polarity, Range* bus, const char* annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus) {
                 if (annotation) {
@@ -110,8 +125,8 @@ namespace Phi {
 
             TopLevelNamespace(const char* identifier, Node* contents): Declaration(identifier), contents(contents) {}
             
-            DEBUGLABEL;
-            GRAPHPRINT;
+            MACRO_DEBUGLABEL_SIG_HDR;
+            MACRO_GRAPHPRINT_SIG_HDR;
 
             virtual void translate(std::ofstream* stream);
 
@@ -130,8 +145,8 @@ namespace Phi {
             Expression* inheritance;
             Statement* contents;
 
-            DEBUGLABEL;
-            GRAPHPRINT;
+            MACRO_DEBUGLABEL_SIG_HDR;
+            MACRO_GRAPHPRINT_SIG_HDR;
 
             TopLevelDeclaration(const char* identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
@@ -244,8 +259,8 @@ namespace Phi {
             Range* bus;
             DeclarationListItem* declarationList;
 
-            GRAPHPRINT;
-            DEBUGLABEL;
+            MACRO_GRAPHPRINT_SIG_HDR;
+            MACRO_DEBUGLABEL_SIG_HDR;
 
             VariableLengthDeclaration(Type type, Range* bus, DeclarationListItem* declarationList): type(type), bus(bus), declarationList(declarationList) {}
 
@@ -259,7 +274,7 @@ namespace Phi {
             Expression* array;
             Expression* optionalAssignment;
 
-            DEBUGLABEL;
+            MACRO_DEBUGLABEL_SIG_HDR;
 
             DeclarationListItem(const char* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
 
@@ -295,23 +310,24 @@ namespace Phi {
 
         // Nondeclarative Statements
         struct Nondeclarative: public Statement {
-            Expression* lhs;
+            LHExpression* lhs;
 
-            Nondeclarative(Expression* lhs): lhs(lhs) {}
+            Nondeclarative(LHExpression* lhs): lhs(lhs) {}
         };
         struct NondeclarativeAssignment: public Nondeclarative {
             Expression* expression;
 
-            NondeclarativeAssignment(Expression* lhs, Expression* expression): Nondeclarative(lhs), expression(expression) {}
+            NondeclarativeAssignment(LHExpression* lhs, Expression* expression): Nondeclarative(lhs), expression(expression) {}
 
             MACRO_ELAB_SIG_HDR;
+            MACRO_GRAPHPRINT_SIG_HDR;
 
-             virtual void translate(std::ofstream* stream);
+            virtual void translate(std::ofstream* stream);
         };
         struct NondeclarativePorts: public Nondeclarative {
             ExpressionIDPair* ports;
 
-            NondeclarativePorts(Expression* lhs, ExpressionIDPair* ports): Nondeclarative(lhs), ports(ports) {}
+            NondeclarativePorts(LHExpression* lhs, ExpressionIDPair* ports): Nondeclarative(lhs), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR;
         };
@@ -330,19 +346,57 @@ namespace Phi {
             unsigned int numBits = 0;
             optional<llvm::APInt> value = nullopt;
 
-            bool leftHandExpression = true;
+        };
+        // Range
+        struct Range: public Node {
+            Range(Expression* from, Expression* to) {
+                this->left = from; this->right = to;
+            }
+            
+            virtual void translate (std::ofstream* stream);
         };
 
-        struct Literal: public Expression {
-            Literal(const char* interpretable, bool widthIncluded = true);
+
+        // Left Hand Expressions
+        struct LHExpression: public Expression {};
+
+        struct IdentifierExpression: public LHExpression {
+            Identifier* identifier;
+
+            IdentifierExpression(const char* identifier): identifier(new Identifier(identifier)) {}
+
+            MACRO_ELAB_SIG_HDR;
+            MACRO_GRAPHPRINT_SIG_HDR;
 
             virtual void translate(std::ofstream* stream);
         };
 
-        struct IdentifierExpression: public Expression {
-            Identifier* identifier;
+        struct PropertyAccess: public LHExpression {
+            PropertyAccess(Expression* object, Expression* property) {
+                this->left = object; this->right = property;
+            }
 
-            IdentifierExpression(const char* identifier): identifier(new Identifier(identifier)) {}
+            virtual void translate (std::ofstream* stream);
+        };
+
+        struct ArrayAccess: public LHExpression {
+            ArrayAccess(Expression* object, Expression* width) {
+                this->left = object; this->right = width;
+            }
+
+            virtual void translate (std::ofstream* stream);
+        };
+        
+        struct RangeAccess: public LHExpression {
+            RangeAccess(Expression* object, Range* range) {
+                this->left = object; this->right = (Node*)range;
+            }
+
+            virtual void translate (std::ofstream* stream);
+        };
+
+        struct Literal: public Expression {
+            Literal(const char* interpretable, bool widthIncluded = true);
 
             virtual void translate(std::ofstream* stream);
         };
@@ -404,39 +458,6 @@ namespace Phi {
 
             Ternary(Expression* condition, Expression* left, Expression* right): condition(condition) {
                 this->left = left; this->right = right;
-            }
-
-            virtual void translate (std::ofstream* stream);
-        };
-
-        struct Access: public Expression {};
-
-        struct PropertyAccess: public Access {
-            PropertyAccess(Expression* object, Expression* property) {
-                this->left = object; this->right = property;
-            }
-
-            virtual void translate (std::ofstream* stream);
-        };
-
-        struct ArrayAccess: public Access {
-            ArrayAccess(Expression* object, Expression* width) {
-                this->left = object; this->right = width;
-            }
-
-            virtual void translate (std::ofstream* stream);
-        };
-        
-        struct Range: public Node {
-            Range(Expression* from, Expression* to) {
-                this->left = from; this->right = to;
-            }
-            
-            virtual void translate (std::ofstream* stream);
-        };
-        struct RangeAccess: public Access {
-            RangeAccess(Expression* object, Range* range) {
-                this->left = object; this->right = range;
             }
 
             virtual void translate (std::ofstream* stream);

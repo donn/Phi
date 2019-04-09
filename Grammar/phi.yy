@@ -41,6 +41,7 @@
 %union {
     char* text;
     struct Node* node;
+    struct LHExpression* lhexpr;
     struct Expression* expr;
     bool bin;
     VariableLengthDeclaration::Type vldt;
@@ -93,14 +94,13 @@
 
 %right '=' ':' 
 
-%right '?'
 %left OP_RANGE
 %left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>' OP_UNSIGNED_LT OP_UNSIGNED_LTE OP_UNSIGNED_GT OP_UNSIGNED_GTE
 %left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '|' '&' '^'
 %left '*' '/' '%'
 %left OP_SRL OP_SRA OP_SLL
 %left '~' UNARY
-%left '.'
+%right '.'
 %right '['
 
 %type<text> NUMERIC FW_NUMERIC FW_SPECIAL IDENTIFIER ANNOTATION STRING optional_annotation
@@ -111,7 +111,8 @@
 
 %type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list special_number
 
-%type<expr> lhexpression expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable mux
+%type<lhexpr> lhexpression
+%type<expr> expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable mux
 
 // %{
 //     extern int yylex(Phi::Parser::semantic_type* yylval,
@@ -345,7 +346,7 @@ subdeclaration:
     dynamic_width optional_bus_declaration declaration_list {
         $$ = new VariableLengthDeclaration($1, (Range*)$2, (DeclarationListItem*)$3);
     }
-    | expression optional_template IDENTIFIER optional_array_declaration optional_ports {
+    | lhexpression optional_template IDENTIFIER optional_array_declaration optional_ports {
         $$ = new InstanceDeclaration($3, $1, (ExpressionIDPair*)$2, $4, (ExpressionIDPair*)$5);
     }
     ;
@@ -443,10 +444,10 @@ port_list:
 /* Nondeclarative Statements */
     
 nondeclarative_statement:
-    expression '=' expression {
+    lhexpression '=' expression {
         $$ = new NondeclarativeAssignment($1, $3);
     }
-    | expression ports {
+    | lhexpression ports {
         $$ = new NondeclarativePorts($1, (ExpressionIDPair*)$2);
     }
     ;

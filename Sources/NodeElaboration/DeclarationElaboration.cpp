@@ -7,26 +7,28 @@ using namespace Phi::Node;
 
 void Port::MACRO_ELAB_SIG_IMP {
     table->add(identifier->idString, this);
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    tryElaborate(right, table, context);
 }
 
 void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
     table->stepIntoAndCreate(identifier->idString, this);
-    tryElaborate(contents, MACRO_ELAB_ARGS);
+    tryElaborate(contents, table, context);
     table->stepOut();
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    tryElaborate(right, table, context);
 }
 
 void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     table->stepIntoAndCreate(identifier->idString, this);
-    tryElaborate(ports, MACRO_ELAB_ARGS);
-    tryElaborate(contents, MACRO_ELAB_ARGS);
+    table->stepIntoAndCreate("_tldPrivate", this);
+    tryElaborate(ports, table, context);
+    tryElaborate(contents, table, context);
     table->stepOut();
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    table->stepOut();
+    tryElaborate(right, table, context);
 }
 
 void If::MACRO_ELAB_SIG_IMP {
-    expression->elaborate(MACRO_ELAB_ARGS);
+    expression->elaborate(table, context);
     
     // If NOT in a comb block, we do need to elaborate. Otherwise... nyet.
     if (table->inComb()) {
@@ -39,7 +41,7 @@ void If::MACRO_ELAB_SIG_IMP {
     }
 
     if (expression->type == Expression::Type::RunTime) {
-        context->errorList.push_back({Phi::Error::emptyLocation, "elaboration.softwareExpr"});
+        context->addError(nullopt, "elaboration.softwareExpr");
         return;
     }
 
@@ -50,86 +52,83 @@ void If::MACRO_ELAB_SIG_IMP {
 
     auto value = expression->value.value();
     if (expression->numBits != 1) {
-        context->errorList.push_back({Phi::Error::emptyLocation, "expr.notACondition"});
+        context->addError(nullopt, "expr.notACondition");
         return;
     }
 
     if (value == llvm::APInt(1, 1, false)) {
-        tryElaborate(contents, MACRO_ELAB_ARGS);
+        tryElaborate(contents, table, context);
     } else {
-        tryElaborate(elseBlock, MACRO_ELAB_ARGS);
+        tryElaborate(elseBlock, table, context);
     }
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    tryElaborate(right, table, context);
 }
 
 void ForLoop::MACRO_ELAB_SIG_IMP {
-    range->elaborate(MACRO_ELAB_ARGS);
+    range->elaborate(table, context);
     // PII
     // TODO
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    tryElaborate(right, table, context);
 }
 
 void Combinational::MACRO_ELAB_SIG_IMP {
     table->stepIntoComb(this);
-    tryElaborate(contents, MACRO_ELAB_ARGS);
+    tryElaborate(contents, table, context);
     table->stepOut();
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    tryElaborate(right, table, context);
 }
 
 void Namespace::MACRO_ELAB_SIG_IMP {
     table->stepIntoAndCreate(identifier->idString, this);
-    tryElaborate(contents, MACRO_ELAB_ARGS);
+    tryElaborate(contents, table, context);
     table->stepOut();
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    tryElaborate(right, table, context);
 }
 
 void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
     // PII
-    tryElaborate(bus, MACRO_ELAB_ARGS);
+    tryElaborate(bus, table, context);
     declarationList->type = type;
     declarationList->bus = bus;
-    tryElaborate(declarationList, MACRO_ELAB_ARGS);
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    tryElaborate(declarationList, table, context);
+    tryElaborate(right, table, context);
 }
 
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
-    tryElaborate(array, MACRO_ELAB_ARGS);
-    tryElaborate(optionalAssignment, MACRO_ELAB_ARGS);
+    tryElaborate(array, table, context);
+    tryElaborate(optionalAssignment, table, context);
     table->add(identifier->idString, this, optionalAssignment);
     if (right) {
         auto rightDLI = (DeclarationListItem*)right;
         rightDLI->type = type;
         rightDLI->bus = bus;
-        tryElaborate(right, MACRO_ELAB_ARGS);
+        tryElaborate(right, table, context);
     }
 }
 
 void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
     if (array) {
-        tryElaborate(array, MACRO_ELAB_ARGS);
+        tryElaborate(array, table, context);
         if (array->type == Expression::Type::ParameterSensitive) {
             //Translate to assert and generate
         } else if (array->type == Expression::Type::RunTime) {
-            context->errorList.push_back({Phi::Error::emptyLocation, "elaboration.softwareExpr"});
+            context->addError(nullopt, "elaboration.softwareExpr");
         } else {
             //unroll
         }
     }
-    tryElaborate(module, MACRO_ELAB_ARGS);
-    unless (module->leftHandExpression) {
-        context->errorList.push_back({Phi::Error::emptyLocation, "identifier.rightHand"});
-    }
+    tryElaborate(module, table, context);
     
-    tryElaborate(parameters, MACRO_ELAB_ARGS);
-    tryElaborate(ports, MACRO_ELAB_ARGS);
+    tryElaborate(parameters, table, context);
+    tryElaborate(ports, table, context);
 
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    tryElaborate(right, table, context);
 }
 
 void ExpressionIDPair::MACRO_ELAB_SIG_IMP {
-    tryElaborate(expression, MACRO_ELAB_ARGS);
+    tryElaborate(expression, table, context);
 
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    tryElaborate(right, table, context);
 }
 
 void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
@@ -143,44 +142,42 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     DeclarationListItem* dliAttache;
     Port* portAttache;
 
-    tryElaborate(lhs, MACRO_ELAB_ARGS);
+    tryElaborate(lhs, table, context);
 
-    unless (lhs->leftHandExpression) {
-        context->errorList.push_back({Phi::Error::emptyLocation, "identifier.rightHand"});
-        goto exit;
-    }
     while (pointer) {
+        identifierPointer = dynamic_cast<IdentifierExpression*>(pointer);
+        propertyAccessPointer = dynamic_cast<PropertyAccess*>(pointer);
         if (identifierPointer) {
             ids.push_back(identifierPointer->identifier->idString);
             pointer = nullptr;
         } else if (propertyAccessPointer) {
-            left = (IdentifierExpression*)identifierPointer->left; // LHExpression association should mandate this
+            left = (IdentifierExpression*)propertyAccessPointer->left; // LHExpression association should mandate this
             ids.push_back(left->identifier->idString);
-            pointer = (Expression*)identifierPointer->right;
+            pointer = (LHExpression*)propertyAccessPointer->right;
         } else {
-            context->errorList.push_back({Phi::Error::emptyLocation, "identifier.invalidAccess"});
+            context->addError(nullopt, "identifier.invalidAccess");
             goto exit;
         }
     }
 
     symbol = table->checkExistence(ids);
-    unless (symbol) {
-        context->errorList.push_back({Phi::Error::emptyLocation, "symbol.dne"});
+    if (!symbol) {
+        context->addError(nullopt, "symbol.dne");
         goto exit;
     }
 
 
     dliAttache = dynamic_cast<DeclarationListItem*>(symbol->attached);
     portAttache = dynamic_cast<Port*>(symbol->attached);
-    unless (dliAttache && dliAttache->type == VariableLengthDeclaration::Type::wire) {
-        unless (portAttache && portAttache->polarity == Port::Polarity::output) {
-            context->errorList.push_back({Phi::Error::emptyLocation, "symbol.notAWire"});
+    if (!(dliAttache && dliAttache->type == VariableLengthDeclaration::Type::wire)) {
+        if (!(portAttache && portAttache->polarity == Port::Polarity::output)) {
+            context->addError(nullopt, "symbol.notAWire");
             goto exit;
         }
     } 
 
     if (symbol->driver) {
-        context->errorList.push_back({Phi::Error::emptyLocation, "symbol.driverExists"});
+        context->addError(nullopt, "symbol.driverExists");
         goto exit;
     }
 
@@ -196,12 +193,12 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
         inComb = true;
     }
 
-    tryElaborate(expression, MACRO_ELAB_ARGS);
+    tryElaborate(expression, table, context);
 
 exit:
-    tryElaborate(right, MACRO_ELAB_ARGS);
+    tryElaborate(right, table, context);
 }
 
 void NondeclarativePorts::MACRO_ELAB_SIG_IMP {
-    tryElaborate(ports, MACRO_ELAB_ARGS);
+    tryElaborate(ports, table, context);
 }
