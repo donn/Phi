@@ -155,11 +155,8 @@ declaration:
     | KEYWORD_MODULE error '}' {
         $$ = new ErrorNode();
     }
-    | KEYWORD_INTERFACE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance ';' {
+    | KEYWORD_INTERFACE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance {
         $$ = new TopLevelDeclaration($2, TopLevelDeclaration::Type::interface, (Port*)$5, $7);
-    }
-    | KEYWORD_INTERFACE error ';' {
-        $$ = new ErrorNode();
     }
     ;
 
@@ -232,16 +229,19 @@ inheritance_list:
     ;
 
 /* Statements */
+optional_semicolon:
+    | ';'
+    ;
 
 statement:
-    optional_annotation subdeclaration ';' {
+    optional_annotation subdeclaration optional_semicolon {
         auto node = (Statement*)$2;
         if ($1) {
             node->annotation = $1;
         }
         $$ = node;
     }
-    | optional_annotation nondeclarative_statement ';' {
+    | optional_annotation nondeclarative_statement optional_semicolon {
         auto node = (Statement*)$2;
         if ($1) {
             node->annotation = $1;

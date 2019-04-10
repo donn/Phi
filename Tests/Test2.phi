@@ -1,7 +1,7 @@
 module Adder(a: Input[3..0], b: Input[3..0], s: Output[3..0], cout: Output) {
-    Wire[4..0] full_number = a + b;
+    Wire[4..0] full_number = a + b
     comb {
-        s = full_number[3..0];
+        s = full_number[3..0]
     }
-    cout = full_number[4];
+    cout = full_number[4]
 }

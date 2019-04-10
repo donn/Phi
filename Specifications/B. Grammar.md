@@ -9,7 +9,7 @@
 
 *declaration*:
 * **module** *identifier* *template-declaration* **(** *port-declaration-list* **)** *inheritance* *block*
-* **interface** *identifier* *template-declaration* **(** *port-declaration-list* **)** *inheritance* **;**
+* **interface** *identifier* *template-declaration* **(** *port-declaration-list* **)** *inheritance*
 
 
 ## Ports
@@ -48,6 +48,10 @@
 * *lhexpression*
 
 ## Statements
+*optional-semicolon*:
+* **;**
+* ε
+
 *statement*:
 * *optional-annotation* *subdeclaration* **;**
 * *optional-annotation* *nondeclarative-statement* **;**
