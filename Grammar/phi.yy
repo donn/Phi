@@ -94,14 +94,13 @@
 
 %right '=' ':' 
 
+%right '.' '['
 %left OP_RANGE
 %left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>' OP_UNSIGNED_LT OP_UNSIGNED_LTE OP_UNSIGNED_GT OP_UNSIGNED_GTE
 %left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '|' '&' '^'
 %left '*' '/' '%'
 %left OP_SRL OP_SRA OP_SLL
 %left '~' UNARY
-%right '.'
-%right '['
 
 %type<text> NUMERIC FW_NUMERIC FW_SPECIAL IDENTIFIER ANNOTATION STRING optional_annotation
 
@@ -111,7 +110,7 @@
 
 %type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list special_number
 
-%type<lhexpr> lhexpression
+%type<lhexpr> lhexpression lhconcatenation
 %type<expr> expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable mux
 
 // %{
@@ -148,14 +147,18 @@ description:
     }
     ;
 
+optional_semicolon:
+    | ';'
+    ;
+
 declaration:
-    KEYWORD_MODULE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance block  {
+    KEYWORD_MODULE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance block optional_semicolon {
         $$ = new TopLevelDeclaration($2, TopLevelDeclaration::Type::module, (Port*)$5, $7, (Statement*)$8);
     }
     | KEYWORD_MODULE error '}' {
         $$ = new ErrorNode();
     }
-    | KEYWORD_INTERFACE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance {
+    | KEYWORD_INTERFACE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance optional_semicolon {
         $$ = new TopLevelDeclaration($2, TopLevelDeclaration::Type::interface, (Port*)$5, $7);
     }
     ;
@@ -229,10 +232,6 @@ inheritance_list:
     ;
 
 /* Statements */
-optional_semicolon:
-    | ';'
-    ;
-
 statement:
     optional_annotation subdeclaration optional_semicolon {
         auto node = (Statement*)$2;
@@ -447,6 +446,9 @@ nondeclarative_statement:
     lhexpression '=' expression {
         $$ = new NondeclarativeAssignment($1, $3);
     }
+    | '{' lhconcatenation '}' '=' expression {
+        $$ = new NondeclarativeAssignment($2, $5); 
+    }
     | lhexpression ports {
         $$ = new NondeclarativePorts($1, (ExpressionIDPair*)$2);
     }
@@ -464,7 +466,16 @@ lhexpression:
         $$ = new RangeAccess($1, (Range*)$3);
     }
     | lhexpression '[' expression ']' {
-        $$ = new ArrayAccess($1, $3);;
+        $$ = new ArrayAccess($1, $3);
+    }
+    ;
+
+lhconcatenation:
+    lhexpression ',' lhconcatenation {
+        $$ = new LHConcatenation($1, $3);
+    }
+    | lhexpression {
+        $$ = $1;
     }
     ;
 
@@ -550,7 +561,7 @@ expression:
     | '~' expression %prec UNARY {
         $$ = new Unary(Unary::Operation::bitwiseNot, $2);
     }
-    | '[' concatenation ']' {
+    | '{' concatenation '}' {
         $$ = $2;
     }
     | '(' expression ')' {
@@ -591,7 +602,7 @@ concatenatable:
     expression {
         $$ = $1;
     }
-    | expression LEFT_REPEAT_CAT concatenation ']' ']' {
+    | expression LEFT_REPEAT_CAT concatenation '}' '}' {
         $$ = new RepeatConcatenation($1, $3);
     }
     ;

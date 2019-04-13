@@ -12,23 +12,28 @@
 #define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
 #define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
 
+// Translation Macros
+#define MACRO_TRANS_PARAMS std::ofstream* stream
+#define MACRO_TRANS_SIG_IMP translate (MACRO_TRANS_PARAMS)
+#define MACRO_TRANS_SIG_HDR virtual void MACRO_TRANS_SIG_IMP
+
+// Debug Macros
 #if YYDEBUG
+    #define MACRO_DEBUGLABEL_PARAMS
+    #define MACRO_DEBUGLABEL_SIG_IMP debugLabel (MACRO_DEBUGLABEL_PARAMS)
+    #define MACRO_DEBUGLABEL_SIG_HDR virtual std::string MACRO_DEBUGLABEL_SIG_IMP
 
-#define MACRO_DEBUGLABEL_PARAMS
-#define MACRO_DEBUGLABEL_SIG_IMP debugLabel (MACRO_DEBUGLABEL_PARAMS)
-#define MACRO_DEBUGLABEL_SIG_HDR virtual std::string MACRO_DEBUGLABEL_SIG_IMP
-
-#define MACRO_GRAPHPRINT_PARAMS std::ostream* stream, int* node
-#define MACRO_GRAPHPRINT_SIG_IMP graphPrint (MACRO_GRAPHPRINT_PARAMS)
-#define MACRO_GRAPHPRINT_SIG_HDR virtual int MACRO_GRAPHPRINT_SIG_IMP
+    #define MACRO_GRAPHPRINT_PARAMS std::ostream* stream, int* node
+    #define MACRO_GRAPHPRINT_SIG_IMP graphPrint (MACRO_GRAPHPRINT_PARAMS)
+    #define MACRO_GRAPHPRINT_SIG_HDR virtual int MACRO_GRAPHPRINT_SIG_IMP
 #else
-#define MACRO_DEBUGLABEL_PARAMS
-#define MACRO_DEBUGLABEL_SIG_IMP
-#define MACRO_DEBUGLABEL_SIG_HDR 
+    #define MACRO_DEBUGLABEL_PARAMS
+    #define MACRO_DEBUGLABEL_SIG_IMP
+    #define MACRO_DEBUGLABEL_SIG_HDR 
 
-#define MACRO_GRAPHPRINT_PARAMS
-#define MACRO_GRAPHPRINT_SIG_IMP 
-#define MACRO_GRAPHPRINT_SIG_HDR
+    #define MACRO_GRAPHPRINT_PARAMS
+    #define MACRO_GRAPHPRINT_SIG_IMP 
+    #define MACRO_GRAPHPRINT_SIG_HDR
 #endif
 
 namespace Phi {
@@ -353,7 +358,7 @@ namespace Phi {
                 this->left = from; this->right = to;
             }
             
-            virtual void translate (std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
 
@@ -376,7 +381,7 @@ namespace Phi {
                 this->left = object; this->right = property;
             }
 
-            virtual void translate (std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct ArrayAccess: public LHExpression {
@@ -384,7 +389,7 @@ namespace Phi {
                 this->left = object; this->right = width;
             }
 
-            virtual void translate (std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
         
         struct RangeAccess: public LHExpression {
@@ -392,7 +397,15 @@ namespace Phi {
                 this->left = object; this->right = (Node*)range;
             }
 
-            virtual void translate (std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
+        };
+
+        struct LHConcatenation: public LHExpression {
+            LHConcatenation(Expression* of, Expression* with) {
+                this->left = of; this->right = with;
+            }
+
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct Literal: public Expression {
@@ -411,7 +424,7 @@ namespace Phi {
             Operation operation;
             Unary(Operation operation, Expression* right): operation(operation) { this->right = right; }
 
-            virtual void translate (std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct Binary: public Expression {
@@ -450,7 +463,7 @@ namespace Phi {
                 this->left = left; this->right = right;
             }
 
-            virtual void translate (std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct Ternary: public Expression {
@@ -460,7 +473,7 @@ namespace Phi {
                 this->left = left; this->right = right;
             }
 
-            virtual void translate (std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct RepeatConcatenation: public Expression {
@@ -468,7 +481,7 @@ namespace Phi {
                 this->left = repeatCount; this->right = repeatable;
             }
 
-            virtual void translate (std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct Concatenation: public Expression {
@@ -476,7 +489,7 @@ namespace Phi {
                 this->left = of; this->right = with;
             }
 
-            virtual void translate (std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
         
         struct Argument: public Node {

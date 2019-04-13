@@ -4,6 +4,6 @@
 
 using namespace Phi::Node;
 
-void Identifier::translate(std::ofstream* stream) {
+void Identifier::MACRO_TRANS_SIG_IMP {
     *stream << "\\" << idString << " ";
 }

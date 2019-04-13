@@ -7,9 +7,13 @@
 * **namespace** *identifier* **{** *description* **}** *description*
 * ε
 
+*optional-semicolon*:
+* **;**
+* ε
+
 *declaration*:
-* **module** *identifier* *template-declaration* **(** *port-declaration-list* **)** *inheritance* *block*
-* **interface** *identifier* *template-declaration* **(** *port-declaration-list* **)** *inheritance*
+* **module** *identifier* *template-declaration* **(** *port-declaration-list* **)** *inheritance* *block* *optional-semicolon*
+* **interface** *identifier* *template-declaration* **(** *port-declaration-list* **)** *inheritance* *optional-semicolon*
 
 
 ## Ports
@@ -48,13 +52,9 @@
 * *lhexpression*
 
 ## Statements
-*optional-semicolon*:
-* **;**
-* ε
-
 *statement*:
-* *optional-annotation* *subdeclaration* **;**
-* *optional-annotation* *nondeclarative-statement* **;**
+* *optional-annotation* *subdeclaration* *optional-semicolon*
+* *optional-annotation* *nondeclarative-statement* *optional-semicolon*
 * *optional-annotation* *block-based*
 
 *block-based*:
@@ -137,6 +137,7 @@
 
 *nondeclarative-statement*:
 * *lhexpression* **=** *expression*
+* **{** *lhconcatenation* **}** **=** *expression*
 * *lhexpression* *ports*
 
 *labeled-statement-list*:
@@ -151,6 +152,10 @@
 * *lhexpression* **.** *lhexpression*
 * *lhexpression* **[** *range* **]**
 * *lhexpression* **[** *expression* **]**
+
+*lhconcatenation*:
+* *lhexpression*, *lhconcatenation*
+* *lhexpression*
 
 *expression*:
 * *expression* **||** *expression*
@@ -181,7 +186,7 @@
 * **&** *expression*
 * **|** *expression*
 * **~** *expression*
-* **[** *concatenation* **]**
+* **{** *concatenation* **}**
 * **$** *expression* **(** *procedural-call* **)**
 * **(** *expression* **)**
 * *fixed-width-numeric*
@@ -197,7 +202,7 @@
 
 *concatenatable*:
 * *expression*
-* *expression* **[[** *concatenation* **]** **]**
+* *expression* **{{** *concatenation* **}** **}**
 
 *mux*:
 * **mux** *expression* *mux-block*

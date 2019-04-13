@@ -6,5 +6,45 @@ module Beta(a: Input, b: Output, c: Output) {
         c = theta[0];
     }
 
+    Register l;
+    l.data = theta[0];
+    l.clock = ~a;
+    l.reset = c;
+    l.enable = a;
+
+
     b = theta[1];
 }
+
+module Example(clock: @clock Input, reset: @reset Input, increase: Input) {
+    Register[3..0] counter
+
+    Wire[3..0] counter_next
+    Wire trash
+
+    Var 
+
+    comb {
+        if (increase) {
+            [trash, counter_next] = counter + 4d1
+        } else {
+            [trash, counter_next] = [1d0, counter_next]
+        }
+    }
+
+    counter.data = counter_next
+}
+
+module FSM(clock: @clock Input, reset: @resetLow Input) {
+    Var[31..0] idle = 0, working = 1
+    Register[31..0] state
+
+    Example example(clock: clock, reset: reset, increase: 1b1)
+
+    comb {
+        if (state == idle) {
+            state.data = working
+        }
+    }
+}
+

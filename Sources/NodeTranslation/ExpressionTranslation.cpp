@@ -4,19 +4,19 @@
 
 using namespace Phi::Node;
 
-void Literal::translate (std::ofstream* stream){
+void Literal::MACRO_TRANS_SIG_IMP {
     // examples: 0, 21, 32b1010010101.., 32d3, ...
 
     //assume: all literals will be represented in hexadecimal
     *stream << numBits << "'h" <<  value.value().toString(16, false);
 }
 
-void IdentifierExpression::translate (std::ofstream* stream){
+void IdentifierExpression::MACRO_TRANS_SIG_IMP {
     //variable name
     tryTranslate(identifier, stream);
 }
 
-void Unary::translate (std::ofstream* stream){
+void Unary::MACRO_TRANS_SIG_IMP {
 
     if(operation == Unary::Operation::negate){
             //two's complement
@@ -40,7 +40,7 @@ void Unary::translate (std::ofstream* stream){
 
 }
 
-void Binary::translate (std::ofstream* stream){
+void Binary::MACRO_TRANS_SIG_IMP {
 
     // note:
     //     $Signed in :
@@ -128,7 +128,7 @@ void Binary::translate (std::ofstream* stream){
     }
 }
 
-void Ternary::translate (std::ofstream* stream){
+void Ternary::MACRO_TRANS_SIG_IMP {
 
      *stream << "(";
      tryTranslate(condition, stream);
@@ -149,7 +149,7 @@ void Ternary::translate (std::ofstream* stream){
      *stream << ")";
 }
 
-void RepeatConcatenation::translate (std::ofstream* stream){
+void RepeatConcatenation::MACRO_TRANS_SIG_IMP {
     //example in phi : [2 [[3'b110]] ]
     //example in verilog : {2 {3'b110} }
 
@@ -163,12 +163,14 @@ void RepeatConcatenation::translate (std::ofstream* stream){
     *stream << "}";
 }
 
-void Concatenation::translate (std::ofstream* stream){
-    //example: {2'b11, 4'h8}
-
-    *stream << "{";
-    tryTranslate(left, stream); 
-    *stream << ",";
-    tryTranslate(right, stream); 
-    *stream << "}";
+#define LOCAL_CONCATDEF(x) void x::MACRO_TRANS_SIG_IMP {\
+    \
+    *stream << "{";\
+    tryTranslate(left, stream); \
+    *stream << ",";\
+    tryTranslate(right, stream); \
+    *stream << "}";\
 }
+
+LOCAL_CONCATDEF(LHConcatenation);
+LOCAL_CONCATDEF(Concatenation);

@@ -3,10 +3,10 @@
 
 using namespace Phi::Node;
 
-void ErrorNode::translate(std::ofstream* stream){
+void ErrorNode::MACRO_TRANS_SIG_IMP {
 }
 
-void SpecialNumber::translate(std::ofstream* stream){
+void SpecialNumber::MACRO_TRANS_SIG_IMP {
     //why it called SpecialNumber?
     //because of the existence of z in number like 0101010z0101
 
@@ -52,7 +52,7 @@ void SpecialNumber::translate(std::ofstream* stream){
     tryTranslate(right, stream);
 }
 
-void LabeledStatementList::translate(std::ofstream* stream){
+void LabeledStatementList::MACRO_TRANS_SIG_IMP {
     // note about LabeledStatementList --> relate to CASE only
 
     //example1:
@@ -106,7 +106,7 @@ void LabeledStatementList::translate(std::ofstream* stream){
     tryTranslate(statements, stream); 
 }
 
-void Range::translate(std::ofstream* stream){
+void Range::MACRO_TRANS_SIG_IMP {
     // example
     //  3:4 
     //  description--> 3: from, 4: to

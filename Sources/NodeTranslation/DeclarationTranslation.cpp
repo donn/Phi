@@ -4,7 +4,7 @@
 
 using namespace Phi::Node;
 
-void Port::translate(std::ofstream* stream) {
+void Port::MACRO_TRANS_SIG_IMP {
     // example
     // a: Input [width-1 .. 0]; 
     // input [width-1 ..0] a;
@@ -35,12 +35,12 @@ void Port::translate(std::ofstream* stream) {
 
 }
 
-void TopLevelNamespace::translate(std::ofstream* stream) {
+void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
     tryTranslate(contents, stream);
     tryTranslate(right, stream);
 }
 
-void TopLevelDeclaration::translate(std::ofstream* stream) {
+void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
     
     if (type == TopLevelDeclaration::Type::module) {
         *stream << "module ";
@@ -93,13 +93,13 @@ void TopLevelDeclaration::translate(std::ofstream* stream) {
     tryTranslate(right, stream);
 }
 
-void VariableLengthDeclaration::translate(std::ofstream* stream){
+void VariableLengthDeclaration::MACRO_TRANS_SIG_IMP {
 
     tryTranslate(declarationList, stream);
     tryTranslate(right, stream);
 }
 
-void DeclarationListItem::translate(std::ofstream* stream) {
+void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     using VLD = VariableLengthDeclaration;
 
     switch(type){
@@ -147,7 +147,7 @@ void DeclarationListItem::translate(std::ofstream* stream) {
     tryTranslate(right, stream);
 }
 
-void InstanceDeclaration::translate(std::ofstream* stream){
+void InstanceDeclaration::MACRO_TRANS_SIG_IMP {
 
     //example
     // flipflop #(.max(4000), .width(18)) id(.b(b), ...);
@@ -178,7 +178,7 @@ void InstanceDeclaration::translate(std::ofstream* stream){
     tryTranslate(right, stream);
 }
 
-void ExpressionIDPair::translate(std::ofstream* stream){
+void ExpressionIDPair::MACRO_TRANS_SIG_IMP {
 
     //example 
     //calling another module

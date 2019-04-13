@@ -4,7 +4,7 @@
 
 using namespace Phi::Node;
 
-void NondeclarativeAssignment::translate (std::ofstream* stream){
+void NondeclarativeAssignment::MACRO_TRANS_SIG_IMP {
     // example 
     // a = b;
     // a: Nondeclarative::lhs, b: expression

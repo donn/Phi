@@ -5,6 +5,6 @@ void Node::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, table, context);
 }
 
-void Node::translate(std::ofstream* stream) {
+void Node::MACRO_TRANS_SIG_IMP {
     tryTranslate(right, stream);
 }

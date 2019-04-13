@@ -4,19 +4,19 @@
 
 using namespace Phi::Node;
 
-void If::translate (std::ofstream* stream){
+void If::MACRO_TRANS_SIG_IMP {
 }
 
-void ForLoop::translate (std::ofstream* stream){
+void ForLoop::MACRO_TRANS_SIG_IMP {
 }
 
-void Namespace::translate (std::ofstream* stream){
+void Namespace::MACRO_TRANS_SIG_IMP {
 }
 
-void Switch::translate (std::ofstream* stream){
+void Switch::MACRO_TRANS_SIG_IMP {
 }
 
-void Combinational::translate (std::ofstream* stream){
+void Combinational::MACRO_TRANS_SIG_IMP {
     // always_comb in systemverilog
 
     // struct BlockBased: public Statement {

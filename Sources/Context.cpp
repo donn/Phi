@@ -86,7 +86,7 @@ void Context::elaborate(SymbolTable* table) {
     head->elaborate(table, this);
 }
 
-void Context::translate(std::ofstream* stream) {
+void Context::MACRO_TRANS_SIG_IMP {
     head->translate(stream);
 }
 

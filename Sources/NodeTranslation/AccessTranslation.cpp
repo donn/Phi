@@ -3,7 +3,7 @@
 
 using namespace Phi::Node;
 
-void PropertyAccess::translate (std::ofstream* stream){
+void PropertyAccess::MACRO_TRANS_SIG_IMP {
     //example: 
     
     // namespace Gamma{
@@ -21,7 +21,7 @@ void PropertyAccess::translate (std::ofstream* stream){
     tryTranslate(right, stream); //property
 }
 
-void ArrayAccess::translate (std::ofstream* stream){
+void ArrayAccess::MACRO_TRANS_SIG_IMP {
     //example
     // barrelShifter bs[4]; // bs --> object , 4 --> width
 
@@ -35,7 +35,7 @@ void ArrayAccess::translate (std::ofstream* stream){
     *stream << "]";
 }
 
-void RangeAccess::translate (std::ofstream* stream){
+void RangeAccess::MACRO_TRANS_SIG_IMP {
     //example : 
     // arr[3:4]; //arr--> object , 3:4-->range
 

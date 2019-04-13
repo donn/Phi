@@ -183,7 +183,7 @@ starter _A-Za-z\u{00A8}\u{00AA}\u{00AD}\u{00AF}\u{00B2}-\u{00B5}\u{00B7}-\u{00BA
     return token::OP_UNSIGNED_LTE;
 }
 
-(\[\[) {
+(\{\{) {
     return token::LEFT_REPEAT_CAT;
 }
 
