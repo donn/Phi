@@ -1,6 +1,6 @@
-`include "Test2.phi.sv"
+`phi "Test2.phi"
 
-module testbench;
+msodule testbench;
 
     reg[3:0] a, b;
     wire[3:0] s;
