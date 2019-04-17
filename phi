@@ -2,7 +2,14 @@
 require 'optparse'
 require 'open3'
 require 'tmpdir'
-require "#{__dir__}/Executables/BSDExits.rb"
+
+# `man sysexits`
+BSDExits = {
+    :OK => 0,  
+    :_BASE => 64,  
+    :USAGE => 64,  :DATAERR => 65,  :NOINPUT => 66,  :NOUSER => 67,  :NOHOST => 68,  :UNAVAILABLE => 69,  :SOFTWARE => 70,  :OSERR => 71,  :OSFILE => 72,  :CANTCREAT => 73,  :IOERR => 74,  :TEMPFAIL => 75,  :PROTOCOL => 76,  :NOPERM => 77,  :CONFIG => 78,  
+    :_MAX => 78
+}
 
 # String extensions to add color
 class String
@@ -24,7 +31,7 @@ class Dir
 end
 
 # Basic setup
-phic = "#{__dir__}/Executables/phic"
+phic = "#{__dir__}/phic"
 passthroughOptions = []
 verbose = false
 
@@ -37,7 +44,7 @@ parser = OptionParser.new do |opts|
         exit $?.exitstatus
     end
 
-    opts.on("-v", "--verbose", "Show the current version of Phi.") do
+    opts.on("-v", "--verbose", "Turn on verbose operation mode.") do
         verbose = true
     end
 
@@ -48,6 +55,16 @@ parser = OptionParser.new do |opts|
 
     opts.on("--ignoreErrors", "Attempt best translation despite errors.") do
         passthroughOptions << "--ignoreErrors"
+    end
+
+    opts.on("--openSource", "Show open source acknowledgements.") do
+        exec("more #{__dir__}/OSAcknowledgements")
+        exit BSDExits[:OK]
+    end
+
+    opts.on("--license", "Show the full license for Phi.") do |v|
+        exec("more #{__dir__}/License")
+        exit BSDExits[:OK]
     end
 end
 

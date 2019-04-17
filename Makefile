@@ -47,7 +47,7 @@ CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $
 
 LD_FLAGS = $(LDFLAGS) -lllvm
 
-BINARY = Executables/phic
+BINARY = phic
 
 # Products
 

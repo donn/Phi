@@ -8,15 +8,19 @@ It is our goal to design a well-defined language with:
 It's basically a mix of Swift/C++'s syntax with Verilog's semantics.
 
 # Dependencies
-Building Phi requires:
+## Running
+* LLVM 
+* Ruby 2.3+ (optional, for main script)
+
+## Build
+All running dependencies, plus:
 
 * A POSIX environment
 * A C++17 compiler that supports **standard** C++17
     * No GCC or Clang specific extensions are used. Any used by accident are a bug we are interested in fixing.
 * Git
-* LLVM
-* GNU Bison
 * Make
+* GNU Bison
 
 ## Usage
 ### All: After Cloning
