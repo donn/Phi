@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
             stdout << "All rights reserved. Licensed under the Apache License 2.0." << std::endl;
             exit(0);
         }},
+        {"outFile", 'o', "Output file.", true, std::nullopt},
         {"ignoreErrors", std::nullopt, "Attempt best translation despite errors.", false, std::nullopt},
 #if YYDEBUG
         {"trace", 'T', "Trace GNU Bison/Phi semantic analysis operation. (Debug builds only.)", false, nullopt},
@@ -72,10 +73,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "File must end with .phi." << std::endl;
         return EX_DATAERR;
     }
-
-    auto outputFilename = filename;
-    outputFilename.replace(extensionPosition, 4, ".v");
-
+    
     auto context = Phi::Context(argv[0]);
     
 #if YYDEBUG
@@ -147,8 +145,13 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
+    std::string outputFilename = arguments[0] + ".sv";
+    if (options.find("outFile") != options.end()) {
+        outputFilename = options["outFile"];
+    }
+
     std::ofstream output;
-    output.open(arguments[0] + ".sv");
+    output.open(outputFilename);
     if (output.fail()) {
         std::cerr << "Could not open file '" << filename << "'." << std::endl;
         return EX_CANTCREAT;

@@ -2,7 +2,7 @@
 Intermediates/
 
 .DS_Store
-phi
+phic
 *.vcd
 
 *.exe

@@ -1,0 +1,180 @@
+#!/usr/bin/env ruby
+require 'optparse'
+require 'open3'
+require 'tmpdir'
+require "#{__dir__}/Executables/BSDExits.rb"
+
+# String extensions to add color
+class String
+    def red;            "\e[31m#{self}\e[0m" end
+    def green;          "\e[32m#{self}\e[0m" end
+    def gray;           "\e[37m#{self}\e[0m" end
+
+    def bold;           "\e[1m#{self}\e[22m" end
+end
+
+# Create all necessary directories for a file
+class Dir
+    def self.createAllDirs(file:)
+        dirname = File.dirname(file)
+        unless File.directory?(dirname)
+            FileUtils.mkdir_p(dirname)
+        end
+    end
+end
+
+# Basic setup
+phic = "#{__dir__}/Executables/phic"
+passthroughOptions = []
+verbose = false
+
+# Commandline option parser
+parser = OptionParser.new do |opts|
+    opts.banner = "Usage: #{Process.argv0} [Options] <File>"
+
+    opts.on("-h", "--help", "Show this message and exit.") do
+        puts opts
+        exit $?.exitstatus
+    end
+
+    opts.on("-v", "--verbose", "Show the current version of Phi.") do
+        verbose = true
+    end
+
+    opts.on("-V", "--version", "Show the current version of Phi.") do
+        system("'#{phic}' -V")
+        exit $?.exitstatus
+    end
+
+    opts.on("--ignoreErrors", "Attempt best translation despite errors.") do
+        passthroughOptions << "--ignoreErrors"
+    end
+end
+
+parser.parse!
+
+if ARGV.count != 1
+    puts parser
+    exit BSDExits[:OK]
+end
+
+argument = ARGV[0]
+
+if argument.end_with?(".phi")
+    # Treat as Phi
+    phic_invocation = "'#{phic}' #{passthroughOptions} #{argument}"
+    system(phic_invocation)
+elsif argument.end_with?(".sv") || argument.end_with?(".v")
+    # Treat as SystemVerilog
+
+    # Check existence of tools
+    verilogc = nil
+    vvp = nil
+    if not ENV['PHI_VERILOG_COMPILER'].nil?
+        verilogc = ENV['PHI_VERILOG_COMPILER']
+    elsif
+        `which iverilog`
+        verilogc = "iverilog" unless $?.exitstatus != 0
+    end
+    if not ENV['PHI_VVP'].nil?
+        vvp = ENV['PHI_VVP']
+    elsif
+        `which vvp`
+        vvp = "vvp" unless $?.exitstatus != 0
+    end
+    if verilogc.nil?
+        stderr.puts "No Verilog simulator found. (Set environment variable $PHI_VERILOG_COMPILER)"
+        exit BSDExits[:UNAVAILABLE]
+    end
+    if vvp.nil?
+        stderr.puts "No VVP found. (Set environment variable $PHI_VVP)"
+        exit BSDExits[:UNAVAILABLE]
+    end
+    
+    # Check if Icarus Verilog
+    icarus_verilog = `#{verilogc} -v 2>&1`.include?("Icarus Verilog version")
+
+    # Get tmp dir
+    temp_directory = Dir.mktmpdir
+    begin
+        # Process SystemVerilog files for Phi includes
+        i = 1
+        result = []
+        lines = File.read(argument).split("\n")
+        regex = /^\s*`phi\s*\"([^']+?)\"\s*$/
+        result << "`line #{i} \"#{argument}\" 0"
+        for line in lines
+            match = regex.match(line)
+            unless match.nil?
+                phi_file = match[1]
+                sv_output = "#{temp_directory}/#{phi_file}.sv"
+                Dir.createAllDirs(file: sv_output)
+
+                phic_invocation = "'#{phic}' #{passthroughOptions.map { |v| "'#{v}'"}.join(" ")}-o '#{sv_output}' '#{phi_file}'"
+                puts phic_invocation if verbose
+                system(phic_invocation)
+
+                if $?.exitstatus != BSDExits[:OK]
+                    exit $?.exitstatus
+                end
+                result << "`include \"#{sv_output}\""
+                result << "`line #{i + 1} \"#{argument}\" 0"
+            else
+                result << line
+            end
+            i += 1
+        end
+
+        # Output new testbench
+        tb_output = "#{temp_directory}/#{argument}"
+        Dir.createAllDirs(file: tb_output)
+        File.open(tb_output, 'w') do |f|
+            f << result.join("\n")
+        end
+
+        # Try to pretty print Icarus Verilog errors
+        vvp_output = "#{temp_directory}/#{argument}.vvp"
+        Dir.createAllDirs(file: vvp_output)
+        verilogc_invocation = "'#{verilogc}' -o '#{vvp_output}' '#{tb_output}'"
+        puts verilogc_invocation if verbose
+        verilogc_out, verilogc_err, verilogc_status = Open3.capture3(verilogc_invocation)
+        if verilogc_status != BSDExits[:OK]
+            if icarus_verilog
+                # Get ready for IcarusVerilog... *sigh*
+                error_regex = /^\s*(.+?)\:(\d+)\: (.+)\s*$/
+                errors = 0
+                for line in verilogc_err.split("\n")
+                    if line == "I give up."
+                        # Thank you,
+                        next
+                    end
+                    print "[Verilog Error] "
+                    match = error_regex.match(line)
+                    if !match.nil?
+                        errors += 1
+                        STDERR.puts "#{match[1]}:#{match[2]}:".bold + " error:".red.bold + " '#{match[3]}'".bold
+                        if match[1] == argument
+                            print "[Relevant Line] "
+                            STDERR.puts lines[match[2].to_i - 1]
+                            STDERR.puts "-"
+                        end
+                    end
+                end
+            else
+                for line in verilogc_err.split("\n")
+                    print "[Verilog Error] "
+                    STDERR.puts line
+                end
+            end
+
+            exit verilogc_status.exitstatus
+        end
+
+        # Execute VVP
+        vvp_invocation = "'#{vvp}' '#{vvp_output}'"
+        puts vvp_invocation if verbose
+        system(vvp_invocation)
+    ensure
+        FileUtils.remove_entry temp_directory
+    end
+end
