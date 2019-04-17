@@ -20,7 +20,6 @@
 
 // Libraries
 #include <StupidSimpleCPPOpts.h>
-#include <termcolor/termcolor.hpp>
 
 std::string versionString() {
     std::string dev = "";

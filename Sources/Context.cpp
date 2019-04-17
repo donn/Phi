@@ -5,9 +5,6 @@
 // Bison
 #include <phi.yy.hh>
 
-// Libraries
-#include <termcolor/termcolor.hpp>
-
 // CPP STL
 #include <iomanip>
 #include <sstream>
@@ -45,16 +42,16 @@ void Context::prettyPrintErrors(std::ostream* out) {
                 highlight = std::string(loc.end.column - loc.begin.column - 2, '~');
             }
 
-            *out << termcolor::bold << *loc.begin.filename;
+            *out << *loc.begin.filename;
             if (loc.begin.line != 0) {
                 *out << ":" << loc.begin.line << ":" << loc.begin.column;
             }
-            *out << ": " << termcolor::red << message << termcolor::reset << std::endl;
+            *out << ": " << message << std::endl;
             if (loc.begin.line != 0) {
                 *out << currentFileLines[loc.begin.line - 1] << std::endl;
-                *out << termcolor::bold << termcolor::green <<
+                *out <<
                     std::setw(loc.begin.column + 1) << "^" <<
-                    highlight << termcolor::reset << std::endl;
+                    highlight << std::endl;
             }
         }
         *out << errorCount << ((errorCount == 1) ? " error" : " errors") << " generated." << std::endl;
