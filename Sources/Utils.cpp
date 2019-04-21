@@ -2,7 +2,9 @@
 
 #include <sstream>
 
-std::vector<std::string> Phi::Utils::split(const std::string* string, char delimiter) {
+using namespace Phi;
+
+std::vector<std::string> Utils::split(const std::string* string, char delimiter) {
     std::vector<std::string> returnValue;
     std::stringstream ss;
     ss.str(*string);
@@ -15,10 +17,16 @@ std::vector<std::string> Phi::Utils::split(const std::string* string, char delim
     return returnValue;
 }
 
-std::string Phi::Utils::join(std::vector<std::string>* arrays, char delimiter) {
+std::string Utils::join(std::vector<std::string>* arrays, char delimiter) {
     std::stringstream ss;
+
     for (auto& string: *arrays) {
         ss << string << delimiter;
     }
+    
     return ss.str();
+}
+
+bool Utils::apIntCheck(llvm::APInt* integer, uint64 limit) {
+    return integer->ult(llvm::APInt(64, limit));
 }

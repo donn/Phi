@@ -1,12 +1,13 @@
-#include <sstream>
-
 #include "Node.h"
 #include "SymbolTable.h"
+
+#include <sstream>
 
 using namespace Phi::Node;
 
 void Port::MACRO_ELAB_SIG_IMP {
-    table->add(identifier->idString, this);
+    auto pointer = std::make_shared<Driven>(identifier->idString, this);
+    table->add(identifier->idString, pointer);
     tryElaborate(right, table, context);
 }
 
@@ -95,11 +96,47 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
 }
 
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
+    DeclarationListItem* rightDLI;
+    std::shared_ptr<Driven> pointer;
+
     tryElaborate(array, table, context);
+    auto size = 1;
+
+    if (array) {
+        switch (array->type) {
+        case Expression::Type::ParameterSensitive:
+            size = 0;
+            break;
+        case Expression::Type::CompileTime:
+            if (!Utils::apIntCheck(&array->value.value(), Expression::maxWidth)) {
+                context->addError(nullopt, "array.maximumExceeded");
+                goto exit; 
+            }
+            size = array->value.value().getLimitedValue();
+            if (size == 0) {
+                context->addError(nullopt, "array.cannotBeZero");
+                goto exit; 
+            }
+            break;
+        case Expression::Type::RunTime:
+            context->addError(nullopt, "array.hardwareExpression");
+            [[fallthrough]];
+        case Expression::Type::Error:
+            goto exit;
+            break;
+        default:
+            throw "FATAL";
+            goto exit;
+        }
+    }
     tryElaborate(optionalAssignment, table, context);
-    table->add(identifier->idString, this, optionalAssignment);
+    //pointer = std::make_shared<Driven>(identifier->idString, this, size);
+    //table->add(identifier->idString, pointer);
+
+exit:
+    //PII
     if (right) {
-        auto rightDLI = (DeclarationListItem*)right;
+        rightDLI = (DeclarationListItem*)right;
         rightDLI->type = type;
         rightDLI->bus = bus;
         tryElaborate(right, table, context);
@@ -137,8 +174,11 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     auto pointer = lhs;
     auto identifierPointer = dynamic_cast<IdentifierExpression*>(pointer);
     auto propertyAccessPointer = dynamic_cast<PropertyAccess*>(pointer);
-    IdentifierExpression* left;
+    
     std::shared_ptr<Symbol> symbol;
+    std::shared_ptr<Driven> driven;
+
+    IdentifierExpression* left;
     DeclarationListItem* dliAttache;
     Port* portAttache;
 
@@ -160,15 +200,16 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
         }
     }
 
-    symbol = table->checkExistence(ids);
-    if (!symbol) {
-        context->addError(nullopt, "symbol.dne");
-        goto exit;
-    }
+    // TODO
+    // symbol = table->checkExistence(ids);
+    // if (!symbol) {
+    //     context->addError(nullopt, "symbol.dne");
+    //     goto exit;
+    // }
 
 
-    dliAttache = dynamic_cast<DeclarationListItem*>(symbol->attached);
-    portAttache = dynamic_cast<Port*>(symbol->attached);
+    dliAttache = dynamic_cast<DeclarationListItem*>(symbol->declarator);
+    portAttache = dynamic_cast<Port*>(symbol->declarator);
     if (!(dliAttache && dliAttache->type == VariableLengthDeclaration::Type::wire)) {
         if (!(portAttache && portAttache->polarity == Port::Polarity::output)) {
             context->addError(nullopt, "symbol.notAWire");
@@ -176,12 +217,13 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
         }
     } 
 
-    if (symbol->driver) {
-        context->addError(nullopt, "symbol.driverExists");
-        goto exit;
-    }
+    // driven = std::dynamic_pointer_cast<Driven>(symbol);
+    // if (symbol->driver) {
+    //     context->addError(nullopt, "symbol.driverExists");
+    //     goto exit;
+    // }
 
-    symbol->driver = this;
+    // symbol->driver = this;
 
     if (table->inComb()) {
         if (dliAttache) {

@@ -42,8 +42,6 @@ namespace Phi {
     class Context;
 
     namespace Node {
-        using Width = uint16;
-        static const Width maxWidth = UINT16_MAX;
 
         struct Node {
             Node* left = nullptr;
@@ -339,38 +337,40 @@ namespace Phi {
 
         // Expression
         struct Expression: public Node {
+            using Width = uint16;
+            static const Width maxWidth = UINT16_MAX;
+
             enum class Type {
                 CompileTime = 0,
                 ParameterSensitive,
                 RunTime,
-
-                Undefined = 0xFF
+                Error = 0xFF
             };
-            Type type = Type::Undefined;
+            Type type = Type::Error;
 
-            unsigned int numBits = 0;
+            Width numBits = 0;
             optional<llvm::APInt> value = nullopt;
-
         };
         // Range
         struct Range: public Node {
-            Range(Expression* from, Expression* to) {
-                this->left = from; this->right = to;
-            }
+            Expression* from;
+            Expression* to;
+            Range(Expression* from, Expression* to): from(from), to(to) {}
             
             MACRO_TRANS_SIG_HDR;
         };
 
 
         // Left Hand Expressions
-        struct LHExpression: public Expression {};
+        struct LHExpression: public Expression {
+            MACRO_ELAB_SIG_HDR;
+        };
 
         struct IdentifierExpression: public LHExpression {
             Identifier* identifier;
 
             IdentifierExpression(const char* identifier): identifier(new Identifier(identifier)) {}
 
-            MACRO_ELAB_SIG_HDR;
             MACRO_GRAPHPRINT_SIG_HDR;
 
             virtual void translate(std::ofstream* stream);

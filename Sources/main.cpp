@@ -31,7 +31,7 @@ std::string versionString() {
 int main(int argc, char* argv[]) {
     auto stdout = std::ofstream("/dev/stdout");
     auto stderr = std::ofstream("/dev/stderr");
-
+    
     // CLI Option parsing
     SSCO::Options getOpt({
         {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(stdout); exit(0); }},

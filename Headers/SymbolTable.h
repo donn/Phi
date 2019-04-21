@@ -15,29 +15,46 @@
 namespace Phi {
     struct Symbol {
         std::string id;
-        Node::Node* attached;
-        Node::Node* driver = nullptr;
+        Node::Node* declarator;
 
-        Symbol(std::string id, Node::Node* attached, Node::Node* driver = nullptr): id(id), attached(attached), driver(nullptr) {}
-        void drive(Node::Node* newDriver) {
-            if (driver) {
-                throw driver;
-            }
-            driver = newDriver;
-        }
-
+        Symbol(std::string id, Node::Node* declarator): id(id), declarator(declarator) {}
         virtual ~Symbol() = default;
+    };
+
+    struct DriveRange {
+        Node::Expression* expression;
+
+        // Relative to expression being driven
+        Node::Expression::Width from;
+        Node::Expression::Width to;
+
+        DriveRange(Node::Expression* expression, Node::Expression::Width from, Node::Expression::Width to): expression(expression), from(from), to(to) {}
+    };
+
+    struct Driven: public Symbol {
+        std::vector<DriveRange> driveRanges;
+
+        Driven(std::string id, Node::Node* declarator): Symbol(id, declarator) {}
+
+        bool drive(Node::Expression* expression, optional<Node::Expression::Width> from = nullopt, optional<Node::Expression::Width> to = nullopt);
     };
 
     struct SymbolSpace: public Symbol {
         std::map< std::string, std::shared_ptr<Symbol> > space;
         bool isComb;
 
-        SymbolSpace(std::string id, Node::Node* attached, bool isComb = false): Symbol(id, attached), isComb(isComb) {
-            space = std::map<std::string, std::shared_ptr<Symbol> >();
-        }
+        SymbolSpace(std::string id, Node::Node* declarator, bool isComb = false): Symbol(id, declarator), isComb(isComb) {}
 #if YYDEBUG
         int represent(std::ostream* stream, int* node);
+#endif
+    };
+
+    struct SymbolArray: public Symbol {
+        std::vector <std::shared_ptr<Symbol> > array;
+
+        SymbolArray(std::string id, Node::Node* declarator, Node::Expression::Width size = 1): Symbol(id, declarator) {}
+#if YYDEBUG
+        //int represent(std::ostream* stream, int* node);
 #endif
     };
 
@@ -45,18 +62,15 @@ namespace Phi {
         std::shared_ptr<SymbolSpace> head = nullptr;
         std::vector< std::shared_ptr<SymbolSpace> > stack;
 
-    public: 
+    public:
         SymbolTable();
         ~SymbolTable();
 
-        void add(std::string id, Node::Node* attached, bool space = false, Node::Node* driver = nullptr);
-        void add(std::string id, Node::Node* attached, Node::Node* driver) {
-            add(id, attached, false, driver);
-        }
-        std::shared_ptr<Symbol> checkExistence(std::vector<std::string> ids);
+        void add(std::string id, std::shared_ptr<Symbol> symbol);
+        optional< std::shared_ptr<Symbol> > find(Node::LHExpression* findable);
         void stepInto(std::string id);
         void stepIntoComb(Node::Node* attached);
-        void stepIntoAndCreate(std::string id, Node::Node* attached);
+        void stepIntoAndCreate(std::string id, Node::Node* declarator);
         void stepOut();
 
         bool inComb();

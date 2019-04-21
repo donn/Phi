@@ -116,9 +116,9 @@ void Range::MACRO_TRANS_SIG_IMP {
     //             }
 
     *stream << "[";
-    tryTranslate(left, stream); //from
+    tryTranslate(from, stream); //from
     *stream << ":";
-    tryTranslate(right, stream); //to
+    tryTranslate(to, stream); //to
     *stream << "]";
 }
 

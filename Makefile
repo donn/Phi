@@ -10,8 +10,8 @@ REFLEX_UNICODE_SRC_DIR = $(REFLEX_DIR)/unicode
 REFLEX_LIB_SRC_DIR = $(REFLEX_DIR)/lib
 REFLEX_LIB_HEADER_DIR = $(REFLEX_DIR)/include
 
-REFLEX_LIB_SOURCES = $(shell find $(REFLEX_LIB_SRC_DIR) -name *.cpp)
-REFLEX_UNICODE_SOURCES = $(shell find $(REFLEX_UNICODE_SRC_DIR) -name *.cpp)
+REFLEX_LIB_SOURCES = $(shell find $(REFLEX_LIB_SRC_DIR) | grep .cpp)
+REFLEX_UNICODE_SOURCES = $(shell find $(REFLEX_UNICODE_SRC_DIR) | grep .cpp)
 
 REFLEX_LIB_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(REFLEX_LIB_SOURCES)))
 REFLEX_UNICODE_OBJECTS =  $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(REFLEX_UNICODE_SOURCES)))

@@ -14,7 +14,7 @@ SpecialNumber::SpecialNumber(const char* interpretablePtr) {
     std::regex_match(interpretable, match, regex); // If it doesn't match, the regex here and in the .l file are mismatched.
 
     auto prospectiveWidth = std::stoi(match[1]);
-    if (prospectiveWidth < 0 || prospectiveWidth > maxWidth) {
+    if (prospectiveWidth < 0 || prospectiveWidth > Expression::maxWidth) {
         throw "expr.tooWide";
     }
 
@@ -90,6 +90,6 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
     }
 }
 
-void IdentifierExpression::MACRO_ELAB_SIG_IMP {
+void LHExpression::MACRO_ELAB_SIG_IMP {
     
 }
