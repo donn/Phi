@@ -19,4 +19,7 @@ typedef uint32_t uint32;
 typedef int64_t int64;
 typedef int64_t uint64;
 
+using AccessWidth = uint16;
+const AccessWidth maxAccessWidth = UINT16_MAX;
+
 #endif // _types_h

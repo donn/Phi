@@ -1,12 +1,11 @@
 #ifndef _utils_h
 #define _utils_h
 
-// C++ STL
+#include "Types.h"
+
 #include <vector>
 #include <llvm/ADT/APInt.h>
 
-// Project Headers
-#include "Types.h"
 
 namespace Phi {
     namespace Utils {

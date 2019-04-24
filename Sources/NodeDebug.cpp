@@ -1,9 +1,10 @@
 #if YYDEBUG
 #include "Node.h"
-using namespace Phi::Node;
 
 #include <typeinfo>
 #include <cxxabi.h>
+
+using namespace Phi::Node;
 
 std::string Node::debugLabel() {
     int status;

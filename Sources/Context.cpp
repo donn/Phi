@@ -1,11 +1,8 @@
-// Project Headers
 #include "Context.h"
 #include "Utils.h"
 
-// Bison
 #include <phi.yy.hh>
 
-// CPP STL
 #include <iomanip>
 #include <sstream>
 #include <fstream>

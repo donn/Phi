@@ -1,4 +1,5 @@
 #include "Node.h"
+
 #include <string>
 #include <fstream>
 
@@ -73,21 +74,6 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
 
     } else if (type == TopLevelDeclaration::Type::interface){
         // Interfaces are elaboration-only
-        // *stream << "interface " << Declaration::identifier << ";" << std::endl;
-
-        // // Parameters
-        // // TODO
-
-        // // Get ready for ports
-        // *stream << "(";
-        // tryTranslate(ports, stream);
-        // *stream << ");";
-        // *stream << std::endl;
-
-        // // Contents
-        // tryTranslate(contents, stream);
-
-        // *stream << "endinterface" << std::endl;
     }
     
     tryTranslate(right, stream);

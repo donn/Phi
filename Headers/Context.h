@@ -1,21 +1,16 @@
 #ifndef _context_h
 #define _context_h
-// C++ STL
-#include <vector>
-#include <list>
-
-// Flex/Bison
-#include <location.hh>
-
-// Project Headers
 #include "Types.h"
 #include "Node.h"
 
-using Location = Phi::location;
+#include <location.hh>
+
+#include <vector>
+#include <list>
 
 namespace Phi {
+    using Location = Phi::location;
     class SymbolTable;
-
     class Context {
 
         struct Error {
@@ -32,8 +27,7 @@ namespace Phi {
 
         std::list<std::string> files;
         std::vector<std::string> currentFileLines;
-        using Node = Phi::Node::Node;
-        Node* head = nullptr;
+        Node::Node* head = nullptr;
 
         void setFile(std::string currentFile);
 

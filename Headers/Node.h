@@ -1,8 +1,7 @@
 #ifndef _node_h
 #define _node_h
-// Project Headers
 #include "Types.h"
-#include <ostream>
+#include "SymbolTable.h"
 
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/StringRef.h>
@@ -19,6 +18,8 @@
 
 // Debug Macros
 #if YYDEBUG
+    #include <ostream>
+
     #define MACRO_DEBUGLABEL_PARAMS
     #define MACRO_DEBUGLABEL_SIG_IMP debugLabel (MACRO_DEBUGLABEL_PARAMS)
     #define MACRO_DEBUGLABEL_SIG_HDR virtual std::string MACRO_DEBUGLABEL_SIG_IMP
@@ -42,7 +43,6 @@ namespace Phi {
     class Context;
 
     namespace Node {
-
         struct Node {
             Node* left = nullptr;
             Node* right = nullptr;
@@ -95,7 +95,7 @@ namespace Phi {
         struct Declaration: public Node {
             Identifier* identifier;
 
-            Declaration(const char* identifier): identifier(new Identifier(identifier)) {}
+            Declaration(Identifier* identifier): identifier(identifier) {}
         };
 
         struct Port: public Declaration {
@@ -112,7 +112,7 @@ namespace Phi {
             MACRO_DEBUGLABEL_SIG_HDR;
             MACRO_GRAPHPRINT_SIG_HDR;
 
-            Port(const char* identifier, bool polarity, Range* bus, const char* annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus) {
+            Port(Identifier* identifier, bool polarity, Range* bus, const char* annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus) {
                 if (annotation) {
                     this->annotation = std::string(annotation);
                 }
@@ -126,7 +126,7 @@ namespace Phi {
         struct TopLevelNamespace: public Declaration {
             Node* contents;
 
-            TopLevelNamespace(const char* identifier, Node* contents): Declaration(identifier), contents(contents) {}
+            TopLevelNamespace(Identifier* identifier, Node* contents): Declaration(identifier), contents(contents) {}
             
             MACRO_DEBUGLABEL_SIG_HDR;
             MACRO_GRAPHPRINT_SIG_HDR;
@@ -151,7 +151,7 @@ namespace Phi {
             MACRO_DEBUGLABEL_SIG_HDR;
             MACRO_GRAPHPRINT_SIG_HDR;
 
-            TopLevelDeclaration(const char* identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
+            TopLevelDeclaration(Identifier* identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR;
 
@@ -162,7 +162,7 @@ namespace Phi {
         struct TemplateDeclaration: public Declaration {
             Expression* assignment;
 
-            TemplateDeclaration(const char* identifier, Expression* assignment): Declaration(identifier) {}
+            TemplateDeclaration(Identifier* identifier, Expression* assignment): Declaration(identifier) {}
         };
 
         // Statements
@@ -192,7 +192,7 @@ namespace Phi {
             Range* range;
             Identifier* identifier;
 
-            ForLoop(Statement* contents, Range* range, const char* identifier): BlockBased(contents), range(range), identifier(new Identifier(identifier)) {}
+            ForLoop(Statement* contents, Range* range, Identifier* identifier): BlockBased(contents), range(range), identifier(identifier) {}
             MACRO_ELAB_SIG_HDR;
 
             virtual void translate(std::ofstream* stream);
@@ -201,7 +201,7 @@ namespace Phi {
         struct Namespace: public BlockBased {
             Identifier* identifier;
 
-            Namespace(Statement* contents, const char* identifier): BlockBased(contents), identifier(new Identifier(identifier)) {}
+            Namespace(Statement* contents, Identifier* identifier): BlockBased(contents), identifier(identifier) {}
 
             MACRO_ELAB_SIG_HDR;
 
@@ -279,7 +279,7 @@ namespace Phi {
 
             MACRO_DEBUGLABEL_SIG_HDR;
 
-            DeclarationListItem(const char* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
+            DeclarationListItem(Identifier* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
 
             MACRO_ELAB_SIG_HDR;
             virtual void translate(std::ofstream* stream);
@@ -294,7 +294,7 @@ namespace Phi {
             Expression* array;
             ExpressionIDPair* ports;
 
-            InstanceDeclaration(const char* identifier, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
+            InstanceDeclaration(Identifier* identifier, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR;
 
@@ -304,7 +304,7 @@ namespace Phi {
         struct ExpressionIDPair: public Declaration {
             Expression* expression;
 
-            ExpressionIDPair(const char* identifier, Expression* expression): Declaration(identifier), expression(expression) {}
+            ExpressionIDPair(Identifier* identifier, Expression* expression): Declaration(identifier), expression(expression) {}
             
             MACRO_ELAB_SIG_HDR;
 
@@ -317,6 +317,7 @@ namespace Phi {
 
             Nondeclarative(LHExpression* lhs): lhs(lhs) {}
         };
+
         struct NondeclarativeAssignment: public Nondeclarative {
             Expression* expression;
 
@@ -327,6 +328,7 @@ namespace Phi {
 
             virtual void translate(std::ofstream* stream);
         };
+        
         struct NondeclarativePorts: public Nondeclarative {
             ExpressionIDPair* ports;
 
@@ -337,9 +339,6 @@ namespace Phi {
 
         // Expression
         struct Expression: public Node {
-            using Width = uint16;
-            static const Width maxWidth = UINT16_MAX;
-
             enum class Type {
                 CompileTime = 0,
                 ParameterSensitive,
@@ -348,9 +347,10 @@ namespace Phi {
             };
             Type type = Type::Error;
 
-            Width numBits = 0;
+            AccessWidth numBits = 0;
             optional<llvm::APInt> value = nullopt;
         };
+
         // Range
         struct Range: public Node {
             Expression* from;
@@ -358,18 +358,19 @@ namespace Phi {
             Range(Expression* from, Expression* to): from(from), to(to) {}
             
             MACRO_TRANS_SIG_HDR;
-        };
-
+        };      
 
         // Left Hand Expressions
         struct LHExpression: public Expression {
             MACRO_ELAB_SIG_HDR;
+
+            virtual std::vector<SymbolTable::Access> accessList();
         };
 
         struct IdentifierExpression: public LHExpression {
             Identifier* identifier;
 
-            IdentifierExpression(const char* identifier): identifier(new Identifier(identifier)) {}
+            IdentifierExpression(Identifier* identifier): identifier(identifier) {}
 
             MACRO_GRAPHPRINT_SIG_HDR;
 

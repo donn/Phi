@@ -1,25 +1,21 @@
 #undef stdout
 #undef stderr
 
-// CPP STL
-#include <iomanip>
-#include <fstream>
-#include <sstream>
-#include <map>
-
-// Project headers
-#include "git_version.h"
-
 #include "Context.h"
 #include "BSDExits.h"
 #include "SymbolTable.h"
 
-// Re-Flex/Bison Headers
+#include "git_version.h"
+
 #include <phi.yy.hh>
 #include <phi.l.hh>
 
-// Libraries
 #include <StupidSimpleCPPOpts.h>
+
+#include <iomanip>
+#include <fstream>
+#include <sstream>
+#include <map>
 
 std::string versionString() {
     std::string dev = "";

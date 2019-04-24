@@ -1,4 +1,5 @@
 #include "Node.h"
+
 #include <fstream>
 
 using namespace Phi::Node;

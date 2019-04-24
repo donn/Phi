@@ -1,9 +1,34 @@
 #include "SymbolTable.h"
-using namespace Phi;
+#include "Node.h"
 
 #include <stack>
 
+using namespace Phi;
+
 #define tableTop stack.back()
+
+bool Driven::drive(Node::Expression* expression, optional<AccessWidth> fromOptional, optional<AccessWidth> toOptional) {
+    AccessWidth from = fromOptional.has_value() ? fromOptional.value() : this->from;
+    AccessWidth to = toOptional.has_value() ? toOptional.value() : this->to;
+
+    // Check for any crossover
+    if (from <= to) {
+        for (auto& range: driveRanges) {
+            if (from >= range.from && from <= range.to) {
+                return false;
+            }
+        }
+    } else {
+        for (auto& range: driveRanges) {
+            if (from <= range.from && from >= range.to) {
+                return false;
+            }
+        }
+    }
+
+    driveRanges.emplace(DriveRange(expression, from, to));
+    return true;
+}
 
 SymbolTable::SymbolTable() {
     head = std::make_shared<SymbolSpace>("", nullptr);
@@ -39,103 +64,122 @@ void SymbolTable::stepIntoAndCreate(std::string space, Node::Node* declarator) {
     stepInto(space);
 }
 
-optional< std::shared_ptr<Symbol> > SymbolTable::find(Node::LHExpression* findable) {
-    using namespace Phi::Node;
-
-    for (auto i = stack.rbegin(); i != stack.rend(); i++) {
-        std::shared_ptr<Symbol> stackPointer = *i;
-        bool flag = true;
-
-        // LHExpression-based approach
-        std::stack<LHExpression*> lhStack;
-        lhStack.push(findable);
-        while (!lhStack.empty()) {
-            auto top = lhStack.top();
-            lhStack.pop();
-            if (top->left && top->right) {
-                lhStack.push((LHExpression*)top->right);
-                lhStack.push((LHExpression*)top->left);
-            } else {
-                assert(!top->left && !top->right);
-                if (auto pointer = dynamic_cast<IdentifierExpression*>(top)) {
-                    // Namespaced Access
-                    // First: Make sure we're in symbol space
-                    auto space = std::dynamic_pointer_cast<SymbolSpace>(stackPointer);
-                    if (space == nullptr) {
-                        continue;
-                    }
-
-                    // Second: Check if symbol exists
-                    auto next = space->space.find(pointer->identifier->idString);
-                    if (next == space->space.end()) {
-                        // If not, we just leave gracefully. There might be a similarly named space at a higher level.
-                        continue;
-                    }
-
-                    // Third: What to do next...
-                    if (stack.empty()) {
-                        return next->second;
-                    }
-
-                    stackPointer = next->second;
-                } else if (auto pointer = dynamic_cast<Expression*>(top)) {
-                    // Array Access
-                    // First: Make sure we're in an array of symbols, and check that it's not parameter sensitive
-                    auto array = std::dynamic_pointer_cast<SymbolArray>(stackPointer);
-                    if (array == nullptr) {
-                        continue;
-                    }
-
-                    if (array->array.size() == 0) {
-                        // PARSEN
-                        throw "parsenAssert";
-                    } 
-
-                    if (pointer->type == Expression::Type::Error) {
-                        return nullopt;
-                    }
-
-                    // Second: Process the expression
-                    if (pointer->type == Expression::Type::ParameterSensitive) {
-                        // PARSEN
-                        throw "parsenAssert";
-                    }
-
-                    if (pointer->type == Expression::Type::RunTime) {
-                        return array;
-                    }
-
-                    auto& apInt = pointer->value.value();
-                    if (!Utils::apIntCheck(&apInt, Expression::maxWidth)) {
-                        throw "expr.exceedsSize";
-                    }
-
-                } else if (auto pointer = dynamic_cast<Range*>(top)) {
-                    // Range Access
+static bool checkRangeCoverage(std::multiset<DriveRange>* driveRanges, bool msbFirst, AccessWidth from, AccessWidth to) {
+    auto& ranges = *driveRanges;
+    if (from <= to) {
+        for (auto& range: ranges) {
+            if (from >= range.from && from <= range.to) {
+                if (to <= range.to) {
+                    return true;
+                } else {
+                    from = range.to + 1;
                 }
             }
-
         }
-
-        // // Vector-based approach (Removed)
-        // for (auto j = ids.begin(); j != ids.end() && flag; j++) {
-        //     auto next = pointer->space.find(*j);
-        //     auto& target = *next;
-        //     // std::cout << (*j) << " in " << (pointer->id) << ": " << (next != pointer->space.end() ? "Found" : "Not Found") << std::endl;
-        //     if (next == pointer->space.end()) {
-        //         flag = false;
-        //     } else {
-        //         if (std::next(j) == ids.end()) {
-        //             return next->second;
-        //         }
-        //         pointer = std::dynamic_pointer_cast<SymbolSpace>(target.second);
-        //         if (pointer == nullptr) {
-        //             flag = false;
-        //         }
-        //     }
-        // }
+    } else {
+        for (auto& range: ranges) {
+            if (from <= range.from && from >= range.to) {
+                if (to >= range.to) {
+                    return true;
+                } else {
+                    from = range.to - 1;
+                }
+            }
+        }
     }
-    return nullptr;
+    return false;
+}
+
+static bool checkRangeCoverage(std::multiset<DriveRange>* driveRanges, bool msbFirst, AccessWidth unit) {
+    auto& ranges = *driveRanges;
+    if (msbFirst) {
+        for (auto& range: ranges) {
+            if (unit >= range.from && unit <= range.to) {
+                return true;
+            }
+        }
+    } else {
+        for (auto& range: ranges) {
+            if (unit <= range.from && unit >= range.to) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* accessesPtr) {
+    auto& accesses = *accessesPtr;
+    for (auto i = stack.rbegin(); i != stack.rend(); i++) {
+        std::shared_ptr<Symbol> pointer = *i;
+        bool flag = true;
+        for (auto j = accesses.begin(); j != accesses.end() && flag; j++) {
+            auto& access = *j;
+
+            if (access.type == Access::Type::id) {
+                auto pointerAsSpace = std::dynamic_pointer_cast<SymbolSpace>(pointer);
+                if (pointerAsSpace == nullptr) {
+                    flag = false;
+                    continue;
+                }
+                auto& id = *j->id;
+                auto next = pointerAsSpace->space.find(id);
+                // std::cout << (*j) << " in " << (pointer->id) << ": " << (next != pointer->space.end() ? "Found" : "Not Found") << std::endl;
+                if (next == pointerAsSpace->space.end()) {
+                    flag = false;
+                    continue;
+                }
+                if (std::next(j) == accesses.end()) {
+                    return next->second;
+                }
+                pointer = next->second;
+            } else if (access.type == Access::Type::range) {
+                auto pointerAsDriven = std::dynamic_pointer_cast<Driven>(pointer);
+
+                if (
+                    (pointerAsDriven->msbFirst && (access.range.from > pointerAsDriven->from || access.range.to < pointerAsDriven->to))
+                    || (access.range.from < pointerAsDriven->from || access.range.to > pointerAsDriven->to)
+                ) {
+                    throw "driven.outOfRangeAccess";
+                }
+
+                if (std::next(j) != accesses.end()) {
+                    throw "driven.accessIsFinal";
+                }
+                
+                return pointerAsDriven;
+            } else if (access.type == Access::Type::index) {
+                if (auto pointerAsArray = std::dynamic_pointer_cast<SymbolArray>(pointer)) {
+                    if (access.index >= pointerAsArray->array.size()) {
+                        throw "array.outOfRangeAccess";
+                    }
+
+                    if (std::next(j) == accesses.end()) {
+                        return pointerAsArray->array[access.index];
+                    }
+
+                    pointer = pointerAsArray->array[access.index];
+                } else if (auto pointerAsDriven = std::dynamic_pointer_cast<Driven>(pointer)) {
+                    if (
+                    (pointerAsDriven->msbFirst && (access.index > pointerAsDriven->from || access.index < pointerAsDriven->to))
+                    || (access.index < pointerAsDriven->from || access.index > pointerAsDriven->to)
+                    ) {
+                        throw "driven.outOfRangeAccess";
+                    }
+
+                    if (std::next(j) != accesses.end()) {
+                        throw "driven.accessIsFinal";
+                    }
+
+                    return pointerAsDriven;
+                } else {
+                    throw "access.notIndexable";
+                }
+            }
+        }
+    }
+    return nullopt;
 }
 
 void SymbolTable::stepOut() {

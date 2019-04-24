@@ -1,18 +1,21 @@
 #ifndef _symboltable_h
 #define _symboltable_h
+#include "Types.h"
+#include "Utils.h"
 
-// CPP STL
 #include <map>
 #include <vector>
 #include <memory>
-
-// Project Headers
-#include "Types.h"
-#include "Context.h"
-#include "Utils.h"
-#include "Node.h"
+#include <set>
 
 namespace Phi {
+    namespace Node {
+        struct Node;
+        struct Expression;
+        struct LHExpression;
+        struct Range;
+    }
+
     struct Symbol {
         std::string id;
         Node::Node* declarator;
@@ -25,18 +28,31 @@ namespace Phi {
         Node::Expression* expression;
 
         // Relative to expression being driven
-        Node::Expression::Width from;
-        Node::Expression::Width to;
+        AccessWidth from;
+        AccessWidth to;
 
-        DriveRange(Node::Expression* expression, Node::Expression::Width from, Node::Expression::Width to): expression(expression), from(from), to(to) {}
+        DriveRange(Node::Expression* expression, AccessWidth from, AccessWidth to): expression(expression), from(from), to(to) {}
+
+        bool operator<(const DriveRange& rhs) const {
+            if (to > from) {
+                return from < rhs.from;
+            } else {
+                return from > rhs.from;
+            }
+        }
     };
 
     struct Driven: public Symbol {
-        std::vector<DriveRange> driveRanges;
+        std::multiset<DriveRange> driveRanges;
 
-        Driven(std::string id, Node::Node* declarator): Symbol(id, declarator) {}
+        AccessWidth from;
+        AccessWidth to;
 
-        bool drive(Node::Expression* expression, optional<Node::Expression::Width> from = nullopt, optional<Node::Expression::Width> to = nullopt);
+        bool msbFirst; // e.g. true: [31..0], false: [0..31]
+
+        Driven(std::string id, Node::Node* declarator, AccessWidth from = 1, AccessWidth to = 1, bool msbFirst = true): Symbol(id, declarator), from(from), to(to), msbFirst(msbFirst) {}
+
+        bool drive(Node::Expression* expression, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt);
     };
 
     struct SymbolSpace: public Symbol {
@@ -52,7 +68,7 @@ namespace Phi {
     struct SymbolArray: public Symbol {
         std::vector <std::shared_ptr<Symbol> > array;
 
-        SymbolArray(std::string id, Node::Node* declarator, Node::Expression::Width size = 1): Symbol(id, declarator) {}
+        SymbolArray(std::string id, Node::Node* declarator, AccessWidth size = 1): Symbol(id, declarator) {}
 #if YYDEBUG
         //int represent(std::ostream* stream, int* node);
 #endif
@@ -63,11 +79,29 @@ namespace Phi {
         std::vector< std::shared_ptr<SymbolSpace> > stack;
 
     public:
+        struct Access {
+            enum class Type {
+                id = 0,
+                range,
+                index
+            };
+            Type type;
+            std::string* id;
+            struct {
+                AccessWidth from;
+                AccessWidth to;
+            } range;
+            AccessWidth index;
+
+            inline static Access ID(std::string* id) { return {Type::id, id, {0, 0}, 0}; }
+            inline static Access Range(AccessWidth from, AccessWidth to) { return {Type::range, nullptr, {from, to}, 0}; }
+            inline static Access Index(AccessWidth access) { return {Type::index, nullptr, {0, 0}, access}; }
+        };
         SymbolTable();
         ~SymbolTable();
 
         void add(std::string id, std::shared_ptr<Symbol> symbol);
-        optional< std::shared_ptr<Symbol> > find(Node::LHExpression* findable);
+        optional< std::shared_ptr<Symbol> > find(std::vector<Access>* accesses);
         void stepInto(std::string id);
         void stepIntoComb(Node::Node* attached);
         void stepIntoAndCreate(std::string id, Node::Node* declarator);

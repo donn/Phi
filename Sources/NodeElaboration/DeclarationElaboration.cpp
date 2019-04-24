@@ -1,5 +1,6 @@
 #include "Node.h"
 #include "SymbolTable.h"
+#include "Context.h"
 
 #include <sstream>
 
@@ -97,7 +98,7 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
 
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     DeclarationListItem* rightDLI;
-    std::shared_ptr<Driven> pointer;
+    std::shared_ptr<Symbol> pointer;
 
     tryElaborate(array, table, context);
     auto size = 1;
@@ -108,7 +109,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             size = 0;
             break;
         case Expression::Type::CompileTime:
-            if (!Utils::apIntCheck(&array->value.value(), Expression::maxWidth)) {
+            if (!Utils::apIntCheck(&array->value.value(), maxAccessWidth)) {
                 context->addError(nullopt, "array.maximumExceeded");
                 goto exit; 
             }
@@ -130,8 +131,23 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
         }
     }
     tryElaborate(optionalAssignment, table, context);
-    //pointer = std::make_shared<Driven>(identifier->idString, this, size);
-    //table->add(identifier->idString, pointer);
+
+    if (size == 1) {
+        pointer = std::make_shared<Driven>(identifier->idString, this); 
+        if (optionalAssignment) {
+            //TODO
+        }
+    } else {
+        auto arrayPointer = std::make_shared<SymbolArray>(identifier->idString, this, size);
+        for (AccessWidth i = 0; i < size; i += 1) {
+            arrayPointer->array[i] = std::make_shared<Driven>(identifier->idString, this);
+        }
+        pointer = arrayPointer;
+        if (optionalAssignment) {
+            throw "array.inlineInitialization";
+        }
+    }
+    table->add(identifier->idString, pointer);
 
 exit:
     //PII
@@ -175,7 +191,7 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     auto identifierPointer = dynamic_cast<IdentifierExpression*>(pointer);
     auto propertyAccessPointer = dynamic_cast<PropertyAccess*>(pointer);
     
-    std::shared_ptr<Symbol> symbol;
+    std::optional< std::shared_ptr<Symbol> > symbol;
     std::shared_ptr<Driven> driven;
 
     IdentifierExpression* left;
@@ -201,21 +217,21 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     }
 
     // TODO
-    // symbol = table->checkExistence(ids);
+    // symbol = table->find(ids);
     // if (!symbol) {
     //     context->addError(nullopt, "symbol.dne");
     //     goto exit;
     // }
 
 
-    dliAttache = dynamic_cast<DeclarationListItem*>(symbol->declarator);
-    portAttache = dynamic_cast<Port*>(symbol->declarator);
-    if (!(dliAttache && dliAttache->type == VariableLengthDeclaration::Type::wire)) {
-        if (!(portAttache && portAttache->polarity == Port::Polarity::output)) {
-            context->addError(nullopt, "symbol.notAWire");
-            goto exit;
-        }
-    } 
+    // dliAttache = dynamic_cast<DeclarationListItem*>(symbol->declarator);
+    // portAttache = dynamic_cast<Port*>(symbol->declarator);
+    // if (!(dliAttache && dliAttache->type == VariableLengthDeclaration::Type::wire)) {
+    //     if (!(portAttache && portAttache->polarity == Port::Polarity::output)) {
+    //         context->addError(nullopt, "symbol.notAWire");
+    //         goto exit;
+    //     }
+    // } 
 
     // driven = std::dynamic_pointer_cast<Driven>(symbol);
     // if (symbol->driver) {
@@ -225,15 +241,15 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
 
     // symbol->driver = this;
 
-    if (table->inComb()) {
-        if (dliAttache) {
-            dliAttache->type = VariableLengthDeclaration::Type::wire_reg;
-        }
-        if (portAttache) {
-            portAttache->polarity = Port::Polarity::output_reg;
-        }
-        inComb = true;
-    }
+    // if (table->inComb()) {
+    //     if (dliAttache) {
+    //         dliAttache->type = VariableLengthDeclaration::Type::wire_reg;
+    //     }
+    //     if (portAttache) {
+    //         portAttache->polarity = Port::Polarity::output_reg;
+    //     }
+    //     inComb = true;
+    // }
 
     tryElaborate(expression, table, context);
 

@@ -108,17 +108,10 @@
 
 %type<vldt> dynamic_width
 
-%type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list special_number
+%type<node> description declaration port_declaration_list populated_port_declaration_list template_declaration template_declaration_list statement block_based if else labeled_statement_list block statement_list subdeclaration  optional_bus_declaration  optional_ports declaration_list optional_template template_list ports port_list nondeclarative_statement range mux_block labeled_expression_list   procedural_call procedural_call_list special_number identifier
 
 %type<lhexpr> lhexpression lhconcatenation
 %type<expr> expression inheritance inheritance_list optional_template_assignment optional_array_declaration optional_assignment concatenation concatenatable mux
-
-// %{
-//     extern int yylex(Phi::Parser::semantic_type* yylval,
-//                      Phi::Parser::location_type* yylloc,
-//                      Phi::Context* context
-//     );
-// %}
 
 %initial-action {
     @$.begin.filename = @$.end.filename = &context->files.back();
@@ -139,8 +132,8 @@ description:
         $$ = node;
         context->head = node;
     }
-    | KEYWORD_NAMESPACE IDENTIFIER '{' description '}' description {
-        auto node = new TopLevelNamespace($2, $4);
+    | KEYWORD_NAMESPACE identifier '{' description '}' description {
+        auto node = new TopLevelNamespace((Identifier*)$2, $4);
         node->right = $6;
         $$ = node;
         context->head = node;
@@ -152,14 +145,14 @@ optional_semicolon:
     ;
 
 declaration:
-    KEYWORD_MODULE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance block optional_semicolon {
-        $$ = new TopLevelDeclaration($2, TopLevelDeclaration::Type::module, (Port*)$5, $7, (Statement*)$8);
+    KEYWORD_MODULE identifier template_declaration '(' port_declaration_list ')' inheritance block optional_semicolon {
+        $$ = new TopLevelDeclaration((Identifier*)$2, TopLevelDeclaration::Type::module, (Port*)$5, $7, (Statement*)$8);
     }
     | KEYWORD_MODULE error '}' {
         $$ = new ErrorNode();
     }
-    | KEYWORD_INTERFACE IDENTIFIER template_declaration '(' port_declaration_list ')' inheritance optional_semicolon {
-        $$ = new TopLevelDeclaration($2, TopLevelDeclaration::Type::interface, (Port*)$5, $7);
+    | KEYWORD_INTERFACE identifier template_declaration '(' port_declaration_list ')' inheritance optional_semicolon {
+        $$ = new TopLevelDeclaration((Identifier*)$2, TopLevelDeclaration::Type::interface, (Port*)$5, $7);
     }
     ;
 
@@ -171,13 +164,13 @@ port_declaration_list:
     }
     ;
 populated_port_declaration_list:
-    IDENTIFIER ':' optional_annotation port_polarity optional_bus_declaration ',' populated_port_declaration_list {
-        auto node = new Port($1, $4, (Range*)$5, $3);
+    identifier ':' optional_annotation port_polarity optional_bus_declaration ',' populated_port_declaration_list {
+        auto node = new Port((Identifier*)$1, $4, (Range*)$5, $3);
         node->right = $7;
         $$ = node;
     }
-    | IDENTIFIER ':' optional_annotation port_polarity optional_bus_declaration {
-        $$ = new Port($1, $4, (Range*)$5, $3);
+    | identifier ':' optional_annotation port_polarity optional_bus_declaration {
+        $$ = new Port((Identifier*)$1, $4, (Range*)$5, $3);
     }
     ;
 port_polarity:
@@ -197,13 +190,13 @@ template_declaration:
     }
     ;
 template_declaration_list:
-    IDENTIFIER optional_template_assignment template_declaration_list {
-        auto node = new TemplateDeclaration($1, $2);
+    identifier optional_template_assignment template_declaration_list {
+        auto node = new TemplateDeclaration((Identifier*)$1, $2);
         node->right = $3;
         $$ = node;
     }
-    | IDENTIFIER optional_template_assignment {
-        $$ = new TemplateDeclaration($1, $2);
+    | identifier optional_template_assignment {
+        $$ = new TemplateDeclaration((Identifier*)$1, $2);
     }
     ;
 optional_template_assignment:
@@ -276,11 +269,11 @@ block_based:
     if {
         $$ = $1;
     }
-    | KEYWORD_FOR IDENTIFIER KEYWORD_IN range block {
-        $$ = new ForLoop((Statement*)$5, (Range*)$4, $2);
+    | KEYWORD_FOR identifier KEYWORD_IN range block {
+        $$ = new ForLoop((Statement*)$5, (Range*)$4, (Identifier*)$2);
     }
-    | KEYWORD_NAMESPACE IDENTIFIER block {
-        $$ = new Namespace((Statement*)$3, $2);
+    | KEYWORD_NAMESPACE identifier block {
+        $$ = new Namespace((Statement*)$3, (Identifier*)$2);
     }
     | KEYWORD_SWITCH expression '{' labeled_statement_list '}' {
         $$ = new Switch($2, (LabeledStatementList*)$4);
@@ -345,8 +338,8 @@ subdeclaration:
     dynamic_width optional_bus_declaration declaration_list {
         $$ = new VariableLengthDeclaration($1, (Range*)$2, (DeclarationListItem*)$3);
     }
-    | lhexpression optional_template IDENTIFIER optional_array_declaration optional_ports {
-        $$ = new InstanceDeclaration($3, $1, (ExpressionIDPair*)$2, $4, (ExpressionIDPair*)$5);
+    | lhexpression optional_template identifier optional_array_declaration optional_ports {
+        $$ = new InstanceDeclaration((Identifier*)$3, $1, (ExpressionIDPair*)$2, $4, (ExpressionIDPair*)$5);
     }
     ;
 
@@ -379,13 +372,13 @@ optional_array_declaration:
     ;
     
 declaration_list:
-    IDENTIFIER optional_array_declaration optional_assignment ',' declaration_list {
-        auto node = new DeclarationListItem($1, $2, $3);
+    identifier optional_array_declaration optional_assignment ',' declaration_list {
+        auto node = new DeclarationListItem((Identifier*)$1, $2, $3);
         node->right = $5;
         $$ = node;
     }
-    | IDENTIFIER optional_array_declaration optional_assignment {
-        $$ = new DeclarationListItem($1, $2, $3);
+    | identifier optional_array_declaration optional_assignment {
+        $$ = new DeclarationListItem((Identifier*)$1, $2, $3);
     }
     ;
 optional_assignment:
@@ -403,13 +396,13 @@ optional_template:
 
 template_list:
     { $$ = epsilon; }
-    | IDENTIFIER ':' '(' expression ')' ',' template_list {
-        auto node = new ExpressionIDPair($1, $4);
+    | identifier ':' '(' expression ')' ',' template_list {
+        auto node = new ExpressionIDPair((Identifier*)$1, $4);
         node->right = $7;
         $$ = node;
     }
-    | IDENTIFIER ':' '(' expression ')' {
-        $$ = new ExpressionIDPair($1, $4);
+    | identifier ':' '(' expression ')' {
+        $$ = new ExpressionIDPair((Identifier*)$1, $4);
     }
     ;
 
@@ -430,13 +423,13 @@ ports:
 
 
 port_list:
-    IDENTIFIER ':' expression ',' port_list {
-        auto node = new ExpressionIDPair($1, $3);
+    identifier ':' expression ',' port_list {
+        auto node = new ExpressionIDPair((Identifier*)$1, $3);
         node->right = $5;
         $$ = node;
     }
-    | IDENTIFIER ':' expression {
-        $$ = new ExpressionIDPair($1, $3);
+    | identifier ':' expression {
+        $$ = new ExpressionIDPair((Identifier*)$1, $3);
     }
     ;
 
@@ -456,8 +449,8 @@ nondeclarative_statement:
 
 /* Expressions */
 lhexpression:
-    IDENTIFIER {
-        $$ = new IdentifierExpression($1);
+    identifier {
+        $$ = new IdentifierExpression((Identifier*)$1);
     } 
     | lhexpression '.' lhexpression {
         $$ = new PropertyAccess($1, $3);
@@ -658,6 +651,12 @@ labeled_expression_list:
     }
     | KEYWORD_DEFAULT ':' expression {
         $$ = new ExpressionPair(nullptr, $3);;
+    }
+    ;
+
+identifier:
+    IDENTIFIER {
+        $$ = new Identifier($1);
     }
     ;
 
