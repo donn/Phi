@@ -355,7 +355,7 @@ namespace Phi {
         struct IdentifierExpression: public LHExpression {
             Identifier* identifier;
 
-            IdentifierExpression(Identifier* identifier): identifier(identifier) {};
+            IdentifierExpression(Identifier* identifier): identifier(identifier) {}
             MACRO_GRAPHPRINT_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
         };
@@ -502,6 +502,7 @@ namespace Phi {
 
         struct Multiplexer: public Expression {
             Multiplexer(Expression* selection, ExpressionPair* options) {}
+            MACRO_TRANS_SIG_HDR;
         };
     }
 }

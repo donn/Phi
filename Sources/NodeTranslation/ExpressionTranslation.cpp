@@ -177,6 +177,10 @@ void RepeatConcatenation::MACRO_TRANS_SIG_IMP {
     *stream << "}";
 }
 
+void Multiplexer::MACRO_TRANS_SIG_IMP{
+    
+}
+
 #define LOCAL_CONCATDEF(x) void x::MACRO_TRANS_SIG_IMP {\
     \
     *stream << "{";\
