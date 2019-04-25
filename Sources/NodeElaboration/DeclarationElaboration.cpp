@@ -7,6 +7,8 @@
 using namespace Phi::Node;
 
 void Port::MACRO_ELAB_SIG_IMP {
+    optional<AccessWidth> to = nullopt, from = nullopt;
+    
     auto pointer = std::make_shared<Driven>(identifier->idString, this);
     table->add(identifier->idString, pointer);
     tryElaborate(right, table, context);
@@ -108,8 +110,8 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 
     bool msbFirst = true;
 
-    std::optional<AccessWidth> from = nullopt;
-    std::optional<AccessWidth> to = nullopt;
+    optional<AccessWidth> from = nullopt;
+    optional<AccessWidth> to = nullopt;
 
     if (array) {
         switch (array->type) {
@@ -154,7 +156,6 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     tryElaborate(optionalAssignment, table, context);
 
     if (size == 1) {
-        AccessWidth size = 1;
         pointerAsDriven = std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst);
         pointer = pointerAsDriven;
         if (optionalAssignment) {
@@ -213,58 +214,54 @@ void ExpressionIDPair::MACRO_ELAB_SIG_IMP {
 void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     // Declaration block because I'm using goto here
     std::vector<SymbolTable::Access> accesses;
-    AccessWidth from, to;
-    auto pointer = lhs;
-    auto identifierPointer = dynamic_cast<IdentifierExpression*>(pointer);
-    auto propertyAccessPointer = dynamic_cast<PropertyAccess*>(pointer);
     
-    std::optional< std::shared_ptr<Symbol> > symbol;
+    optional< std::shared_ptr<Symbol> > symbolOptional;
+    std::shared_ptr<Symbol> symbol;
     std::shared_ptr<Driven> driven;
 
-    IdentifierExpression* left;
     DeclarationListItem* dliAttache;
     Port* portAttache;
+    optional<AccessWidth> from = nullopt, to = nullopt;
 
-    
     tryElaborate(lhs, table, context);
 
     accesses = lhs->accessList(&from, &to);
-    symbol = table->find(&accesses);
+    symbolOptional = table->find(&accesses);
 
-    std::cout << symbol.has_value() << std::endl;
-    // symbol = table->find(ids);
-    // if (!symbol) {
-    //     context->addError(nullopt, "symbol.dne");
-    //     goto exit;
-    // }
+    if (!symbolOptional.has_value()) {
+        context->addError(nullopt, "symbol.dne");
+        goto exit;
+    }
 
+    symbol = symbolOptional.value();
 
-    // dliAttache = dynamic_cast<DeclarationListItem*>(symbol->declarator);
-    // portAttache = dynamic_cast<Port*>(symbol->declarator);
-    // if (!(dliAttache && dliAttache->type == VariableLengthDeclaration::Type::wire)) {
-    //     if (!(portAttache && portAttache->polarity == Port::Polarity::output)) {
-    //         context->addError(nullopt, "symbol.notAWire");
-    //         goto exit;
-    //     }
-    // } 
+    dliAttache = dynamic_cast<DeclarationListItem*>(symbol->declarator);
+    portAttache = dynamic_cast<Port*>(symbol->declarator);
+    if (!(dliAttache && dliAttache->type == VariableLengthDeclaration::Type::wire)) {
+        if (!(portAttache && portAttache->polarity == Port::Polarity::output)) {
+            context->addError(nullopt, "symbol.notAWire");
+            goto exit;
+        }
+    } 
 
-    // driven = std::dynamic_pointer_cast<Driven>(symbol);
-    // if (symbol->driver) {
-    //     context->addError(nullopt, "symbol.driverExists");
-    //     goto exit;
-    // }
+    driven = std::dynamic_pointer_cast<Driven>(symbol);
 
-    // symbol->driver = this;
+    if (!driven) {
+        context->addError(nullopt, "assignment.leftHandNotDriven");
+        goto exit;
+    }
 
-    // if (table->inComb()) {
-    //     if (dliAttache) {
-    //         dliAttache->type = VariableLengthDeclaration::Type::wire_reg;
-    //     }
-    //     if (portAttache) {
-    //         portAttache->polarity = Port::Polarity::output_reg;
-    //     }
-    //     inComb = true;
-    // }
+    if (!driven->drive(expression, from, to)) {
+        context->addError(nullopt, "assignment.alreadyDriven");
+    } else if (table->inComb()) {
+        if (dliAttache) {
+            dliAttache->type = VariableLengthDeclaration::Type::wire_reg;
+        }
+        if (portAttache) {
+            portAttache->polarity = Port::Polarity::output_reg;
+        }
+        inComb = true;
+    }
 
     tryElaborate(expression, table, context);
 

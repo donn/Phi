@@ -97,19 +97,21 @@ void LHExpression::MACRO_ELAB_SIG_IMP {
     
 }
 
-std::vector<Phi::SymbolTable::Access> LHExpression::accessList(AccessWidth* from, AccessWidth* to) {
+#include <iostream>
+
+std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWidth>* from, optional<AccessWidth>* to) {
     using PSA = Phi::SymbolTable::Access;
     std::vector<PSA> vector;
 
-    std::stack<LHExpression*> lhStack;
+    std::stack<Node*> lhStack;
     lhStack.push(this);
 
     while (!lhStack.empty()) {
         auto top = lhStack.top();
         lhStack.pop();
         if (top->left && top->right) {
-            lhStack.push((LHExpression*)top->right);
-            lhStack.push((LHExpression*)top->left);
+            lhStack.push(top->right);
+            lhStack.push(top->left);
             continue;
         }
         assert(!top->left && !top->right);
@@ -143,12 +145,8 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(AccessWidth* from
                 throw "driven.rangeAccessIsFinal";
             }
 
-            if (from) {
-                *from = fromValue;
-            }
-            if (to) {
-                *to = toValue;
-            }
+            *from = fromValue;
+            *to = toValue;
 
             // vector.push_back(PSA::Range(toValue, fromValue));
         }

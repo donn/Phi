@@ -11,19 +11,26 @@ bool Driven::drive(Node::Expression* expression, optional<AccessWidth> fromOptio
     AccessWidth from = fromOptional.has_value() ? fromOptional.value() : this->from;
     AccessWidth to = toOptional.has_value() ? toOptional.value() : this->to;
 
+    AccessWidth width;
     // Check for any crossover
     if (from <= to) {
+        width = to - from + 1;
         for (auto& range: driveRanges) {
             if (from >= range.from && from <= range.to) {
                 return false;
             }
         }
     } else {
+        width = from - to + 1;
         for (auto& range: driveRanges) {
             if (from <= range.from && from >= range.to) {
                 return false;
             }
         }
+    }
+
+    if (expression->numBits != width) {
+        throw "driving.widthMismatch";
     }
 
     driveRanges.emplace(DriveRange(expression, from, to));
@@ -108,6 +115,7 @@ static bool checkRangeCoverage(std::multiset<DriveRange>* driveRanges, bool msbF
     return false;
 }
 
+#include <iostream>
 
 optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* accessesPtr) {
     auto& accesses = *accessesPtr;
@@ -137,7 +145,7 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* acces
             } else if (access.type == Access::Type::index) {
                 if (auto pointerAsArray = std::dynamic_pointer_cast<SymbolArray>(pointer)) {
                     if (access.index >= pointerAsArray->array.size()) {
-                        throw "array.outOfRangeAccess";
+                        throw "symbol.outOfRangeAccess";
                     }
 
                     if (std::next(j) == accesses.end()) {
@@ -150,16 +158,16 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* acces
                     (pointerAsDriven->msbFirst && (access.index > pointerAsDriven->from || access.index < pointerAsDriven->to))
                     || (access.index < pointerAsDriven->from || access.index > pointerAsDriven->to)
                     ) {
-                        throw "driven.outOfRangeAccess";
+                        throw "symbol.outOfRangeAccess";
                     }
 
                     if (std::next(j) != accesses.end()) {
-                        throw "driven.accessIsFinal";
+                        throw "symbol.accessIsFinal";
                     }
 
                     return pointerAsDriven;
                 } else {
-                    throw "access.notIndexable";
+                    throw "symbol.notIndexable";
                 } 
             }
             // else if (access.type == Access::Type::range) {

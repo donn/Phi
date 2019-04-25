@@ -5,6 +5,7 @@
 
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/StringRef.h>
+#include <typeinfo>
 
 // Elaboration Macros
 #define MACRO_ELAB_PARAMS Phi::SymbolTable* table, Phi::Context* context
@@ -332,6 +333,7 @@ namespace Phi {
             optional<llvm::APInt> value;
 
             Expression() { type = Type::Error; numBits = 0; value = nullopt; }
+            virtual ~Expression() {}
         };
 
         // Range
@@ -347,11 +349,11 @@ namespace Phi {
         struct LHExpression: public Expression {
             MACRO_ELAB_SIG_HDR;
 
-            virtual std::vector<SymbolTable::Access> accessList(AccessWidth* from, AccessWidth* to);
+            virtual std::vector<SymbolTable::Access> accessList(optional<AccessWidth>* from, optional<AccessWidth>* to);
         };
 
         
-        struct __attribute__((visibility("default"))) IdentifierExpression: public LHExpression {
+        struct IdentifierExpression: public LHExpression {
             Identifier* identifier;
 
             IdentifierExpression(Identifier* identifier): identifier(identifier) {}

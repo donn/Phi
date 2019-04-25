@@ -1,4 +1,7 @@
 module Omega() {
-    Wire[31..0] k[42];
+    namespace Beta {
+        Wire[31..0] k[42];
+    }
     Beta.k[1] = 3;
+    Beta.k[2][15..0] = 3;
 }
