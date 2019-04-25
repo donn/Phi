@@ -74,20 +74,12 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
     //         Statement* statements;
     // }
 
-    //note:
-    //http://www.sunburst-design.com/papers/CummingsSNUG1999Boston_FullParallelCase.pdf
-    //Guideline: Do not use casex for synthesizable code [2].
-    //So, we decided to use casez instead of using casex
     
     /*
     example of case in verilog:
-        case (case_expression)
-            case_item1 : case_item_statement1;
-            case_item2 : case_item_statement2;
-            case_item3 : case_item_statement3;
-            case_item4 : case_item_statement4;
-            default    : case_item_statement5;
-        endcase
+        
+        example 1) case_item1 : case_item_statement1;
+        example 2) default    : case_item_statement5;
     */
 
     if(isDefault){
@@ -96,11 +88,25 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
     }else{
         //not default case
         if(LabeledStatementList::specialNumber!=nullptr){
-            //casez specialNumber
-            *stream << "casez: ";
+            //special number 
+            
+            //convert each ? to z
+            std::string modified_specialNumber = specialNumber->number;
+            for(int i=0; i<(specialNumber->number).size(); i++){
+                if(specialNumber->number[i]=='?'){
+                    modified_specialNumber[i]='z';
+                }else{
+                    modified_specialNumber[i]= specialNumber->number[i];
+                }
+                
+            }
+
+            *stream << modified_specialNumber;
+            *stream << ": ";
         }else{
-            //case expression
-            *stream << "case: ";
+            //expression 
+            tryTranslate(expression, stream); 
+            *stream << ": ";
         }
     }
     

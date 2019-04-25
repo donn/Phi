@@ -29,9 +29,9 @@ void If::MACRO_TRANS_SIG_IMP {
             tryTranslate(expression, stream);
             *stream << " ) ";
         }   
-        *stream << "{";
+        *stream << "begin";
         tryTranslate(contents, stream);
-        *stream << "}";
+        *stream << "end";
 
         if (elseBlock!=NULL) {
             *stream << " else ";
@@ -51,7 +51,49 @@ void Namespace::MACRO_TRANS_SIG_IMP {
 }
 
 void Switch::MACRO_TRANS_SIG_IMP {
+    /*
+    struct LabeledStatementList: public Node {
+            bool isDefault; // Is this the default case in a switch statement?
+            Expression* expression;
+            SpecialNumber* specialNumber;
+            Statement* statements;
+    };
+
+    struct Switch: public BlockBased {
+            Expression* expression;
+            LabeledStatementList* list;
+    };
+    */
+
+   
+   /* 
+   example in verilog:
+    
+    case (address) //address -> expression
+
+    //list 
+    2'b00 : statement1; 
+    2'b01, 2'b10 : statement2; 
+    default : statement3; 
+
+    endcase
+   */
+
+
+    //note:
+    //http://www.sunburst-design.com/papers/CummingsSNUG1999Boston_FullParallelCase.pdf
+    //Guideline: Do not use casex for synthesizable code [2].
+    //So, we decided to use casez instead of using casex
+    
+
     //always inside comb block
+    *stream << "casez";
+    *stream << "(";
+    tryTranslate(expression, stream);
+    *stream << " ) ";
+    tryTranslate(list, stream);
+    *stream << "endcase";
+    
 }
 
 void Combinational::MACRO_TRANS_SIG_IMP {
