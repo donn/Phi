@@ -501,7 +501,9 @@ namespace Phi {
         };
 
         struct Multiplexer: public Expression {
-            Multiplexer(Expression* selection, ExpressionPair* options) {}
+            Multiplexer(Expression* selection, ExpressionPair* options) {
+                this->left = selection; this->right = options;
+            }
             MACRO_TRANS_SIG_HDR;
         };
     }
