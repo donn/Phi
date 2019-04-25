@@ -22,7 +22,7 @@ void Parser::error(Location const& location, const std::string& string) {
 }
 
 void Context::addError(const optional<Location> location, const std::string message) {
-    auto trueLocation = location.has_value() ? location.value() : Location(&files.front(), 0, 0);
+    auto trueLocation = location.has_value() ? location.value() : Location(&files.back(), 0, 0);
     errorList.push_back({trueLocation, message});
 }
 

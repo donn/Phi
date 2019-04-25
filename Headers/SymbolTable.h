@@ -87,15 +87,15 @@ namespace Phi {
             };
             Type type;
             std::string* id;
-            struct {
-                AccessWidth from;
-                AccessWidth to;
-            } range;
+            // struct {
+            //     AccessWidth from;
+            //     AccessWidth to;
+            // } range;
             AccessWidth index;
 
-            inline static Access ID(std::string* id) { return {Type::id, id, {0, 0}, 0}; }
-            inline static Access Range(AccessWidth from, AccessWidth to) { return {Type::range, nullptr, {from, to}, 0}; }
-            inline static Access Index(AccessWidth access) { return {Type::index, nullptr, {0, 0}, access}; }
+            inline static Access ID(std::string* id) { return {Type::id, id, 0}; }
+            // inline static Access Range(AccessWidth from, AccessWidth to) { return {Type::range, nullptr, {from, to}, 0}; }
+            inline static Access Index(AccessWidth access) { return {Type::index, nullptr, access}; }
         };
         SymbolTable();
         ~SymbolTable();

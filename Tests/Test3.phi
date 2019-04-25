@@ -1,3 +1,4 @@
-module Hecc() {
-    hecc[3].heccc.hecccc[3][3..1] = help;
+module Omega() {
+    Wire[31..0] k[42];
+    Beta.k[1] = 3;
 }

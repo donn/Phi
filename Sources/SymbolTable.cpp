@@ -134,21 +134,6 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* acces
                     return next->second;
                 }
                 pointer = next->second;
-            } else if (access.type == Access::Type::range) {
-                auto pointerAsDriven = std::dynamic_pointer_cast<Driven>(pointer);
-
-                if (
-                    (pointerAsDriven->msbFirst && (access.range.from > pointerAsDriven->from || access.range.to < pointerAsDriven->to))
-                    || (access.range.from < pointerAsDriven->from || access.range.to > pointerAsDriven->to)
-                ) {
-                    throw "driven.outOfRangeAccess";
-                }
-
-                if (std::next(j) != accesses.end()) {
-                    throw "driven.accessIsFinal";
-                }
-                
-                return pointerAsDriven;
             } else if (access.type == Access::Type::index) {
                 if (auto pointerAsArray = std::dynamic_pointer_cast<SymbolArray>(pointer)) {
                     if (access.index >= pointerAsArray->array.size()) {
@@ -175,8 +160,24 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* acces
                     return pointerAsDriven;
                 } else {
                     throw "access.notIndexable";
-                }
+                } 
             }
+            // else if (access.type == Access::Type::range) {
+            //     auto pointerAsDriven = std::dynamic_pointer_cast<Driven>(pointer);
+
+            //     if (
+            //         (pointerAsDriven->msbFirst && (access.range.from > pointerAsDriven->from || access.range.to < pointerAsDriven->to))
+            //         || (access.range.from < pointerAsDriven->from || access.range.to > pointerAsDriven->to)
+            //     ) {
+            //         throw "driven.outOfRangeAccess";
+            //     }
+
+            //     if (std::next(j) != accesses.end()) {
+            //         throw "driven.accessIsFinal";
+            //     }
+                
+            //     return pointerAsDriven;
+            // } 
         }
     }
     return nullopt;

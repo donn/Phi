@@ -7,7 +7,7 @@
 #include <llvm/ADT/StringRef.h>
 
 // Elaboration Macros
-#define MACRO_ELAB_PARAMS SymbolTable* table, Context* context
+#define MACRO_ELAB_PARAMS Phi::SymbolTable* table, Phi::Context* context
 #define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
 #define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
 
@@ -58,11 +58,7 @@ namespace Phi {
             virtual void translate(std::ofstream* stream);
         };
 
-        inline void tryElaborate(Node* node, MACRO_ELAB_PARAMS) {
-            if (node) {
-                node->elaborate(table, context);
-            }
-        }
+        void tryElaborate(Node* node, MACRO_ELAB_PARAMS);
 
         inline void tryTranslate(Node* node, std::ofstream* stream) {
             if (node) {
@@ -345,10 +341,12 @@ namespace Phi {
                 RunTime,
                 Error = 0xFF
             };
-            Type type = Type::Error;
 
-            AccessWidth numBits = 0;
-            optional<llvm::APInt> value = nullopt;
+            Type type;
+            AccessWidth numBits;
+            optional<llvm::APInt> value;
+
+            Expression() { type = Type::Error; numBits = 0; value = nullopt; }
         };
 
         // Range
@@ -364,10 +362,11 @@ namespace Phi {
         struct LHExpression: public Expression {
             MACRO_ELAB_SIG_HDR;
 
-            virtual std::vector<SymbolTable::Access> accessList();
+            virtual std::vector<SymbolTable::Access> accessList(AccessWidth* from, AccessWidth* to);
         };
 
-        struct IdentifierExpression: public LHExpression {
+        
+        struct __attribute__((visibility("default"))) IdentifierExpression: public LHExpression {
             Identifier* identifier;
 
             IdentifierExpression(Identifier* identifier): identifier(identifier) {}
@@ -409,6 +408,7 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR;
         };
 
+        
         struct Literal: public Expression {
             Literal(const char* interpretable, bool widthIncluded = true);
 

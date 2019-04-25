@@ -174,7 +174,7 @@ void ExpressionIDPair::MACRO_TRANS_SIG_IMP {
     // struct ExpressionIDPair: public Declaration {
     //         Expression* expression;
     // }
-
+    
     *stream << ".";
     tryTranslate(identifier, stream);
     *stream << "(";

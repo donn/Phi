@@ -99,9 +99,17 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     DeclarationListItem* rightDLI;
     std::shared_ptr<Symbol> pointer;
+    std::shared_ptr<Driven> pointerAsDriven;
+    std::shared_ptr<SymbolArray> pointerAsArray;
 
     tryElaborate(array, table, context);
-    auto size = 1;
+    AccessWidth size = 1;
+    AccessWidth width = 1;
+
+    bool msbFirst = true;
+
+    std::optional<AccessWidth> from = nullopt;
+    std::optional<AccessWidth> to = nullopt;
 
     if (array) {
         switch (array->type) {
@@ -130,19 +138,37 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             goto exit;
         }
     }
+    tryElaborate(bus, table, context);
+    if (bus) {
+        if (bus->from->type == Expression::Type::Error) {
+            goto exit;
+        }
+        from = bus->from->value.value().getLimitedValue();
+        to = bus->to->value.value().getLimitedValue();
+
+        msbFirst = from > to;
+
+        width = (msbFirst ? (from.value() - to.value()) : (from.value() + to.value())) + 1;
+    }
+
     tryElaborate(optionalAssignment, table, context);
 
     if (size == 1) {
-        pointer = std::make_shared<Driven>(identifier->idString, this); 
+        AccessWidth size = 1;
+        pointerAsDriven = std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst);
+        pointer = pointerAsDriven;
         if (optionalAssignment) {
-            //TODO
-        }
+            if (width != optionalAssignment->numBits) {
+                throw "expression.widthMismatch";
+            }
+            pointerAsDriven->drive(optionalAssignment);
+        } 
     } else {
-        auto arrayPointer = std::make_shared<SymbolArray>(identifier->idString, this, size);
+        pointerAsArray = std::make_shared<SymbolArray>(identifier->idString, this, size);
         for (AccessWidth i = 0; i < size; i += 1) {
-            arrayPointer->array[i] = std::make_shared<Driven>(identifier->idString, this);
+            pointerAsArray->array.push_back(std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst));
         }
-        pointer = arrayPointer;
+        pointer = pointerAsArray;
         if (optionalAssignment) {
             throw "array.inlineInitialization";
         }
@@ -186,7 +212,8 @@ void ExpressionIDPair::MACRO_ELAB_SIG_IMP {
 
 void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     // Declaration block because I'm using goto here
-    std::vector<std::string> ids;
+    std::vector<SymbolTable::Access> accesses;
+    AccessWidth from, to;
     auto pointer = lhs;
     auto identifierPointer = dynamic_cast<IdentifierExpression*>(pointer);
     auto propertyAccessPointer = dynamic_cast<PropertyAccess*>(pointer);
@@ -198,25 +225,13 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     DeclarationListItem* dliAttache;
     Port* portAttache;
 
+    
     tryElaborate(lhs, table, context);
 
-    while (pointer) {
-        identifierPointer = dynamic_cast<IdentifierExpression*>(pointer);
-        propertyAccessPointer = dynamic_cast<PropertyAccess*>(pointer);
-        if (identifierPointer) {
-            ids.push_back(identifierPointer->identifier->idString);
-            pointer = nullptr;
-        } else if (propertyAccessPointer) {
-            left = (IdentifierExpression*)propertyAccessPointer->left; // LHExpression association should mandate this
-            ids.push_back(left->identifier->idString);
-            pointer = (LHExpression*)propertyAccessPointer->right;
-        } else {
-            context->addError(nullopt, "identifier.invalidAccess");
-            goto exit;
-        }
-    }
+    accesses = lhs->accessList(&from, &to);
+    symbol = table->find(&accesses);
 
-    // TODO
+    std::cout << symbol.has_value() << std::endl;
     // symbol = table->find(ids);
     // if (!symbol) {
     //     context->addError(nullopt, "symbol.dne");
