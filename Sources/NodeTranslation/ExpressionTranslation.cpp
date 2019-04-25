@@ -32,11 +32,24 @@ void Unary::MACRO_TRANS_SIG_IMP {
             tryTranslate(right, stream);
             *stream << ")";
     }else if (operation == Unary::Operation::allAnd){
-            //handled in elaboration phase
-            //do nothing 
+            for(int i=0; i<Expression::numBits; i++){
+            tryTranslate(right, stream);
+            *stream << "[";
+            *stream << i;
+            *stream << "]";
+            if(i<(Expression::numBits-1))
+                *stream << "&";
+        }
     }else if(operation == Unary::Operation::allOr){
-            //handled in elaboration phase
-            //do nothing 
+        for(int i=0; i<Expression::numBits; i++){
+            tryTranslate(right, stream);
+            *stream << "[";
+            *stream << i;
+            *stream << "]";
+            if(i<(Expression::numBits-1))
+                *stream << "|";
+        }
+            
     }
 
 }
@@ -162,6 +175,38 @@ void RepeatConcatenation::MACRO_TRANS_SIG_IMP {
     *stream << "}";
 
     *stream << "}";
+}
+
+void Multiplexer::MACRO_TRANS_SIG_IMP{
+    /*
+    Multiplexer(Expression* selection, ExpressionPair* options) {
+                this->left = selection; this->right = options;
+            }
+    */
+
+    /*
+    assign q = ( select == 0 )? d[0] : ( select == 1 )? d[1] : ( select == 2 )? d[2] : d[3];
+    */
+   
+    // PII
+    ExpressionPair* cur = (ExpressionPair*)right;
+    Expression* selection = (Expression*)left;
+    while(cur != NULL) {
+        *stream << "(";
+        tryTranslate(selection, stream); 
+        *stream << "=";
+        tryTranslate(cur->label, stream);
+        *stream << ")";
+        *stream << "?";
+        tryTranslate(cur->result, stream);
+        *stream << ":";
+
+        //get next node
+        cur = (ExpressionPair*)cur->right;
+    }
+    //cur == NULL
+    //last node
+    tryTranslate(cur->result, stream); 
 }
 
 #define LOCAL_CONCATDEF(x) void x::MACRO_TRANS_SIG_IMP {\
