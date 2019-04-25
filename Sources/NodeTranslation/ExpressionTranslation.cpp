@@ -32,11 +32,24 @@ void Unary::MACRO_TRANS_SIG_IMP {
             tryTranslate(right, stream);
             *stream << ")";
     }else if (operation == Unary::Operation::allAnd){
-            //handled in elaboration phase
-            //do nothing 
+            for(int i=0; i<Expression::numBits; i++){
+            tryTranslate(right, stream);
+            *stream << "[";
+            *stream << i;
+            *stream << "]";
+            if(i<(Expression::numBits-1))
+                *stream << "&";
+        }
     }else if(operation == Unary::Operation::allOr){
-            //handled in elaboration phase
-            //do nothing 
+        for(int i=0; i<Expression::numBits; i++){
+            tryTranslate(right, stream);
+            *stream << "[";
+            *stream << i;
+            *stream << "]";
+            if(i<(Expression::numBits-1))
+                *stream << "|";
+        }
+            
     }
 
 }

@@ -55,7 +55,7 @@ namespace Phi {
             MACRO_GRAPHPRINT_SIG_HDR;
 
             MACRO_ELAB_SIG_HDR;
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         inline void tryElaborate(Node* node, MACRO_ELAB_PARAMS) {
@@ -71,7 +71,7 @@ namespace Phi {
         }
 
         struct ErrorNode: public Node {
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         // Molecular
@@ -81,8 +81,7 @@ namespace Phi {
             Identifier(const char* identifier);
 
             MACRO_DEBUGLABEL_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         // Some forward declarations
@@ -119,8 +118,7 @@ namespace Phi {
             }
 
             MACRO_ELAB_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct TopLevelNamespace: public Declaration {
@@ -130,10 +128,9 @@ namespace Phi {
             
             MACRO_DEBUGLABEL_SIG_HDR;
             MACRO_GRAPHPRINT_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
-
+            
             MACRO_ELAB_SIG_HDR;
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct Statement;
@@ -154,8 +151,7 @@ namespace Phi {
             TopLevelDeclaration(Identifier* identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         // Templating
@@ -184,8 +180,7 @@ namespace Phi {
 
             If(Statement* contents, Expression* expression, If* elseBlock): BlockBased(contents), expression(expression), elseBlock(elseBlock) {}
             MACRO_ELAB_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct ForLoop: public BlockBased {
@@ -194,18 +189,16 @@ namespace Phi {
 
             ForLoop(Statement* contents, Range* range, Identifier* identifier): BlockBased(contents), range(range), identifier(identifier) {}
             MACRO_ELAB_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct Namespace: public BlockBased {
             Identifier* identifier;
 
             Namespace(Statement* contents, Identifier* identifier): BlockBased(contents), identifier(identifier) {}
-
             MACRO_ELAB_SIG_HDR;
+            MACRO_TRANS_SIG_HDR;
 
-            virtual void translate(std::ofstream* stream);
         };
 
         struct LabeledStatementList;
@@ -215,16 +208,14 @@ namespace Phi {
             std::string number;
             
             SpecialNumber(const char* interpretable);
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
         struct Switch: public BlockBased {
             Expression* expression;
             LabeledStatementList* list;
 
             Switch(Expression* expression, LabeledStatementList* list): BlockBased(nullptr), expression(expression), list(list) {}
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct LabeledStatementList: public Node {
@@ -235,8 +226,7 @@ namespace Phi {
             Statement* statements;
 
             LabeledStatementList(bool isDefault, Expression* expression, SpecialNumber* specialNumber, Statement* statements): isDefault(isDefault), expression(expression), specialNumber(specialNumber), statements(statements) {}
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct Combinational: public BlockBased {
@@ -244,8 +234,7 @@ namespace Phi {
             Combinational(Statement* contents): BlockBased(contents) {}
 
             MACRO_ELAB_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         // Subdeclarations
@@ -268,7 +257,7 @@ namespace Phi {
             VariableLengthDeclaration(Type type, Range* bus, DeclarationListItem* declarationList): type(type), bus(bus), declarationList(declarationList) {}
 
             MACRO_ELAB_SIG_HDR;
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct DeclarationListItem: public Declaration {
@@ -282,7 +271,7 @@ namespace Phi {
             DeclarationListItem(Identifier* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
 
             MACRO_ELAB_SIG_HDR;
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
 
         };
 
@@ -297,8 +286,7 @@ namespace Phi {
             InstanceDeclaration(Identifier* identifier, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct ExpressionIDPair: public Declaration {
@@ -307,8 +295,7 @@ namespace Phi {
             ExpressionIDPair(Identifier* identifier, Expression* expression): Declaration(identifier), expression(expression) {}
             
             MACRO_ELAB_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         // Nondeclarative Statements
@@ -322,11 +309,9 @@ namespace Phi {
             Expression* expression;
 
             NondeclarativeAssignment(LHExpression* lhs, Expression* expression): Nondeclarative(lhs), expression(expression) {}
-
             MACRO_ELAB_SIG_HDR;
             MACRO_GRAPHPRINT_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
         
         struct NondeclarativePorts: public Nondeclarative {
@@ -370,11 +355,9 @@ namespace Phi {
         struct IdentifierExpression: public LHExpression {
             Identifier* identifier;
 
-            IdentifierExpression(Identifier* identifier): identifier(identifier) {}
-
+            IdentifierExpression(Identifier* identifier): identifier(identifier) {};
             MACRO_GRAPHPRINT_SIG_HDR;
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct PropertyAccess: public LHExpression {
@@ -411,8 +394,7 @@ namespace Phi {
 
         struct Literal: public Expression {
             Literal(const char* interpretable, bool widthIncluded = true);
-
-            virtual void translate(std::ofstream* stream);
+            MACRO_TRANS_SIG_HDR;
         };
 
         struct Unary: public Expression {
