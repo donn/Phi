@@ -125,15 +125,8 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWi
             vector.push_back(PSA::Index(value));
         } else if (auto pointer = dynamic_cast<Range*>(top)) {
             // Elaborating on a range should have checked this by now
-            assert(!(pointer->from->type == Expression::Type::RunTime || pointer->to->type == Expression::Type::RunTime));
-            assert(!(pointer->from->type == Expression::Type::Error || pointer->to->type == Expression::Type::Error));
-
-            auto toValue = pointer->to->value.value().getLimitedValue();
-            auto fromValue = pointer->from->value.value().getLimitedValue();
-
-            // Elaborating on a range should have checked this as well
-            assert(toValue <= maxAccessWidth);
-            assert(fromValue <= maxAccessWidth);
+            AccessWidth fromValue, toValue;
+            pointer->getValues(&fromValue, &toValue);
 
             if (!lhStack.empty()) {
                 throw "driven.rangeAccessIsFinal";
@@ -150,27 +143,44 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWi
 }
 
 void LHExpression::MACRO_ELAB_SIG_IMP {
-    tryElaborate(left, table, context, true);
-    tryElaborate(right, table, context, true);
-    if (!special) {
-        std::optional<AccessWidth> from, to;
-        auto accesses = accessList(&from, &to);
-        auto symbol = table->find(&accesses);
-        if (!symbol.has_value()) {
-            throw "symbol.dne";
-        }
-        auto unwrapped = symbol.value();
-        if (auto driven = std::dynamic_pointer_cast<Driven>(unwrapped)) {
-            
-        }
-        
+    tryElaborate(left, table, context);
+    tryElaborate(right, table, context);
+}
+
+static void lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
+    auto lh = dynamic_cast<LHExpression*>(suspect);
+
+    if (!lh) { return; }
+
+    optional<AccessWidth> from, to;
+    auto accesses = lh->accessList(&from, &to);
+    auto symbol = table->find(&accesses);
+
+    if (!symbol.has_value()) {
+        throw "symbol.dne";
     }
+
+    auto unwrapped = symbol.value();
+    auto driven = std::dynamic_pointer_cast<Phi::Driven>(unwrapped);
+
+    if (!driven) {
+        throw "symbol.notADriven";
+    }
+
+    if (!from.has_value() || !to.has_value()) {
+        assert(!from.has_value() && !to.has_value());
+
+        from = driven->from;
+        to = driven->to;
+    }
+
+    numBits = msbFirst ? (from - to + 1) : (to - from + 1);
 }
 
 void Unary::MACRO_ELAB_SIG_IMP {
     auto rightExpr = static_cast<Expression*>(right);
-    auto leftExpr  = static_cast<Expression*>(left);
     tryElaborate(right, table, context);
+    lhDrivenProcess(right, table);
     if (rightExpr->type == Expression::Type::Error) {
         return;
     }

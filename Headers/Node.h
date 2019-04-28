@@ -8,8 +8,8 @@
 #include <typeinfo>
 
 // Elaboration Macros
-#define MACRO_ELAB_PARAMS Phi::SymbolTable* table, Phi::Context* context, bool special
-#define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS = false)
+#define MACRO_ELAB_PARAMS Phi::SymbolTable* table, Phi::Context* context
+#define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
 #define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
 
 // Translation Macros
@@ -59,7 +59,7 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR;
         };
 
-        void tryElaborate(Node* node, MACRO_ELAB_PARAMS = false);
+        void tryElaborate(Node* node, MACRO_ELAB_PARAMS);
 
         inline void tryTranslate(Node* node, std::ofstream* stream, std::string namespace_so_far) {
             if (node) {
@@ -340,9 +340,13 @@ namespace Phi {
         struct Range: public Node {
             Expression* from;
             Expression* to;
+
             Range(Expression* from, Expression* to): from(from), to(to) {}
             
+            MACRO_ELAB_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
+
+            void getValues(AccessWidth* from, AccessWidth* to); // CALL ONLY AFTER ELABORATION!!
         };      
 
         // Left Hand Expressions
