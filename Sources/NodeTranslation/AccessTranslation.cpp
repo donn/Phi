@@ -1,5 +1,6 @@
 #include "Node.h"
 
+#include <string>
 #include <fstream>
 
 using namespace Phi::Node;
@@ -17,9 +18,9 @@ void PropertyAccess::MACRO_TRANS_SIG_IMP {
     //             this->left = object; this->right = property;
     //         }
 
-    tryTranslate(left, stream); //object
+    tryTranslate(left, stream, namespace_so_far); //object
     *stream << ".";
-    tryTranslate(right, stream); //property
+    tryTranslate(right, stream, namespace_so_far); //property
 }
 
 void ArrayAccess::MACRO_TRANS_SIG_IMP {
@@ -30,9 +31,9 @@ void ArrayAccess::MACRO_TRANS_SIG_IMP {
     //             this->left = object; this->right = width;
     //         }
 
-    tryTranslate(left, stream); //object
+    tryTranslate(left, stream, namespace_so_far); //object
     *stream << "[";
-    tryTranslate(right, stream); //width
+    tryTranslate(right, stream, namespace_so_far); //width
     *stream << "]";
 }
 
@@ -45,6 +46,6 @@ void RangeAccess::MACRO_TRANS_SIG_IMP {
     //         }
 
 
-    tryTranslate(left, stream); //object
-    tryTranslate(right, stream); //range
+    tryTranslate(left, stream, namespace_so_far); //object
+    tryTranslate(right, stream, namespace_so_far); //range
 }

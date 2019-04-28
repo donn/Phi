@@ -8,7 +8,7 @@ void Node::MACRO_ELAB_SIG_IMP {
 }
 
 void Node::MACRO_TRANS_SIG_IMP {
-    tryTranslate(right, stream);
+    tryTranslate(right, stream, namespace_so_far);
 }
 
 void Phi::Node::tryElaborate(Phi::Node::Node* node, MACRO_ELAB_PARAMS)  {

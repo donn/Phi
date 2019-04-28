@@ -26,16 +26,16 @@ void If::MACRO_TRANS_SIG_IMP {
         if((expression!=NULL) )
         {
             *stream << "if ( ";
-            tryTranslate(expression, stream);
+            tryTranslate(expression, stream, namespace_so_far);
             *stream << " ) ";
         }   
         *stream << "begin";
-        tryTranslate(contents, stream);
+        tryTranslate(contents, stream, namespace_so_far);
         *stream << "end";
 
         if (elseBlock!=NULL) {
             *stream << " else ";
-            tryTranslate(elseBlock, stream);
+            tryTranslate(elseBlock, stream, namespace_so_far);
         }
     }
 }
@@ -89,9 +89,9 @@ void Switch::MACRO_TRANS_SIG_IMP {
     //always inside comb block
     *stream << "casez";
     *stream << "(";
-    tryTranslate(expression, stream);
+    tryTranslate(expression, stream, namespace_so_far);
     *stream << " ) ";
-    tryTranslate(list, stream);
+    tryTranslate(list, stream, namespace_so_far);
     *stream << "endcase";
     
 }
@@ -105,9 +105,9 @@ void Combinational::MACRO_TRANS_SIG_IMP {
 
     *stream << "always @* \n";
     *stream << "begin \n";
-    tryTranslate(contents, stream);
+    tryTranslate(contents, stream, namespace_so_far);
     *stream << "end \n";
 
     
-    tryTranslate(right, stream);
+    tryTranslate(right, stream, namespace_so_far);
 }

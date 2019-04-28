@@ -13,7 +13,7 @@
 #define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
 
 // Translation Macros
-#define MACRO_TRANS_PARAMS std::ofstream* stream
+#define MACRO_TRANS_PARAMS std::ofstream* stream, std::string namespace_so_far
 #define MACRO_TRANS_SIG_IMP translate (MACRO_TRANS_PARAMS)
 #define MACRO_TRANS_SIG_HDR virtual void MACRO_TRANS_SIG_IMP
 
@@ -61,9 +61,9 @@ namespace Phi {
 
         void tryElaborate(Node* node, MACRO_ELAB_PARAMS = false);
 
-        inline void tryTranslate(Node* node, std::ofstream* stream) {
+        inline void tryTranslate(Node* node, std::ofstream* stream, std::string namespace_so_far) {
             if (node) {
-                node->translate(stream);
+                node->translate(stream, namespace_so_far);
             }
         }
 
