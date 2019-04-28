@@ -1,5 +1,6 @@
 #include "Node.h"
 
+#include <string>
 #include <fstream>
 
 using namespace Phi::Node;
@@ -50,7 +51,7 @@ void SpecialNumber::MACRO_TRANS_SIG_IMP {
     *stream << number;
     *stream << ";";
     
-    tryTranslate(right, stream);
+    tryTranslate(right, stream, namespace_so_far);
 }
 
 void LabeledStatementList::MACRO_TRANS_SIG_IMP {
@@ -105,12 +106,12 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
             *stream << ": ";
         }else{
             //expression 
-            tryTranslate(expression, stream); 
+            tryTranslate(expression, stream, namespace_so_far); 
             *stream << ": ";
         }
     }
     
-    tryTranslate(statements, stream); 
+    tryTranslate(statements, stream, namespace_so_far); 
 }
 
 void Range::MACRO_TRANS_SIG_IMP {
@@ -123,9 +124,9 @@ void Range::MACRO_TRANS_SIG_IMP {
     //             }
 
     *stream << "[";
-    tryTranslate(from, stream); //from
+    tryTranslate(from, stream, namespace_so_far); //from
     *stream << ":";
-    tryTranslate(to, stream); //to
+    tryTranslate(to, stream, namespace_so_far); //to
     *stream << "]";
 }
 

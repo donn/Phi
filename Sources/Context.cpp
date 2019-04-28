@@ -81,7 +81,7 @@ void Context::elaborate(SymbolTable* table) {
 }
 
 void Context::MACRO_TRANS_SIG_IMP {
-    head->translate(stream);
+    head->translate(stream, namespace_so_far);
 }
 
 #if YYDEBUG
