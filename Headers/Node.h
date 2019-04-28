@@ -8,8 +8,8 @@
 #include <typeinfo>
 
 // Elaboration Macros
-#define MACRO_ELAB_PARAMS Phi::SymbolTable* table, Phi::Context* context
-#define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
+#define MACRO_ELAB_PARAMS Phi::SymbolTable* table, Phi::Context* context, bool special
+#define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS = false)
 #define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
 
 // Translation Macros
@@ -59,7 +59,7 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR;
         };
 
-        void tryElaborate(Node* node, MACRO_ELAB_PARAMS);
+        void tryElaborate(Node* node, MACRO_ELAB_PARAMS = false);
 
         inline void tryTranslate(Node* node, std::ofstream* stream) {
             if (node) {
@@ -347,17 +347,20 @@ namespace Phi {
 
         // Left Hand Expressions
         struct LHExpression: public Expression {
-            MACRO_ELAB_SIG_HDR;
+            std::vector<SymbolTable::Access> accessList(optional<AccessWidth>* from, optional<AccessWidth>* to);
 
-            virtual std::vector<SymbolTable::Access> accessList(optional<AccessWidth>* from, optional<AccessWidth>* to);
+            MACRO_ELAB_SIG_HDR;
         };
 
         
         struct IdentifierExpression: public LHExpression {
             Identifier* identifier;
 
-            IdentifierExpression(Identifier* identifier): identifier(identifier) {}
             MACRO_GRAPHPRINT_SIG_HDR;
+
+            IdentifierExpression(Identifier* identifier): identifier(identifier) {}
+
+            MACRO_ELAB_SIG_HDR {}
             MACRO_TRANS_SIG_HDR;
         };
 
@@ -409,6 +412,7 @@ namespace Phi {
             Operation operation;
             Unary(Operation operation, Expression* right): operation(operation) { this->right = right; }
 
+            MACRO_ELAB_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
         };
 

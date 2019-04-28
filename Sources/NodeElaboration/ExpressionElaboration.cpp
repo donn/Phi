@@ -93,12 +93,6 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
     }
 }
 
-void LHExpression::MACRO_ELAB_SIG_IMP {
-    
-}
-
-#include <iostream>
-
 std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWidth>* from, optional<AccessWidth>* to) {
     using PSA = Phi::SymbolTable::Access;
     std::vector<PSA> vector;
@@ -153,4 +147,32 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWi
     }
 
     return vector;
+}
+
+void LHExpression::MACRO_ELAB_SIG_IMP {
+    tryElaborate(left, table, context, true);
+    tryElaborate(right, table, context, true);
+    if (!special) {
+        std::optional<AccessWidth> from, to;
+        auto accesses = accessList(&from, &to);
+        auto symbol = table->find(&accesses);
+        if (!symbol.has_value()) {
+            throw "symbol.dne";
+        }
+        auto unwrapped = symbol.value();
+        if (auto driven = std::dynamic_pointer_cast<Driven>(unwrapped)) {
+            
+        }
+        
+    }
+}
+
+void Unary::MACRO_ELAB_SIG_IMP {
+    auto rightExpr = static_cast<Expression*>(right);
+    auto leftExpr  = static_cast<Expression*>(left);
+    tryElaborate(right, table, context);
+    if (rightExpr->type == Expression::Type::Error) {
+        return;
+    }
+
 }
