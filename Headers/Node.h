@@ -7,20 +7,20 @@
 #include <llvm/ADT/StringRef.h>
 #include <typeinfo>
 
+#include <ostream>
+
 // Elaboration Macros
 #define MACRO_ELAB_PARAMS Phi::SymbolTable* table, Phi::Context* context
 #define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
 #define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
 
 // Translation Macros
-#define MACRO_TRANS_PARAMS std::ofstream* stream, std::string namespace_so_far
+#define MACRO_TRANS_PARAMS std::ostream* stream, std::string namespaceSoFar
 #define MACRO_TRANS_SIG_IMP translate (MACRO_TRANS_PARAMS)
 #define MACRO_TRANS_SIG_HDR virtual void MACRO_TRANS_SIG_IMP
 
 // Debug Macros
 #if YYDEBUG
-    #include <ostream>
-
     #define MACRO_DEBUGLABEL_PARAMS
     #define MACRO_DEBUGLABEL_SIG_IMP debugLabel (MACRO_DEBUGLABEL_PARAMS)
     #define MACRO_DEBUGLABEL_SIG_HDR virtual std::string MACRO_DEBUGLABEL_SIG_IMP
@@ -61,11 +61,7 @@ namespace Phi {
 
         void tryElaborate(Node* node, MACRO_ELAB_PARAMS);
 
-        inline void tryTranslate(Node* node, std::ofstream* stream, std::string namespace_so_far) {
-            if (node) {
-                node->translate(stream, namespace_so_far);
-            }
-        }
+        inline void tryTranslate(Node* node, MACRO_TRANS_PARAMS);
 
         struct ErrorNode: public Node {
             MACRO_TRANS_SIG_HDR;
@@ -274,13 +270,13 @@ namespace Phi {
 
         struct ExpressionIDPair;
         struct InstanceDeclaration: public Declaration {
-            Expression* module;
+            LHExpression* module;
             ExpressionIDPair* parameters;
 
             Expression* array;
             ExpressionIDPair* ports;
 
-            InstanceDeclaration(Identifier* identifier, Expression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
+            InstanceDeclaration(Identifier* identifier, LHExpression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
@@ -377,6 +373,8 @@ namespace Phi {
         };
 
         struct ArrayAccess: public LHExpression {
+            bool index = true; // If false, translation should treat this as a namespace array access
+
             ArrayAccess(Expression* object, Expression* width) {
                 this->left = object; this->right = width;
             }
@@ -456,6 +454,7 @@ namespace Phi {
                 this->left = left; this->right = right;
             }
 
+            MACRO_ELAB_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
         };
 

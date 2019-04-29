@@ -23,41 +23,41 @@ void Port::MACRO_TRANS_SIG_IMP {
     }
     
     // bus --> bus points to null ? no range : range [from:to] ;
-    tryTranslate(bus, stream, namespace_so_far);
+    tryTranslate(bus, stream, namespaceSoFar);
 
     // identifier 
     *stream << " ";
-    tryTranslate(identifier, stream, namespace_so_far);
+    tryTranslate(identifier, stream, namespaceSoFar);
 
     *stream << ";";
     *stream << std::endl;
 
-    tryTranslate(right, stream, namespace_so_far);
+    tryTranslate(right, stream, namespaceSoFar);
 
 }
 
 void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
-    //adjust namespace_so_far
-    namespace_so_far = namespace_so_far + "_" + std::to_string((identifier->idString).length()) + identifier->idString;
+    //adjust namespaceSoFar
+    namespaceSoFar = namespaceSoFar + "_" + std::to_string((identifier->idString).length()) + identifier->idString;
 
-    tryTranslate(contents, stream, namespace_so_far);
-    tryTranslate(identifier, stream, namespace_so_far);
+    tryTranslate(contents, stream, namespaceSoFar);
+    tryTranslate(identifier, stream, namespaceSoFar);
 }
 
 void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
     
-    //adjust namespace_so_far
-    namespace_so_far = namespace_so_far +  "_" + std::to_string((identifier->idString).length()) + identifier->idString;
+    //adjust namespaceSoFar
+    namespaceSoFar = namespaceSoFar +  "_" + std::to_string((identifier->idString).length()) + identifier->idString;
     
     if (type == TopLevelDeclaration::Type::module) {
         *stream << "module ";
-        tryTranslate(identifier, stream, namespace_so_far);
+        tryTranslate(identifier, stream, namespaceSoFar);
         *stream << " (" << std::endl;
         auto pointer = ports;
         
         // PII
         while (pointer) {
-            tryTranslate(pointer->identifier, stream, namespace_so_far);
+            tryTranslate(pointer->identifier, stream, namespaceSoFar);
             *stream << ", " << std::endl;
             pointer = (Port*)pointer->right;
         }
@@ -70,11 +70,11 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
         // TODO
 
         // Get ready for ports
-        tryTranslate(ports, stream, namespace_so_far);
+        tryTranslate(ports, stream, namespaceSoFar);
         *stream << std::endl;
 
         // Contents
-        tryTranslate(contents, stream, namespace_so_far);
+        tryTranslate(contents, stream, namespaceSoFar);
 
         *stream <<std::endl;
         *stream << "endmodule" << std::endl;
@@ -83,21 +83,21 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
         // Interfaces are elaboration-only
     }
     
-    tryTranslate(right, stream, namespace_so_far);
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void VariableLengthDeclaration::MACRO_TRANS_SIG_IMP {
 
-    tryTranslate(declarationList, stream, namespace_so_far);
-    tryTranslate(right, stream, namespace_so_far);
+    tryTranslate(declarationList, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     using VLD = VariableLengthDeclaration;
 
-    //adjust namespace_so_far
+    //adjust namespaceSoFar
     if(type==VLD::Type::reg || type==VLD::Type::latch){
-        namespace_so_far = namespace_so_far +  "_" + std::to_string((identifier->idString).length()) + identifier->idString;
+        namespaceSoFar = namespaceSoFar +  "_" + std::to_string((identifier->idString).length()) + identifier->idString;
     }else{
         //do nothing
     }
@@ -120,69 +120,69 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
 
         default:
             // Var handled during elaboration
-            *stream << "/* phi error */";
-            break;
+            tryTranslate(right, stream, namespaceSoFar);
+            return;
     };
 
     //add wires,regs, always @ block, inside always @ block
     if(type==VLD::Type::reg){
-        *stream << "wire "+ namespace_so_far+"_clock; \n";
-        *stream << "wire "+namespace_so_far+"_reset; \n";
+        *stream << "wire "+ namespaceSoFar+"_clock; \n";
+        *stream << "wire "+namespaceSoFar+"_reset; \n";
         
         *stream << "wire ";
-        tryTranslate(bus, stream, namespace_so_far);
+        tryTranslate(bus, stream, namespaceSoFar);
         *stream << " ";
-        *stream <<namespace_so_far+"_data; \n";
+        *stream <<namespaceSoFar+"_data; \n";
         
         *stream << "reg ";
-        tryTranslate(bus, stream, namespace_so_far);
+        tryTranslate(bus, stream, namespaceSoFar);
         *stream << " ";
         *stream << identifier->idString + "; \n";
 
-        *stream << "always @ (posedge " + namespace_so_far +"_clock or posedge " + namespace_so_far +"_reset) begin";
+        *stream << "always @ (posedge " + namespaceSoFar +"_clock or posedge " + namespaceSoFar +"_reset) begin";
         
-        *stream << "if("+namespace_so_far+"_reset) begin\n";
+        *stream << "if("+namespaceSoFar+"_reset) begin\n";
         *stream << identifier->idString + "<= 0; \n";
         *stream << "end \n";
 
         *stream << "else begin\n";
-        *stream << identifier->idString + "<=" + namespace_so_far+ "_data; \n";
+        *stream << identifier->idString + "<=" + namespaceSoFar+ "_data; \n";
         *stream << "end \n";
 
         *stream << "end \n";
 
-        tryTranslate(right, stream, namespace_so_far);
+        tryTranslate(right, stream, namespaceSoFar);
     }else if(type==VLD::Type::latch){
-        *stream << "wire "+ namespace_so_far+"_condition; \n";
+        *stream << "wire "+ namespaceSoFar+"_condition; \n";
         
         *stream << "wire ";
-        tryTranslate(bus, stream, namespace_so_far);
+        tryTranslate(bus, stream, namespaceSoFar);
         *stream << " ";
-        *stream <<namespace_so_far+"_data; \n";
+        *stream <<namespaceSoFar+"_data; \n";
 
         *stream << "reg ";
-        tryTranslate(bus, stream, namespace_so_far);
+        tryTranslate(bus, stream, namespaceSoFar);
         *stream << " ";
         *stream <<identifier->idString+ "; \n";
 
-        *stream << "always @ (" + namespace_so_far +"_condition) begin";
+        *stream << "always @ (" + namespaceSoFar +"_condition) begin";
         
-        *stream << "if("+namespace_so_far+"_condition) begin\n";
-        *stream << identifier->idString + "<=" + namespace_so_far +"_data; \n";
+        *stream << "if("+namespaceSoFar+"_condition) begin\n";
+        *stream << identifier->idString + "<=" + namespaceSoFar +"_data; \n";
         *stream << "end \n";
         
         *stream << "end \n";
         
-        tryTranslate(right, stream, namespace_so_far);
+        tryTranslate(right, stream, namespaceSoFar);
     }else{
-        tryTranslate(bus, stream, namespace_so_far);
+        tryTranslate(bus, stream, namespaceSoFar);
         *stream << " ";
-        tryTranslate(identifier, stream, namespace_so_far);
+        tryTranslate(identifier, stream, namespaceSoFar);
 
         // Expression* array;
         if (array) {
             *stream << "[";
-            tryTranslate(array, stream, namespace_so_far);
+            tryTranslate(array, stream, namespaceSoFar);
             *stream << "]";
         }
 
@@ -191,13 +191,13 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
             *stream << "=";
             *stream << " ";
             *stream << "(";
-            tryTranslate(optionalAssignment, stream, namespace_so_far);
+            tryTranslate(optionalAssignment, stream, namespaceSoFar);
             *stream << ")";
         }
 
         *stream << "; " << std::endl;
 
-        tryTranslate(right, stream, namespace_so_far);
+        tryTranslate(right, stream, namespaceSoFar);
     }
     
 
@@ -219,20 +219,20 @@ void InstanceDeclaration::MACRO_TRANS_SIG_IMP {
     //         ExpressionIDPair* ports;
     // }
 
-    tryTranslate(module, stream, namespace_so_far);
+    tryTranslate(module, stream, namespaceSoFar);
 
     if (parameters) {
         *stream << " #(";
-        tryTranslate(parameters, stream, namespace_so_far);
+        tryTranslate(parameters, stream, namespaceSoFar);
         *stream << ")";
     }
 
     *stream << " ";
-    tryTranslate(identifier, stream, namespace_so_far);
+    tryTranslate(identifier, stream, namespaceSoFar);
     *stream << "(";
-    tryTranslate(ports, stream, namespace_so_far);
+    tryTranslate(ports, stream, namespaceSoFar);
     *stream << ");";
-    tryTranslate(right, stream, namespace_so_far);
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void ExpressionIDPair::MACRO_TRANS_SIG_IMP {
@@ -247,13 +247,13 @@ void ExpressionIDPair::MACRO_TRANS_SIG_IMP {
     // }
     
     *stream << ".";
-    tryTranslate(identifier, stream, namespace_so_far);
+    tryTranslate(identifier, stream, namespaceSoFar);
     *stream << "(";
-    tryTranslate(expression, stream, namespace_so_far);
+    tryTranslate(expression, stream, namespaceSoFar);
     *stream << ")";
 
     if (right) {
         *stream << "," << std::endl;
-        tryTranslate(right, stream, namespace_so_far);
+        tryTranslate(right, stream, namespaceSoFar);
     }
 }

@@ -28,12 +28,12 @@ void NondeclarativeAssignment::MACRO_TRANS_SIG_IMP {
         *stream << "assign ";
     }
 
-    tryTranslate(lhs, stream, namespace_so_far); 
+    tryTranslate(lhs, stream, namespaceSoFar); 
     *stream << " = ";
-    tryTranslate(expression, stream, namespace_so_far); 
+    tryTranslate(expression, stream, namespaceSoFar); 
     *stream << ";";
     *stream << std::endl;
 
-    tryTranslate(right, stream, namespace_so_far); 
+    tryTranslate(right, stream, namespaceSoFar); 
 }
 

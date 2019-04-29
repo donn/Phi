@@ -108,7 +108,7 @@ $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(REFLEX_UNICODE_OBJECTS)
 	mkdir -p $(@D)
-	c++ $(LD_FLAGS) -o $@ $^
+	c++ $(LD_FLAGS) $(CPP_FLAGS) -o $@ $^
 	@echo "\033[1;32m>> Build complete.\033[0m"
 
 .PHONY: clean

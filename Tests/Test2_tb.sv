@@ -1,6 +1,6 @@
 `phi "Test2.phi"
 
-msodule testbench;
+module testbench;
 
     reg[3:0] a, b;
     wire[3:0] s;

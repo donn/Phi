@@ -36,7 +36,7 @@ namespace Phi {
         void prettyPrintErrors(std::ostream* out);
 
         void elaborate(SymbolTable* table);
-        void translate(std::ofstream* stream, std::string namespace_so_far);
+        void translate(std::ostream* stream, std::string namespaceSoFar);
 
 #if YYDEBUG
         int trace = 0;

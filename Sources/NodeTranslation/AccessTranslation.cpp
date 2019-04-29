@@ -18,9 +18,9 @@ void PropertyAccess::MACRO_TRANS_SIG_IMP {
     //             this->left = object; this->right = property;
     //         }
 
-    tryTranslate(left, stream, namespace_so_far); //object
+    tryTranslate(left, stream, namespaceSoFar); //object
     *stream << ".";
-    tryTranslate(right, stream, namespace_so_far); //property
+    tryTranslate(right, stream, namespaceSoFar); //property
 }
 
 void ArrayAccess::MACRO_TRANS_SIG_IMP {
@@ -31,9 +31,9 @@ void ArrayAccess::MACRO_TRANS_SIG_IMP {
     //             this->left = object; this->right = width;
     //         }
 
-    tryTranslate(left, stream, namespace_so_far); //object
+    tryTranslate(left, stream, namespaceSoFar); //object
     *stream << "[";
-    tryTranslate(right, stream, namespace_so_far); //width
+    tryTranslate(right, stream, namespaceSoFar); //width
     *stream << "]";
 }
 
@@ -46,6 +46,6 @@ void RangeAccess::MACRO_TRANS_SIG_IMP {
     //         }
 
 
-    tryTranslate(left, stream, namespace_so_far); //object
-    tryTranslate(right, stream, namespace_so_far); //range
+    tryTranslate(left, stream, namespaceSoFar); //object
+    tryTranslate(right, stream, namespaceSoFar); //range
 }

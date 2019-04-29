@@ -1,10 +1,9 @@
 .vscode/
-Intermediates/
-
 .DS_Store
-phic
-*.vcd
 
+Intermediates/
+*.dSYM/
+phic
 *.exe
 *.stackdump
 
@@ -15,5 +14,7 @@ phic
 *.png
 
 *.out
+*.vcd
 
 *~
+/*.cpp

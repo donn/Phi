@@ -51,7 +51,7 @@ void SpecialNumber::MACRO_TRANS_SIG_IMP {
     *stream << number;
     *stream << ";";
     
-    tryTranslate(right, stream, namespace_so_far);
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void LabeledStatementList::MACRO_TRANS_SIG_IMP {
@@ -106,12 +106,12 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
             *stream << ": ";
         }else{
             //expression 
-            tryTranslate(expression, stream, namespace_so_far); 
+            tryTranslate(expression, stream, namespaceSoFar); 
             *stream << ": ";
         }
     }
     
-    tryTranslate(statements, stream, namespace_so_far); 
+    tryTranslate(statements, stream, namespaceSoFar); 
 }
 
 void Range::MACRO_TRANS_SIG_IMP {
@@ -124,9 +124,9 @@ void Range::MACRO_TRANS_SIG_IMP {
     //             }
 
     *stream << "[";
-    tryTranslate(from, stream, namespace_so_far); //from
+    tryTranslate(from, stream, namespaceSoFar); //from
     *stream << ":";
-    tryTranslate(to, stream, namespace_so_far); //to
+    tryTranslate(to, stream, namespaceSoFar); //to
     *stream << "]";
 }
 

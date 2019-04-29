@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::ofstream output;
-    std::string namespace_so_far = "";
+    std::string namespaceSoFar = "";
     
     output.open(outputFilename);
     if (output.fail()) {
@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
     auto currentTime = *std::localtime(&timeObject);
     output << "   Generated on: " <<  std::put_time(&currentTime, "%Y-%m-%d %H:%M:%S") << std::endl;
     output << "*/" << std::endl << std::endl;
-    context.translate(&output, namespace_so_far);
+    context.translate(&output, namespaceSoFar);
     output.close();
 
     return EX_OK;

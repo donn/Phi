@@ -14,7 +14,7 @@ void Literal::MACRO_TRANS_SIG_IMP {
 
 void IdentifierExpression::MACRO_TRANS_SIG_IMP {
     //variable name
-    tryTranslate(identifier, stream, namespace_so_far);
+    tryTranslate(identifier, stream, namespaceSoFar);
 }
 
 void Unary::MACRO_TRANS_SIG_IMP {
@@ -23,17 +23,17 @@ void Unary::MACRO_TRANS_SIG_IMP {
             //two's complement
             *stream << "-";
             *stream << "(";
-            tryTranslate(right, stream, namespace_so_far);
+            tryTranslate(right, stream, namespaceSoFar);
             *stream << ")";
     }else if(operation == Unary::Operation::bitwiseNot){
             //one's complement
             *stream << "~";
             *stream << "(";
-            tryTranslate(right, stream, namespace_so_far);
+            tryTranslate(right, stream, namespaceSoFar);
             *stream << ")";
     }else if (operation == Unary::Operation::allAnd){
             for(int i=0; i<Expression::numBits; i++){
-            tryTranslate(right, stream, namespace_so_far);
+            tryTranslate(right, stream, namespaceSoFar);
             *stream << "[";
             *stream << i;
             *stream << "]";
@@ -42,7 +42,7 @@ void Unary::MACRO_TRANS_SIG_IMP {
         }
     }else if(operation == Unary::Operation::allOr){
         for(int i=0; i<Expression::numBits; i++){
-            tryTranslate(right, stream, namespace_so_far);
+            tryTranslate(right, stream, namespaceSoFar);
             *stream << "[";
             *stream << i;
             *stream << "]";
@@ -70,10 +70,10 @@ void Binary::MACRO_TRANS_SIG_IMP {
     ){
         //handle if the operation is for signed numbers
         *stream << "$signed(";
-        tryTranslate(left, stream, namespace_so_far);
+        tryTranslate(left, stream, namespaceSoFar);
         *stream << ")";
     }else{
-        tryTranslate(left, stream, namespace_so_far);
+        tryTranslate(left, stream, namespaceSoFar);
     }
     
 
@@ -135,31 +135,31 @@ void Binary::MACRO_TRANS_SIG_IMP {
     ){
         //handle if the operation is for signed numbers
         *stream << "$signed(";
-        tryTranslate(right, stream, namespace_so_far);
+        tryTranslate(right, stream, namespaceSoFar);
         *stream << ")";
     }else{
-        tryTranslate(right, stream, namespace_so_far);
+        tryTranslate(right, stream, namespaceSoFar);
     }
 }
 
 void Ternary::MACRO_TRANS_SIG_IMP {
 
      *stream << "(";
-     tryTranslate(condition, stream, namespace_so_far);
+     tryTranslate(condition, stream, namespaceSoFar);
      *stream << ")";
 
      *stream << " ";
      *stream << "?";
      *stream << " ";
      *stream << "(";
-     tryTranslate(left, stream, namespace_so_far);
+     tryTranslate(left, stream, namespaceSoFar);
      *stream << ")";
      
      *stream << " ";
      *stream << ":";
      *stream << " ";
      *stream << "(";
-     tryTranslate(right, stream, namespace_so_far);
+     tryTranslate(right, stream, namespaceSoFar);
      *stream << ")";
 }
 
@@ -168,10 +168,10 @@ void RepeatConcatenation::MACRO_TRANS_SIG_IMP {
     //example in verilog : {2 {3'b110} }
 
     *stream << "{";
-    tryTranslate(left, stream, namespace_so_far); //repeatCount
+    tryTranslate(left, stream, namespaceSoFar); //repeatCount
 
     *stream << "{";
-    tryTranslate(right, stream, namespace_so_far); // repeatable
+    tryTranslate(right, stream, namespaceSoFar); // repeatable
     *stream << "}";
 
     *stream << "}";
@@ -193,12 +193,12 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
     Expression* selection = (Expression*)left;
     while(cur != NULL) {
         *stream << "(";
-        tryTranslate(selection, stream, namespace_so_far); 
+        tryTranslate(selection, stream, namespaceSoFar); 
         *stream << "=";
-        tryTranslate(cur->label, stream, namespace_so_far);
+        tryTranslate(cur->label, stream, namespaceSoFar);
         *stream << ")";
         *stream << "?";
-        tryTranslate(cur->result, stream, namespace_so_far);
+        tryTranslate(cur->result, stream, namespaceSoFar);
         *stream << ":";
 
         //get next node
@@ -206,15 +206,15 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
     }
     //cur == NULL
     //last node
-    tryTranslate(cur->result, stream, namespace_so_far); 
+    tryTranslate(cur->result, stream, namespaceSoFar); 
 }
 
 #define LOCAL_CONCATDEF(x) void x::MACRO_TRANS_SIG_IMP {\
     \
     *stream << "{";\
-    tryTranslate(left, stream, namespace_so_far); \
+    tryTranslate(left, stream, namespaceSoFar); \
     *stream << ",";\
-    tryTranslate(right, stream, namespace_so_far); \
+    tryTranslate(right, stream, namespaceSoFar); \
     *stream << "}";\
 }
 

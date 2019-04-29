@@ -23,10 +23,8 @@ void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
 
 void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     table->stepIntoAndCreate(identifier->idString, this);
-    table->stepIntoAndCreate("_tldPrivate", this);
     tryElaborate(ports, table, context);
     tryElaborate(contents, table, context);
-    table->stepOut();
     table->stepOut();
     tryElaborate(right, table, context);
 }
@@ -160,7 +158,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
         pointer = pointerAsDriven;
         if (optionalAssignment) {
             if (width != optionalAssignment->numBits) {
-                throw "expression.widthMismatch";
+                throw "assign.widthMismatch";
             }
             pointerAsDriven->drive(optionalAssignment);
         } 
@@ -201,6 +199,7 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
     
     tryElaborate(parameters, table, context);
     tryElaborate(ports, table, context);
+    //TODO: Port Checking
 
     tryElaborate(right, table, context);
 }

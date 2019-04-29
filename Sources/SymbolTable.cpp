@@ -144,6 +144,8 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* acces
                 pointer = next->second;
             } else if (access.type == Access::Type::index) {
                 if (auto pointerAsArray = std::dynamic_pointer_cast<SymbolArray>(pointer)) {
+                    *access.trueIndex = false;
+                    
                     if (access.index >= pointerAsArray->array.size()) {
                         throw "symbol.outOfRangeAccess";
                     }
