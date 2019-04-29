@@ -1,4 +1,6 @@
-#export POSIXLY_CORRECT = 1
+BISON ?= bison
+CC ?= cc
+CXX ?= c++
 
 SOURCE_DIR = Sources
 BUILD_DIR = Intermediates
@@ -45,7 +47,7 @@ OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(SOURCES))) $(addprefix
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
 CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_LIBRARY_SOURCES)))
 
-LD_FLAGS = $(LDFLAGS) -lllvm
+LD_FLAGS = $(LDFLAGS) -lllvm -lc++ -lSystem
 
 BINARY = phic
 
@@ -73,19 +75,19 @@ $(BUILD_DIR)/git_version.h:
 
 $(YACC_OUT): $(YACC)
 	mkdir -p $(@D)
-	bison $(YACC_FLAGS) -o $@ -d $^
+	$(BISON) $(YACC_FLAGS) -o $@ -d $^
 
 $(REFLEX_LIB_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(REFLEX_LIB_HEADER_DIR)
 	mkdir -p $(@D)
-	c++ $(CPP_LY_FLAGS) -c -I$(REFLEX_LIB_HEADER_DIR) -o $@ $<
+	$(CXX) $(CPP_LY_FLAGS) -c -I$(REFLEX_LIB_HEADER_DIR) -o $@ $<
 
 $(REFLEX_UNICODE_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(REFLEX_LIB_HEADER_DIR)
 	mkdir -p $(@D)
-	c++ $(CPP_LY_FLAGS) -c -I$(REFLEX_LIB_HEADER_DIR) -o $@ $<
+	$(CXX) $(CPP_LY_FLAGS) -c -I$(REFLEX_LIB_HEADER_DIR) -o $@ $<
 
 Intermediates/reflex: $(REFLEX_MESS)
 	mkdir -p $(@D)
-	c++ $(CPP_LY_FLAGS) -I $(REFLEX_LIB_HEADER_DIR) -o $@ $^
+	$(CXX) $(CPP_LY_FLAGS) -I $(REFLEX_LIB_HEADER_DIR) -o $@ $^
 
 $(LEX_OUT): $(LEX) $(YACC_OUT) Intermediates/reflex
 	mkdir -p $(@D)
@@ -96,24 +98,25 @@ $(LEX_HEADER): $(LEX_OUT)
 
 $(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS)
 	mkdir -p $(@D)
-	cc $(C_FLAGS) -c -I$(HEADER_DIR) -o $@ $<
+	$(CC) $(C_FLAGS) -c -I$(HEADER_DIR) -o $@ $<
 
 $(CPP_LY_OBJECTS): %.o : %.cc $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 	mkdir -p $(@D)
-	c++ $(CPP_LY_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) -I /usr/local/include/ $(LIBRARY_HEADER_PATHS) -c -o $@ $<
+	$(CXX) $(CPP_LY_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) -I /usr/local/include/ $(LIBRARY_HEADER_PATHS) -c -o $@ $<
 
 $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 	mkdir -p $(@D)
-	c++ $(CPP_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
+	$(CXX) $(CPP_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(REFLEX_UNICODE_OBJECTS)
 	mkdir -p $(@D)
-	c++ $(LD_FLAGS) $(CPP_FLAGS) -o $@ $^
+	$(CXX) $(LD_FLAGS) -o $@ $^
 	@echo "\033[1;32m>> Build complete.\033[0m"
 
 .PHONY: clean
 
 clean:
+	echo $(ACTION) > ~/action
 	rm -rf $(BUILD_DIR)
 	rm -f $(BINARY)
 	rm -f Examples/*.v

@@ -71,10 +71,9 @@ void SymbolTable::stepIntoAndCreate(std::string space, Node::Node* declarator) {
     stepInto(space);
 }
 
-static bool checkRangeCoverage(std::multiset<DriveRange>* driveRanges, bool msbFirst, AccessWidth from, AccessWidth to) {
-    auto& ranges = *driveRanges;
+bool Driven::checkRangeCoverage(AccessWidth from, AccessWidth to) {
     if (from <= to) {
-        for (auto& range: ranges) {
+        for (auto& range: driveRanges) {
             if (from >= range.from && from <= range.to) {
                 if (to <= range.to) {
                     return true;
@@ -84,7 +83,7 @@ static bool checkRangeCoverage(std::multiset<DriveRange>* driveRanges, bool msbF
             }
         }
     } else {
-        for (auto& range: ranges) {
+        for (auto& range: driveRanges) {
             if (from <= range.from && from >= range.to) {
                 if (to >= range.to) {
                     return true;
@@ -97,16 +96,15 @@ static bool checkRangeCoverage(std::multiset<DriveRange>* driveRanges, bool msbF
     return false;
 }
 
-static bool checkRangeCoverage(std::multiset<DriveRange>* driveRanges, bool msbFirst, AccessWidth unit) {
-    auto& ranges = *driveRanges;
+bool Driven::checkRangeCoverage(AccessWidth unit) {
     if (msbFirst) {
-        for (auto& range: ranges) {
+        for (auto& range: driveRanges) {
             if (unit >= range.from && unit <= range.to) {
                 return true;
             }
         }
     } else {
-        for (auto& range: ranges) {
+        for (auto& range: driveRanges) {
             if (unit <= range.from && unit >= range.to) {
                 return true;
             }

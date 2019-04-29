@@ -181,6 +181,13 @@ static void lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
     auto toUnwrapped = to.value();
 
     lh->numBits = driven->msbFirst ? (fromUnwrapped - toUnwrapped + 1) : (toUnwrapped - fromUnwrapped + 1);
+
+    if (!( 
+        (fromUnwrapped == toUnwrapped) && driven->checkRangeCoverage(fromUnwrapped)
+        || driven->checkRangeCoverage(fromUnwrapped, toUnwrapped)
+    )) {
+        throw "driven.usedBeforeInit";
+    }
 }
 
 void Unary::MACRO_ELAB_SIG_IMP {

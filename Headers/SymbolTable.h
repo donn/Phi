@@ -53,6 +53,8 @@ namespace Phi {
         Driven(std::string id, Node::Node* declarator, AccessWidth from = 1, AccessWidth to = 1, bool msbFirst = true): Symbol(id, declarator), from(from), to(to), msbFirst(msbFirst) {}
 
         bool drive(Node::Expression* expression, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt);
+        bool checkRangeCoverage(AccessWidth from, AccessWidth to);
+        bool checkRangeCoverage(AccessWidth unit);
     };
 
     struct SymbolSpace: public Symbol {
