@@ -23,16 +23,17 @@ void NondeclarativeAssignment::MACRO_TRANS_SIG_IMP {
     //         Expression* expression;
     // }
 
-    
-    if (!Statement::inComb) {
-        *stream << "assign ";
-    }
+    if (!skipTranslation) {
+        if (!Statement::inComb) {
+            *stream << "assign ";
+        }
 
-    tryTranslate(lhs, stream, namespaceSoFar); 
-    *stream << " = ";
-    tryTranslate(expression, stream, namespaceSoFar); 
-    *stream << ";";
-    *stream << std::endl;
+        tryTranslate(lhs, stream, namespaceSoFar); 
+        *stream << " = ";
+        tryTranslate(expression, stream, namespaceSoFar); 
+        *stream << ";";
+        *stream << std::endl;
+    }
 
     tryTranslate(right, stream, namespaceSoFar); 
 }

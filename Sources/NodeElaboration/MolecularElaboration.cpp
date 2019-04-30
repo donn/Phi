@@ -12,6 +12,8 @@ Identifier::Identifier(const char* identifier) {
 void Range::MACRO_ELAB_SIG_IMP {
     tryElaborate(from, table, context);
     tryElaborate(to, table, context);
+    LHExpression::lhDrivenProcess(from, table);
+    LHExpression::lhDrivenProcess(to, table);
 
     auto from = static_cast<Expression*>(this->from);
     auto to = static_cast<Expression*>(this->to);

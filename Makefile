@@ -28,7 +28,7 @@ YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cc,$(YACC)))
 
 YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
-CPP_LY_FLAGS = -Wno-deprecated-register -std=c++17 $(CPPFLAGS)
+CPP_LY_FLAGS = -std=c++17 $(CPPFLAGS)
 CPP_FLAGS = -Wall -pedantic -std=c++17 $(CPPFLAGS)
 
 SOURCES = 
@@ -47,7 +47,7 @@ OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(SOURCES))) $(addprefix
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
 CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_LIBRARY_SOURCES)))
 
-LD_FLAGS = $(LDFLAGS) -lllvm -lc++ -lSystem
+LD_FLAGS = $(LDFLAGS) -lllvm
 
 BINARY = phic
 

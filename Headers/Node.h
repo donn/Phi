@@ -31,11 +31,11 @@
 #else
     #define MACRO_DEBUGLABEL_PARAMS
     #define MACRO_DEBUGLABEL_SIG_IMP
-    #define MACRO_DEBUGLABEL_SIG_HDR 
+    #define MACRO_DEBUGLABEL_SIG_HDR \/\/
 
     #define MACRO_GRAPHPRINT_PARAMS
     #define MACRO_GRAPHPRINT_SIG_IMP 
-    #define MACRO_GRAPHPRINT_SIG_HDR
+    #define MACRO_GRAPHPRINT_SIG_HDR \/\/
 #endif
 
 namespace Phi {
@@ -60,8 +60,7 @@ namespace Phi {
         };
 
         void tryElaborate(Node* node, MACRO_ELAB_PARAMS);
-
-        inline void tryTranslate(Node* node, MACRO_TRANS_PARAMS);
+        void tryTranslate(Node* node, MACRO_TRANS_PARAMS);
 
         struct ErrorNode: public Node {
             MACRO_TRANS_SIG_HDR;
@@ -300,10 +299,13 @@ namespace Phi {
 
         struct NondeclarativeAssignment: public Nondeclarative {
             Expression* expression;
+            bool skipTranslation = false;
+
+            MACRO_GRAPHPRINT_SIG_HDR;
 
             NondeclarativeAssignment(LHExpression* lhs, Expression* expression): Nondeclarative(lhs), expression(expression) {}
+
             MACRO_ELAB_SIG_HDR;
-            MACRO_GRAPHPRINT_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
         };
         
@@ -318,6 +320,7 @@ namespace Phi {
         // Expression
         struct Expression: public Node {
             enum class Type {
+                // In ascending order of precedence
                 CompileTime = 0,
                 ParameterSensitive,
                 RunTime,
@@ -348,6 +351,7 @@ namespace Phi {
         // Left Hand Expressions
         struct LHExpression: public Expression {
             std::vector<SymbolTable::Access> accessList(optional<AccessWidth>* from, optional<AccessWidth>* to);
+            static void lhDrivenProcess(Node* suspect, Phi::SymbolTable* table);
 
             MACRO_ELAB_SIG_HDR;
         };
