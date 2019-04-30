@@ -53,8 +53,9 @@ namespace Phi {
         Driven(std::string id, Node::Node* declarator, AccessWidth from = 1, AccessWidth to = 1, bool msbFirst = true): Symbol(id, declarator), from(from), to(to), msbFirst(msbFirst) {}
 
         bool drive(Node::Expression* expression, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt);
-        bool checkRangeCoverage(AccessWidth from, AccessWidth to);
-        bool checkRangeCoverage(AccessWidth unit);
+
+        std::vector<DriveRange> checkRangeCoverage(AccessWidth from, AccessWidth to);
+        optional<DriveRange> checkRangeCoverage(AccessWidth unit);
     };
 
     struct SymbolSpace: public Symbol {
@@ -100,7 +101,7 @@ namespace Phi {
         ~SymbolTable();
 
         void add(std::string id, std::shared_ptr<Symbol> symbol);
-        optional< std::shared_ptr<Symbol> > find(std::vector<Access>* accesses);
+        optional< std::shared_ptr<Symbol> > find(std::vector<Access>* accesses, optional<AccessWidth>* from, optional<AccessWidth>* to);
         void stepInto(std::string id);
         void stepIntoComb(Node::Node* attached);
         void stepIntoAndCreate(std::string id, Node::Node* declarator);

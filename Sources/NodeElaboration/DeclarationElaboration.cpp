@@ -2,8 +2,6 @@
 #include "SymbolTable.h"
 #include "Context.h"
 
-#include <sstream>
-
 using namespace Phi::Node;
 
 void Port::MACRO_ELAB_SIG_IMP {
@@ -30,35 +28,32 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
 }
 
 void If::MACRO_ELAB_SIG_IMP {
-    expression->elaborate(table, context);
+    tryElaborate(expression, table, context);
+    LHExpression::lhDrivenProcess(expression, table);
     
     // If NOT in a comb block, we do need to elaborate. Otherwise... nyet.
     if (table->inComb()) {
         return;
     }
-    
-    if (expression->type == Expression::Type::ParameterSensitive) {
-        // Translate to assert/generate
-        return;
-    }
 
-    if (expression->type == Expression::Type::RunTime) {
-        context->addError(nullopt, "elaboration.softwareExpr");
-        return;
-    }
-
-    if (!expression->value.has_value()) {
+    if (expression->type == Expression::Type::Error) {
         //evaluation prolly failed
         return;
     }
 
+    if (expression->type == Expression::Type::RunTime) {
+        throw "elaboration.softwareExpr";
+        return;
+    }
+
     auto value = expression->value.value();
+
     if (expression->numBits != 1) {
         context->addError(nullopt, "expr.notACondition");
         return;
     }
 
-    if (value == llvm::APInt(1, 1, false)) {
+    if (value == llvm::APInt(1, 1)) {
         tryElaborate(contents, table, context);
     } else {
         tryElaborate(elseBlock, table, context);
@@ -88,8 +83,8 @@ void Namespace::MACRO_ELAB_SIG_IMP {
 }
 
 void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
-    // PII
     tryElaborate(bus, table, context);
+    // PII
     declarationList->type = type;
     declarationList->bus = bus;
     tryElaborate(declarationList, table, context);
@@ -103,6 +98,8 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     std::shared_ptr<SymbolArray> pointerAsArray;
 
     tryElaborate(array, table, context);
+    LHExpression::lhDrivenProcess(array, table);
+
     AccessWidth size = 1;
     AccessWidth width = 1;
 
@@ -111,7 +108,12 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     optional<AccessWidth> from = nullopt;
     optional<AccessWidth> to = nullopt;
 
+    AccessWidth i = 0;
+
     if (array) {
+        if (optionalAssignment) {
+            throw "array.inlineInitialization";
+        }
         switch (array->type) {
         case Expression::Type::ParameterSensitive:
             size = 0;
@@ -149,9 +151,12 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
         msbFirst = from > to;
 
         width = (msbFirst ? (from.value() - to.value()) : (from.value() + to.value())) + 1;
+    } else {
+        from = to = 0;
     }
 
     tryElaborate(optionalAssignment, table, context);
+    LHExpression::lhDrivenProcess(optionalAssignment, table);
 
     if (size == 1) {
         pointerAsDriven = std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst);
@@ -168,9 +173,6 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             pointerAsArray->array.push_back(std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst));
         }
         pointer = pointerAsArray;
-        if (optionalAssignment) {
-            throw "array.inlineInitialization";
-        }
     }
     table->add(identifier->idString, pointer);
 
@@ -225,7 +227,7 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     tryElaborate(lhs, table, context);
 
     accesses = lhs->accessList(&from, &to);
-    symbolOptional = table->find(&accesses);
+    symbolOptional = table->find(&accesses, &from, &to);
 
     if (!symbolOptional.has_value()) {
         context->addError(nullopt, "symbol.dne");
@@ -236,12 +238,16 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
 
     dliAttache = dynamic_cast<DeclarationListItem*>(symbol->declarator);
     portAttache = dynamic_cast<Port*>(symbol->declarator);
-    if (!(dliAttache && dliAttache->type == VariableLengthDeclaration::Type::wire)) {
+    if (!dliAttache) {
         if (!(portAttache && portAttache->polarity == Port::Polarity::output)) {
             context->addError(nullopt, "symbol.notAWire");
             goto exit;
         }
-    } 
+    } else {
+        if (dliAttache->type == VariableLengthDeclaration::Type::var) {
+            skipTranslation = true;
+        }
+    }
 
     driven = std::dynamic_pointer_cast<Driven>(symbol);
 
@@ -263,6 +269,7 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     }
 
     tryElaborate(expression, table, context);
+    LHExpression::lhDrivenProcess(expression, table);
 
 exit:
     tryElaborate(right, table, context);

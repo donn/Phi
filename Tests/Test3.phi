@@ -1,5 +1,7 @@
 module Omega() {
-    Var[31..0] c = 32;
-    Wire[c..0] k;
+    Var[63..0] c;
+    c[31..0] = 32x1;
+    c[63..32] = 32xFFFFFFFF;
+    Wire[31..0] k = c[47..16];
 
 }

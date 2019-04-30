@@ -71,51 +71,63 @@ void SymbolTable::stepIntoAndCreate(std::string space, Node::Node* declarator) {
     stepInto(space);
 }
 
-bool Driven::checkRangeCoverage(AccessWidth from, AccessWidth to) {
-    if (from <= to) {
-        for (auto& range: driveRanges) {
-            if (from >= range.from && from <= range.to) {
-                if (to <= range.to) {
-                    return true;
-                } else {
-                    from = range.to + 1;
-                }
-            }
+std::vector<DriveRange> Driven::checkRangeCoverage(AccessWidth from, AccessWidth to) {
+    std::vector<DriveRange> returnValues;
+
+    bool covered = false;
+    
+    if (msbFirst) {
+        if (to > from) {
+            throw "symbol.rangeOrderViolation";
         }
-    } else {
         for (auto& range: driveRanges) {
             if (from <= range.from && from >= range.to) {
+                returnValues.push_back(range);
                 if (to >= range.to) {
-                    return true;
+                    covered = true;
+                    break;
                 } else {
                     from = range.to - 1;
                 }
             }
         }
+    } else {
+        if (from > to) {
+            throw "symbol.rangeOrderViolation";
+        }
+
+        for (auto& range: driveRanges) {
+            if (from >= range.from && from <= range.to) {
+                returnValues.push_back(range);
+                if (to <= range.to) {
+                    covered = true;
+                    break;
+                } else {
+                    from = range.to + 1;
+                }
+            }
+        }
     }
-    return false;
+    return covered ? returnValues : std::vector<DriveRange>();
 }
 
-bool Driven::checkRangeCoverage(AccessWidth unit) {
+optional<DriveRange> Driven::checkRangeCoverage(AccessWidth unit) {
     if (msbFirst) {
         for (auto& range: driveRanges) {
-            if (unit >= range.from && unit <= range.to) {
-                return true;
+            if (unit <= range.from && unit >= range.to) {
+                return range;
             }
         }
     } else {
         for (auto& range: driveRanges) {
-            if (unit <= range.from && unit >= range.to) {
-                return true;
+            if (unit >= range.from && unit <= range.to) {
+                return range;
             }
         }
     }
-    return false;
+    return nullopt;
 }
-
-#include <iostream>
-
-optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* accessesPtr) {
+optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* accessesPtr, optional<AccessWidth>* from, optional<AccessWidth>* to) {
     auto& accesses = *accessesPtr;
     for (auto i = stack.rbegin(); i != stack.rend(); i++) {
         std::shared_ptr<Symbol> pointer = *i;
@@ -156,10 +168,13 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* acces
                 } else if (auto pointerAsDriven = std::dynamic_pointer_cast<Driven>(pointer)) {
                     if (
                     (pointerAsDriven->msbFirst && (access.index > pointerAsDriven->from || access.index < pointerAsDriven->to))
-                    || (access.index < pointerAsDriven->from || access.index > pointerAsDriven->to)
+                    || (!pointerAsDriven->msbFirst && (access.index < pointerAsDriven->from || access.index > pointerAsDriven->to))
                     ) {
                         throw "symbol.outOfRangeAccess";
                     }
+
+                    *from = access.index;
+                    *to = access.index;
 
                     if (std::next(j) != accesses.end()) {
                         throw "symbol.accessIsFinal";
