@@ -24,17 +24,30 @@ void PropertyAccess::MACRO_TRANS_SIG_IMP {
 }
 
 void ArrayAccess::MACRO_TRANS_SIG_IMP {
-    //example
-    // barrelShifter bs[4]; // bs --> object , 4 --> width
+    //example 1
+    //barrelShifter bs[4]; // bs --> object , 4 --> width
 
+    // bool index = true; --> // If false, translation should treat this as a namespace array access
     // ArrayAccess(Expression* object, Expression* width) {
     //             this->left = object; this->right = width;
     //         }
 
-    tryTranslate(left, stream, namespaceSoFar); //object
-    *stream << "[";
-    tryTranslate(right, stream, namespaceSoFar); //width
-    *stream << "]";
+    //example 2
+    //a[3].k[0] --> ns_0A3 k[0]
+
+    if(index==false){
+        //array -> treat this as a namespace
+        auto width = static_cast<Expression*>(right);
+        auto value = width->value.value();
+        namespaceSoFar = namespaceSoFar + "_0A" + std::to_string(value.getLimitedValue());
+        tryTranslate(right, stream, namespaceSoFar); 
+    }else{
+        tryTranslate(left, stream, namespaceSoFar); //object
+        *stream << "[";
+        tryTranslate(right, stream, namespaceSoFar); //width
+        *stream << "]";
+    }
+    
 }
 
 void RangeAccess::MACRO_TRANS_SIG_IMP {
