@@ -48,7 +48,7 @@ OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(SOURCES))) $(addprefix
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
 CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_LIBRARY_SOURCES)))
 
-LD_FLAGS = $(shell $(LLVM_CONFIG) --ldflags --libs)
+LD_FLAGS = $(shell $(LLVM_CONFIG) --ldflags --libs --system-libs)
 
 BINARY = phic
 

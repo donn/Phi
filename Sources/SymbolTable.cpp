@@ -185,22 +185,6 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* acces
                     throw "symbol.notIndexable";
                 } 
             }
-            // else if (access.type == Access::Type::range) {
-            //     auto pointerAsDriven = std::dynamic_pointer_cast<Driven>(pointer);
-
-            //     if (
-            //         (pointerAsDriven->msbFirst && (access.range.from > pointerAsDriven->from || access.range.to < pointerAsDriven->to))
-            //         || (access.range.from < pointerAsDriven->from || access.range.to > pointerAsDriven->to)
-            //     ) {
-            //         throw "driven.outOfRangeAccess";
-            //     }
-
-            //     if (std::next(j) != accesses.end()) {
-            //         throw "driven.accessIsFinal";
-            //     }
-                
-            //     return pointerAsDriven;
-            // } 
         }
     }
     return nullopt;
@@ -216,8 +200,13 @@ void SymbolTable::stepIntoComb(Node::Node* attached) {
 }
 
 bool SymbolTable::inComb() {
-    return tableTop->isComb;
-}
+    for (auto iterator = stack.rbegin(); iterator != stack.rend(); iterator++) {
+        if ((*iterator)->isComb) {
+            return true;
+        }
+    }
+    return false;
+} 
 
 #if YYDEBUG
 void SymbolTable::represent(std::ostream* stream) {
