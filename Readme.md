@@ -41,23 +41,22 @@ This will take some time, llvm is big.
 
 You will need to add bison to PATH, as brew won't. Do this however you want: a recommended setup is to add this to `~/.bash_profile` (or your shell's equivalent):
 ```sh
-export PATH="/usr/local/opt/bison/bin:$PATH"
+export BISON="/usr/local/opt/bison/bin/bison"
 ```
 
-You also need to expose LLVM to the compiler, as brew also won't. The Makefile supports $LDFLAGS and $CPPFLAGS, so you can just add these to your `~/.bash_profile` too:
+You will also need to expose LLVM Config to the compiler, as brew *also* won't. Again, the recommended setup is to add `~/.bash_profile` (or your shell's equivalent):
 ```sh
-export LDFLAGS="-L/usr/local/opt/llvm/lib"
-export CPPFLAGS="-I/usr/local/opt/llvm/include"
+export LLVM_CONFIG="/usr/local/opt/llvm/bin/llvm-config"
 ```
 
 ### GNU/Linux
 Install git, gcc, make and buson using your package manager.
 
 #### Debian-based OSes (incl. Ubuntu, elementary...)
-Use apt.
+Using apt...
 
-```bash
-    sudo apt-get install build-essential bison llvm
+```sh
+    sudo apt-get install build-essential git bison llvm
 ```
 
 # License

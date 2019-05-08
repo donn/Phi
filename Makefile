@@ -1,6 +1,7 @@
 BISON ?= bison
 CC ?= cc
 CXX ?= c++
+LLVM_CONFIG ?= llvm-config
 
 SOURCE_DIR = Sources
 BUILD_DIR = Intermediates
@@ -28,8 +29,8 @@ YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cc,$(YACC)))
 
 YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
-CPP_LY_FLAGS = -std=c++17 $(CPPFLAGS)
-CPP_FLAGS = -Wall -pedantic -std=c++17 $(CPPFLAGS)
+CPP_LY_FLAGS = $(shell $(LLVM_CONFIG) --cxxflags) -fexceptions -std=c++17
+CPP_FLAGS = $(CPP_LY_FLAGS) -Wall -pedantic
 
 SOURCES = 
 HEADERS =
@@ -47,7 +48,7 @@ OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(SOURCES))) $(addprefix
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
 CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_LIBRARY_SOURCES)))
 
-LD_FLAGS = $(LDFLAGS) -lllvm
+LD_FLAGS = $(shell $(LLVM_CONFIG) --ldflags --libs)
 
 BINARY = phic
 
@@ -110,7 +111,7 @@ $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(REFLEX_UNICODE_OBJECTS)
 	mkdir -p $(@D)
-	$(CXX) $(LD_FLAGS) -o $@ $^
+	$(CXX) -o $@ $^ $(LD_FLAGS)
 	@echo "\033[1;32m>> Build complete.\033[0m"
 
 .PHONY: clean
