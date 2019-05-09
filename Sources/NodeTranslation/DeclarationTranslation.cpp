@@ -42,6 +42,8 @@ void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
 
     tryTranslate(contents, stream, namespaceSoFar);
     tryTranslate(identifier, stream, namespaceSoFar);
+
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
@@ -85,6 +87,7 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
 void VariableLengthDeclaration::MACRO_TRANS_SIG_IMP {
 
     tryTranslate(declarationList, stream, namespaceSoFar);
+    
     tryTranslate(right, stream, namespaceSoFar);
 }
 

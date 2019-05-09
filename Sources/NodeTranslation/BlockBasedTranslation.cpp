@@ -38,6 +38,8 @@ void If::MACRO_TRANS_SIG_IMP {
             tryTranslate(elseBlock, stream, namespaceSoFar);
         }
     }
+
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void ForLoop::MACRO_TRANS_SIG_IMP {
@@ -45,9 +47,15 @@ void ForLoop::MACRO_TRANS_SIG_IMP {
     if(Statement::inComb){
 
     }
+
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void Namespace::MACRO_TRANS_SIG_IMP {
+    namespaceSoFar = namespaceSoFar + "_" + std::to_string((identifier->idString).length()) + identifier->idString; 
+    tryTranslate(contents, stream, namespaceSoFar);
+
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void Switch::MACRO_TRANS_SIG_IMP {
@@ -94,6 +102,8 @@ void Switch::MACRO_TRANS_SIG_IMP {
     tryTranslate(list, stream, namespaceSoFar);
     *stream << "endcase";
     
+
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void Combinational::MACRO_TRANS_SIG_IMP {
