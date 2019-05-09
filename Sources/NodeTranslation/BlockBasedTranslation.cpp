@@ -99,8 +99,10 @@ void Switch::MACRO_TRANS_SIG_IMP {
     *stream << "(";
     tryTranslate(expression, stream, namespaceSoFar);
     *stream << " ) ";
+    *stream << "\n";
     tryTranslate(list, stream, namespaceSoFar);
     *stream << "endcase";
+    *stream << "\n";
     
 
     tryTranslate(right, stream, namespaceSoFar);
