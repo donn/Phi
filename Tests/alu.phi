@@ -18,24 +18,24 @@ module alu(
 */
 
   comb {
-      switch(alu_control)(
-          case 3b000: result = data_1 + data_2
-          case 3b001: result = data_1 - data_2
-          case 3b010: result = ~data_1
-          case 3b011: result = data_1<<data_2
-          case 3b100: result = data_1>>data_2
-          case 3b101: result = data_1 & data_2
-          case 3b110: result = data_1 | data_2
-          case 3b111:
+      switch(alu_control){
+        case 3b000: result = data_1 + data_2
+        case 3b001: result = data_1 - data_2
+        case 3b010: result = ~data_1
+        case 3b011: result = data_1<<data_2
+        case 3b100: result = data_1>>data_2
+        case 3b101: result = data_1 & data_2
+        case 3b110: result = data_1 | data_2
+        case 3b111:
             if(data_1<data_2){
               result = 32d1
             } else {
               result = 32d0
             }
-          default: result = data_1 + data_2
-      )
+        default: result = data_1 + data_2
+      }
   }
 
-  zero_flag = mux result==32b0 (1b1: 1b1, 1b0: 1b0)
+  //zero_flag = mux result==32b0 (1b1: 1b1, 1b0: 1b0)
 
 }
