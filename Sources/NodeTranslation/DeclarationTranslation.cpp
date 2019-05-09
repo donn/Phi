@@ -65,10 +65,6 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
 
 
         *stream << ";" << std::endl;
-
-        // Parameters
-        // TODO
-
         // Get ready for ports
         tryTranslate(ports, stream, namespaceSoFar);
         *stream << std::endl;

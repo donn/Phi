@@ -117,7 +117,6 @@ $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(R
 .PHONY: clean
 
 clean:
-	echo $(ACTION) > ~/action
 	rm -rf $(BUILD_DIR)
 	rm -f $(BINARY)
 	rm -f Examples/*.v

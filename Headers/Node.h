@@ -10,7 +10,7 @@
 #include <ostream>
 
 // Elaboration Macros
-#define MACRO_ELAB_PARAMS Phi::SymbolTable* table, Phi::Context* context
+#define MACRO_ELAB_PARAMS Phi::Context* context
 #define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
 #define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
 

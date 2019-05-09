@@ -1,8 +1,7 @@
 #include "Node.h"
+#include "Context.h"
 
 #include <regex>
-#include <sstream>
-
 using namespace Phi::Node;
 
 Identifier::Identifier(const char* identifier) {
@@ -10,10 +9,10 @@ Identifier::Identifier(const char* identifier) {
 }
 
 void Range::MACRO_ELAB_SIG_IMP {
-    tryElaborate(from, table, context);
-    tryElaborate(to, table, context);
-    LHExpression::lhDrivenProcess(from, table);
-    LHExpression::lhDrivenProcess(to, table);
+    tryElaborate(from, context);
+    tryElaborate(to, context);
+    LHExpression::lhDrivenProcess(from, context->table);
+    LHExpression::lhDrivenProcess(to, context->table);
 
     auto from = static_cast<Expression*>(this->from);
     auto to = static_cast<Expression*>(this->to);

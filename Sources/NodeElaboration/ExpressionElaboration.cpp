@@ -1,11 +1,9 @@
 #include "Node.h"
-
-#include "SymbolTable.h"
+#include "Context.h"
 
 #include <stack>
 #include <regex>
 #include <sstream>
-
 using namespace Phi::Node;
 
 // Numbers
@@ -146,8 +144,8 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWi
 }
 
 void LHExpression::MACRO_ELAB_SIG_IMP {
-    tryElaborate(left, table, context);
-    tryElaborate(right, table, context);
+    tryElaborate(left, context);
+    tryElaborate(right, context);
 }
 
 void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
@@ -181,6 +179,12 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
     auto toUnwrapped = to.value();
 
     lh->numBits = driven->msbFirst ? (fromUnwrapped - toUnwrapped + 1) : (toUnwrapped - fromUnwrapped + 1);
+
+    if (dynamic_cast<Port*>(driven->declarator)) {
+        lh->type = Expression::Type::RunTime;
+        return;
+    }
+
     if (lh->numBits == 1) {
         auto index = fromUnwrapped;
         auto range = driven->checkRangeCoverage(index);
@@ -264,13 +268,18 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
 }
 
 void Unary::MACRO_ELAB_SIG_IMP {
-    tryElaborate(right, table, context);
-    LHExpression::lhDrivenProcess(right, table);
+    tryElaborate(right, context);
+    LHExpression::lhDrivenProcess(right, context->table);
     auto rightExpr = static_cast<Expression*>(right);
+
+    // Abort if error
     if (rightExpr->type == Expression::Type::Error) {
+        type = Expression::Type::Error;
         return;
     }
+
     numBits = rightExpr->numBits;
+
     if (rightExpr->type == Expression::Type::CompileTime) {
         auto rightUnwrapped = rightExpr->value.value();
         switch (operation) {
@@ -298,15 +307,35 @@ void Unary::MACRO_ELAB_SIG_IMP {
 }
 
 void Binary::MACRO_ELAB_SIG_IMP {
-    tryElaborate(left, table, context);
-    tryElaborate(right, table, context);
-    LHExpression::lhDrivenProcess(left, table);
-    LHExpression::lhDrivenProcess(right, table);
+    tryElaborate(left, context);
+    tryElaborate(right, context);
+    LHExpression::lhDrivenProcess(left, context->table);
+    LHExpression::lhDrivenProcess(right, context->table);
     auto leftExpr = static_cast<Expression*>(left);
     auto rightExpr = static_cast<Expression*>(right);
+
+    // Abort if error
     if (leftExpr->type == Expression::Type::Error || rightExpr->type == Expression::Type::Error) {
+        type = Expression::Type::Error;
         return;
     }
+
+    // Calculate numbits
+    if (operation >= Operation::equal && operation <= Operation::unsignedGreaterThanOrEqual) {
+        numBits = 1;
+    } else {
+        switch (operation) {
+            case Operation::plus:
+            case Operation::minus:
+                numBits = leftExpr->numBits + 1;
+                break;
+            case Operation::mul:
+                numBits = leftExpr->numBits + rightExpr->numBits;
+            default:
+                numBits = leftExpr->numBits;
+        }
+    }
+
     if (leftExpr->type == Expression::Type::CompileTime && rightExpr->type == Expression::Type::CompileTime) {
         auto leftUnwrapped = leftExpr->value.value();
         auto rightUnwrapped = rightExpr->value.value();
@@ -321,7 +350,6 @@ void Binary::MACRO_ELAB_SIG_IMP {
         }
 
         if (operation >= Operation::equal && operation <= Operation::unsignedGreaterThanOrEqual) {
-            numBits = 1;
             bool condition = false;
             switch (operation) {
                 case Operation::equal:
@@ -359,8 +387,6 @@ void Binary::MACRO_ELAB_SIG_IMP {
             }
             value = condition ? llvm::APInt(1, 1) : llvm::APInt(1, 0);
         } else {
-            numBits = leftExpr->numBits;
-
             auto leftCopy  = leftUnwrapped.zext(leftExpr->numBits + 1);
             auto rightCopy = rightUnwrapped.zext(rightExpr->numBits + 1);
 
@@ -369,11 +395,9 @@ void Binary::MACRO_ELAB_SIG_IMP {
             llvm::APInt store, garbage;
             switch (operation) {
                 case Operation::plus:
-                    numBits = leftExpr->numBits + 1;
                     value = leftCopy + rightCopy;
                     break;
                 case Operation::minus:
-                    numBits = leftExpr->numBits + 1;
                     value = leftCopy - rightCopy;
                     break;
                 case Operation::unsignedPlus:
@@ -384,7 +408,6 @@ void Binary::MACRO_ELAB_SIG_IMP {
                     break;
                     
                 case Operation::mul:
-                    numBits = leftExpr->numBits + rightExpr->numBits;
                     value = leftCopyMul * rightUnwrapped;
                     break;
                 case Operation::div:

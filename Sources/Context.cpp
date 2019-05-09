@@ -76,8 +76,10 @@ bool Context::error() {
     return errorList.size() > 0;
 }
 
-void Context::elaborate(SymbolTable* table) {
-    head->elaborate(table, this);
+void Context::elaborate(SymbolTable* tablePtr) {
+    table = tablePtr;
+    head->elaborate(this);
+    table = nullptr;
 }
 
 void Context::MACRO_TRANS_SIG_IMP {

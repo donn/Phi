@@ -4,7 +4,7 @@
 using namespace Phi::Node;
 
 void Node::MACRO_ELAB_SIG_IMP {
-    tryElaborate(right, table, context);
+    tryElaborate(right, context);
 }
 
 void Node::MACRO_TRANS_SIG_IMP {
@@ -14,7 +14,7 @@ void Node::MACRO_TRANS_SIG_IMP {
 void Phi::Node::tryElaborate(Phi::Node::Node* node, MACRO_ELAB_PARAMS) {
     if (node) {
         try {
-            node->elaborate(table, context);  
+            node->elaborate(context);  
         } catch (const char* e) {
             context->addError(nullopt, e);
         }

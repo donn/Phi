@@ -2,7 +2,7 @@
 #include "Node.h"
 
 #include <stack>
-
+#include <iostream>
 using namespace Phi;
 
 #define tableTop stack.back()
@@ -27,10 +27,6 @@ bool Driven::drive(Node::Expression* expression, optional<AccessWidth> fromOptio
                 return false;
             }
         }
-    }
-
-    if (expression->numBits != width) {
-        throw "driving.widthMismatch";
     }
 
     driveRanges.emplace(DriveRange(expression, from, to));
@@ -143,7 +139,7 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* acces
                 }
                 auto& id = *j->id;
                 auto next = pointerAsSpace->space.find(id);
-                // std::cout << (*j) << " in " << (pointer->id) << ": " << (next != pointer->space.end() ? "Found" : "Not Found") << std::endl;
+                
                 if (next == pointerAsSpace->space.end()) {
                     flag = false;
                     continue;
@@ -216,9 +212,6 @@ void SymbolTable::represent(std::ostream* stream) {
     head->represent(stream, &counter);
     *stream << "}" << std::endl;
 }
-
-// Debug
-#include <iomanip>
 
 int SymbolSpace::represent(std::ostream* stream, int* node) {
     auto current = *node;
