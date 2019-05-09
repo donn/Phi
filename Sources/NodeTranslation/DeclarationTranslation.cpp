@@ -218,8 +218,9 @@ void InstanceDeclaration::MACRO_TRANS_SIG_IMP {
     //         ExpressionIDPair* ports;
     // }
 
-    tryTranslate(module, stream, namespaceSoFar);
+    *stream << "\n";
 
+    tryTranslate(module, stream, namespaceSoFar);
     if (parameters) {
         *stream << " #(";
         tryTranslate(parameters, stream, namespaceSoFar);
@@ -230,7 +231,8 @@ void InstanceDeclaration::MACRO_TRANS_SIG_IMP {
     tryTranslate(identifier, stream, namespaceSoFar);
     *stream << "(";
     tryTranslate(ports, stream, namespaceSoFar);
-    *stream << ");";
+    *stream << "); \n";
+
     tryTranslate(right, stream, namespaceSoFar);
 }
 
