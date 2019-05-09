@@ -150,9 +150,9 @@ void LHExpression::MACRO_ELAB_SIG_IMP {
 
 void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
     auto lh = dynamic_cast<LHExpression*>(suspect);
-
     if (!lh) { return; }
 
+    // Get and verify symbol
     optional<AccessWidth> from, to;
     auto accesses = lh->accessList(&from, &to);
     auto symbol = table->find(&accesses, &from, &to);
@@ -180,9 +180,16 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
 
     lh->numBits = driven->msbFirst ? (fromUnwrapped - toUnwrapped + 1) : (toUnwrapped - fromUnwrapped + 1);
 
+    // Check if RunTime
     if (dynamic_cast<Port*>(driven->declarator)) {
         lh->type = Expression::Type::RunTime;
         return;
+    }
+    if (auto dli = dynamic_cast<DeclarationListItem*>(driven->declarator)) {
+        if (dli->type != VariableLengthDeclaration::Type::var) {
+            lh->type = Expression::Type::RunTime;
+            return;
+        }
     }
 
     if (lh->numBits == 1) {
@@ -448,4 +455,36 @@ void Binary::MACRO_ELAB_SIG_IMP {
     if (rightExpr->type == Expression::Type::RunTime) {
         type = Expression::Type::RunTime;
     }
+}
+
+void Concatenation::MACRO_ELAB_SIG_IMP {
+    tryElaborate(left, context);
+    LHExpression::lhDrivenProcess(left, context->table);
+    tryElaborate(right, context);
+    LHExpression::lhDrivenProcess(right, context->table);
+    
+    auto leftExpr = static_cast<Expression*>(left);
+    auto rightExpr = static_cast<Expression*>(right);
+
+    type = std::max(leftExpr->type, rightExpr->type);
+
+    numBits = leftExpr->numBits + rightExpr->numBits;
+}
+
+void RepeatConcatenation::MACRO_ELAB_SIG_IMP {
+    tryElaborate(left, context);
+    LHExpression::lhDrivenProcess(left, context->table);
+    tryElaborate(right, context);
+    LHExpression::lhDrivenProcess(right, context->table);
+    
+    auto leftExpr = static_cast<Expression*>(left);
+    auto rightExpr = static_cast<Expression*>(right);
+    type = rightExpr->type;
+    
+    if (leftExpr->type == Type::RunTime) {
+        type = Type::Error;
+        throw "concat.cannotRepeatOnHardwareExpression";
+    }
+
+    numBits = leftExpr->value.value().getLimitedValue() * rightExpr->numBits;
 }

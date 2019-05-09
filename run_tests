@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+files = Dir["Tests/*.phi"]
+
+for file in files
+    puts "Testing #{file}..."
+    system("./phic #{file}")
+end
