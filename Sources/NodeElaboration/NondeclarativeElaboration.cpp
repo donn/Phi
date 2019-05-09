@@ -45,7 +45,15 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     tryElaborate(expression, context);
     LHExpression::lhDrivenProcess(expression, context->table);
 
-    width = driven->msbFirst ? driven->from - driven->to + 1 : driven->to - driven->from+ 1;
+    
+    if (!from.has_value() || !to.has_value()) {
+        assert(!from.has_value() && !to.has_value());
+
+        from = driven->from;
+        to = driven->to;
+    }
+
+    width = driven->msbFirst ? from.value() - to.value() + 1 : to.value() - from.value() + 1;
 
     if (width != expression->numBits) {
         throw "driving.widthMismatch";
