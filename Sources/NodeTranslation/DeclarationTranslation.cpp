@@ -40,7 +40,6 @@ void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
     //adjust namespaceSoFar
     namespaceSoFar = namespaceSoFar + "_" + std::to_string((identifier->idString).length()) + identifier->idString;
     tryTranslate(contents, stream, namespaceSoFar);
-    tryTranslate(identifier, stream, namespaceSoFar);
 
     tryTranslate(right, stream, namespaceSoFar);
 }
@@ -50,11 +49,9 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
     if (type == TopLevelDeclaration::Type::module) {
         
         *stream << "module ";
-        namespaceSoFar = "/" + namespaceSoFar;
-        *stream <<namespaceSoFar;
+        tryTranslate(identifier, stream, namespaceSoFar);
         //adjust namespaceSoFar after entering the module to be nothing 
         namespaceSoFar = "";
-        tryTranslate(identifier, stream, namespaceSoFar);
         *stream << " (" << std::endl;
         auto pointer = ports;
         

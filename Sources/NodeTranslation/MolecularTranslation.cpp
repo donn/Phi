@@ -6,7 +6,7 @@
 using namespace Phi::Node;
 
 void Identifier::MACRO_TRANS_SIG_IMP {
-    *stream << "\\" << idString << " ";
+    *stream << "\\" << namespaceSoFar << idString << " ";
 }
 
 void ErrorNode::MACRO_TRANS_SIG_IMP {
