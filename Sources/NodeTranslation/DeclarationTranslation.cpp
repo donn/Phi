@@ -1,5 +1,5 @@
 #include "Node.h"
-
+#include <iostream>
 #include <string>
 #include <fstream>
 
@@ -39,19 +39,19 @@ void Port::MACRO_TRANS_SIG_IMP {
 void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
     //adjust namespaceSoFar
     namespaceSoFar = namespaceSoFar + "_" + std::to_string((identifier->idString).length()) + identifier->idString;
-
     tryTranslate(contents, stream, namespaceSoFar);
-    tryTranslate(identifier, stream, namespaceSoFar);
+
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
     
-    //adjust namespaceSoFar
-    namespaceSoFar = namespaceSoFar +  "_" + std::to_string((identifier->idString).length()) + identifier->idString;
-    
     if (type == TopLevelDeclaration::Type::module) {
+        
         *stream << "module ";
         tryTranslate(identifier, stream, namespaceSoFar);
+        //adjust namespaceSoFar after entering the module to be nothing 
+        namespaceSoFar = "";
         *stream << " (" << std::endl;
         auto pointer = ports;
         
@@ -79,12 +79,16 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
         // Interfaces are elaboration-only
     }
     
+
+    
+
     tryTranslate(right, stream, namespaceSoFar);
 }
 
 void VariableLengthDeclaration::MACRO_TRANS_SIG_IMP {
 
     tryTranslate(declarationList, stream, namespaceSoFar);
+    
     tryTranslate(right, stream, namespaceSoFar);
 }
 

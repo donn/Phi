@@ -6,7 +6,7 @@
 using namespace Phi::Node;
 
 void Identifier::MACRO_TRANS_SIG_IMP {
-    *stream << "\\" << idString << " ";
+    *stream << "\\" << namespaceSoFar << idString << " ";
 }
 
 void ErrorNode::MACRO_TRANS_SIG_IMP {
@@ -89,7 +89,8 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
 
     if (isDefault) {
         //default case 
-        *stream << "default: ";
+        *stream << "default:";
+        *stream << "\n";
     } else {
         //not default case
         if(LabeledStatementList::specialNumber!=nullptr){
@@ -103,19 +104,19 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
                 }else{
                     modified_specialNumber[i]= specialNumber->number[i];
                 }
-                
             }
-
             *stream << modified_specialNumber;
-            *stream << ": ";
+            *stream << ":";
+            *stream << "\n";
         }else{
             //expression 
             tryTranslate(expression, stream, namespaceSoFar); 
-            *stream << ": ";
+            *stream << ":";
+            *stream << "\n";
         }
     }
-    
     tryTranslate(statements, stream, namespaceSoFar); 
+    tryTranslate(right, stream, namespaceSoFar); 
 }
 
 void Range::MACRO_TRANS_SIG_IMP {

@@ -1,5 +1,5 @@
 #include "Node.h"
-
+#include <iostream>
 #include <string>
 #include <fstream>
 
@@ -38,6 +38,8 @@ void If::MACRO_TRANS_SIG_IMP {
             tryTranslate(elseBlock, stream, namespaceSoFar);
         }
     }
+
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void ForLoop::MACRO_TRANS_SIG_IMP {
@@ -45,9 +47,15 @@ void ForLoop::MACRO_TRANS_SIG_IMP {
     if(Statement::inComb){
 
     }
+
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void Namespace::MACRO_TRANS_SIG_IMP {
+    //adjust namespace
+    namespaceSoFar = namespaceSoFar + "_" + std::to_string((identifier->idString).length()) + identifier->idString; 
+    tryTranslate(contents, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void Switch::MACRO_TRANS_SIG_IMP {
@@ -91,9 +99,13 @@ void Switch::MACRO_TRANS_SIG_IMP {
     *stream << "(";
     tryTranslate(expression, stream, namespaceSoFar);
     *stream << " ) ";
+    *stream << "\n";
     tryTranslate(list, stream, namespaceSoFar);
     *stream << "endcase";
+    *stream << "\n";
     
+
+    tryTranslate(right, stream, namespaceSoFar);
 }
 
 void Combinational::MACRO_TRANS_SIG_IMP {
