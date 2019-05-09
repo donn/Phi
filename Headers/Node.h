@@ -511,6 +511,8 @@ namespace Phi {
             Expression* label; // If nullptr, default
             Expression* result;
             ExpressionPair(Expression* label, Expression* result): label(label), result(result) {}
+
+            // no translation needed, because it is already handled in multiplexer translation
         };
 
         struct Multiplexer: public Expression {
