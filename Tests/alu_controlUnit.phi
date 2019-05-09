@@ -1,0 +1,63 @@
+module alu_controlUnit(
+  ALUOp: Input[1..0],
+  opcode: Input[5..0],
+  alu_control: Output[2..0]
+){
+
+/*
+link used for opcode/function --> https://www.slideshare.net/tagbagtroj/mips-opcodes
+
+                              ALUOp
+add,sub,lsl,lsr,and,or,slt     00
+lw/sw                          10
+beq/bne                        01
+
+         format      opcode    function/opcode
+add --> r format --> 000000 --> 100000
+sub --> r format --> 000000 --> 100010
+lsl --> r format --> 000000 --> 000000
+lsr --> r format --> 000000 --> 000010
+and --> r format --> 000000 --> 100100
+or  --> r format --> 000000 --> 100101
+slt --> r format --> 000000 --> 101010
+lw  --> i format --> 100011
+sw  --> i format --> 101011
+beq --> i format --> 000100
+bne --> i format --> 000101
+*/
+
+  comb {
+    alu_control = mux {ALUOp,opcode} (
+                    8b10??????:
+                              // lw,sw
+                              3b000,
+                    8b01??????:
+                              // beq,bne
+                              3b001,
+                    8b00100000:
+                              // add
+                              3b000,
+                    8b00100010:
+                              // sub
+                              3b001,
+                    8b00000000:
+                              // lsl - logical shift left
+                              3b011,
+                    8b00000010:
+                              // lsr - logical shift right
+                              3b100,
+                    8b00100100:
+                              // and
+                              3b101,
+                    8b00100101:
+                              // or
+                              3b110,
+                    8b00101010: 
+                              // slt - set less than
+                              3b111,
+                    default:
+                              3b000
+    )
+  }
+
+}

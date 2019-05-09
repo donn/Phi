@@ -7,6 +7,8 @@ using namespace Phi::Node;
 
 void Identifier::MACRO_TRANS_SIG_IMP {
     *stream << "\\" << namespaceSoFar << idString << " ";
+
+    tryTranslate(right, stream, namespaceSoFar); 
 }
 
 void ErrorNode::MACRO_TRANS_SIG_IMP {
@@ -133,4 +135,7 @@ void Range::MACRO_TRANS_SIG_IMP {
     *stream << ":";
     tryTranslate(to, stream, namespaceSoFar); //to
     *stream << "]";
+
+    tryTranslate(right, stream, namespaceSoFar); 
 }
+

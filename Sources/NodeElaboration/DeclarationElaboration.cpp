@@ -1,5 +1,4 @@
 #include "Node.h"
-#include "Context.h"
 using namespace Phi::Node;
 
 void Port::MACRO_ELAB_SIG_IMP {

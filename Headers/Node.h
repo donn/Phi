@@ -1,7 +1,7 @@
 #ifndef _node_h
 #define _node_h
+#include "Context.h"
 #include "Types.h"
-#include "SymbolTable.h"
 
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/StringRef.h>
@@ -39,8 +39,6 @@
 #endif
 
 namespace Phi {
-    // Forward declarations
-    class SymbolTable;
     class Context;
 
     namespace Node {
@@ -82,7 +80,6 @@ namespace Phi {
         struct Range;
 
         // Declarations
-
         struct Declaration: public Node {
             Identifier* identifier;
 
@@ -399,6 +396,7 @@ namespace Phi {
         
         struct Literal: public Expression {
             Literal(const char* interpretable, bool widthIncluded = true);
+
             MACRO_TRANS_SIG_HDR;
         };
 
@@ -466,6 +464,7 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR;
         };
 
+        // Concatenation
         struct RepeatConcatenation: public Expression {
             RepeatConcatenation(Expression* repeatCount, Expression* repeatable) {
                 this->left = repeatCount; this->right = repeatable;
@@ -484,7 +483,8 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR;
         };
         
-        struct Argument: public Node {
+        // Procedural Call
+        struct Argument: public Node { // Abstract
         };
 
         struct StringArgument: public Node {
@@ -503,6 +503,7 @@ namespace Phi {
             }
         };
 
+        // Multiplexer
         struct ExpressionPair: public Node {
             // If both of the following are nullptr, it's default
             Expression* label;
@@ -512,6 +513,7 @@ namespace Phi {
             
             ExpressionPair(Expression* label, SpecialNumber* specialNumber, Expression* result): label(label), specialNumber(specialNumber), result(result) {}
             MACRO_ELAB_SIG_HDR;
+            // Translation not needed due to PII by Multiplexer
         };
 
         struct Multiplexer: public Expression {

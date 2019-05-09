@@ -111,7 +111,6 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         case VLD::Type::reg:
         case VLD::Type::wire_reg:
             //reg
-            *stream << "reg";
             break;
 
         case VLD::Type::latch:
@@ -127,7 +126,7 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     //add wires,regs, always @ block, inside always @ block
     if(type==VLD::Type::reg){
         *stream << "wire "+ namespaceSoFar+"_clock; \n";
-        *stream << "wire "+namespaceSoFar+"_reset; \n";
+        *stream << "wire "+ namespaceSoFar+"_reset; \n";
         
         *stream << "wire ";
         tryTranslate(bus, stream, namespaceSoFar);
@@ -139,7 +138,7 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         *stream << " ";
         *stream << identifier->idString + "; \n";
 
-        *stream << "always @ (posedge " + namespaceSoFar +"_clock or posedge " + namespaceSoFar +"_reset) begin";
+        *stream << "\nalways @ (posedge " + namespaceSoFar +"_clock or posedge " + namespaceSoFar +"_reset) begin \n";
         
         *stream << "if("+namespaceSoFar+"_reset) begin\n";
         *stream << identifier->idString + "<= 0; \n";
@@ -219,8 +218,9 @@ void InstanceDeclaration::MACRO_TRANS_SIG_IMP {
     //         ExpressionIDPair* ports;
     // }
 
-    tryTranslate(module, stream, namespaceSoFar);
+    *stream << "\n";
 
+    tryTranslate(module, stream, namespaceSoFar);
     if (parameters) {
         *stream << " #(";
         tryTranslate(parameters, stream, namespaceSoFar);
@@ -231,7 +231,8 @@ void InstanceDeclaration::MACRO_TRANS_SIG_IMP {
     tryTranslate(identifier, stream, namespaceSoFar);
     *stream << "(";
     tryTranslate(ports, stream, namespaceSoFar);
-    *stream << ");";
+    *stream << "); \n";
+
     tryTranslate(right, stream, namespaceSoFar);
 }
 

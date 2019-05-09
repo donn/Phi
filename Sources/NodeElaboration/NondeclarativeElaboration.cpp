@@ -1,6 +1,4 @@
 #include "Node.h"
-#include "SymbolTable.h"
-#include "Context.h"
 using namespace Phi::Node;
 
 void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {

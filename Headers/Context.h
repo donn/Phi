@@ -1,7 +1,7 @@
 #ifndef _context_h
 #define _context_h
 #include "Types.h"
-#include "Node.h"
+#include "SymbolTable.h"
 
 #include <location.hh>
 
@@ -10,9 +10,11 @@
 
 namespace Phi {
     using Location = Phi::location;
-    class SymbolTable;
-    class Context {
+    namespace Node {
+        class Node;
+    }
 
+    class Context {
         struct Error {
             Location loc;
             std::string message;
