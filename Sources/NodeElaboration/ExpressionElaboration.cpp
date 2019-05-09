@@ -488,3 +488,47 @@ void RepeatConcatenation::MACRO_ELAB_SIG_IMP {
 
     numBits = leftExpr->value.value().getLimitedValue() * rightExpr->numBits;
 }
+
+void Multiplexer::MACRO_ELAB_SIG_IMP {
+    tryElaborate(left, context);
+    LHExpression::lhDrivenProcess(left, context->table);
+
+    tryElaborate(right, context);
+    // TODO: Multiplexer runtime vs compiletime
+        // Selection algorithm
+    type = Type::CompileTime;
+    
+    // Limitation: Cannot verify integrity
+
+    // PII
+    auto rightEP = static_cast<ExpressionPair*>(right);
+    numBits = rightEP->result->numBits;
+}
+
+void ExpressionPair::MACRO_ELAB_SIG_IMP {
+    tryElaborate(label, context);
+    LHExpression::lhDrivenProcess(label, context->table);
+    tryElaborate(specialNumber, context);
+    tryElaborate(result, context);
+    LHExpression::lhDrivenProcess(result, context->table);
+
+    tryElaborate(right, context);
+
+    // PII
+    if (right) {
+        auto rightEP = static_cast<ExpressionPair*>(right);
+        if (rightEP->result->numBits != result->numBits) {
+            throw "expr.widthMismatch";
+        }
+        if (rightEP->label || rightEP->specialNumber) { // We don't need to check the current node because if it has a right, it must not be default
+            auto numBitsHere = specialNumber ? specialNumber->numBits : label->numBits;
+            auto numBitsThere = rightEP->specialNumber ?
+                rightEP->specialNumber->numBits:
+                rightEP->label->numBits;
+            if (numBitsHere != numBitsThere) {
+                throw "expr.widthMismatch";
+            }
+        }
+
+    }
+}

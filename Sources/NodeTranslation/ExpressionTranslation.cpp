@@ -142,27 +142,6 @@ void Binary::MACRO_TRANS_SIG_IMP {
     }
 }
 
-void Ternary::MACRO_TRANS_SIG_IMP {
-
-     *stream << "(";
-     tryTranslate(condition, stream, namespaceSoFar);
-     *stream << ")";
-
-     *stream << " ";
-     *stream << "?";
-     *stream << " ";
-     *stream << "(";
-     tryTranslate(left, stream, namespaceSoFar);
-     *stream << ")";
-     
-     *stream << " ";
-     *stream << ":";
-     *stream << " ";
-     *stream << "(";
-     tryTranslate(right, stream, namespaceSoFar);
-     *stream << ")";
-}
-
 void RepeatConcatenation::MACRO_TRANS_SIG_IMP {
     //example in phi : [2 [[3'b110]] ]
     //example in verilog : {2 {3'b110} }

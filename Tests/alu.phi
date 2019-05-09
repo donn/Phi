@@ -36,6 +36,6 @@ module alu(
       }
   }
 
-  //zero_flag = mux result==32b0 (1b1: 1b1, 1b0: 1b0)
+  zero_flag = mux result==32b0 (1b1: 1b1, 1b0: 1b0)
 
 }

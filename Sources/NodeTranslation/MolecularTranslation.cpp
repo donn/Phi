@@ -110,7 +110,7 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
             *stream << "\n";
         }else{
             //expression 
-            tryTranslate(expression, stream, namespaceSoFar); 
+            tryTranslate(label, stream, namespaceSoFar); 
             *stream << ":";
             *stream << "\n";
         }

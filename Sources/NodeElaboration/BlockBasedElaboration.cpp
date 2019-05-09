@@ -56,3 +56,33 @@ void Namespace::MACRO_ELAB_SIG_IMP {
     context->table->stepOut();
     tryElaborate(right, context);
 }
+
+void Switch::MACRO_ELAB_SIG_IMP {
+    tryElaborate(expression, context);
+    LHExpression::lhDrivenProcess(expression, context->table);
+    tryElaborate(list, context);
+}
+
+void LabeledStatementList::MACRO_ELAB_SIG_IMP {
+    tryElaborate(label, context);
+    LHExpression::lhDrivenProcess(label, context->table);
+    tryElaborate(specialNumber, context);
+    tryElaborate(statements, context);
+
+    tryElaborate(right, context);
+
+    // PII
+    if (right) {
+        auto rightLSL = static_cast<LabeledStatementList*>(right);
+        if (rightLSL->label || rightLSL->specialNumber) { // We don't need to check the current node because if it has a right, it must not be default
+            auto numBitsHere = specialNumber ? specialNumber->numBits : label->numBits;
+            auto numBitsThere = rightLSL->specialNumber ?
+                rightLSL->specialNumber->numBits:
+                rightLSL->label->numBits;
+            if (numBitsHere != numBitsThere) {
+                throw "expr.widthMismatch";
+            }
+        }
+
+    }
+}

@@ -193,32 +193,28 @@ namespace Phi {
         };
 
         struct LabeledStatementList;
-        struct SpecialNumber: public Node {
-            unsigned int numBits;
-            uint8 radix;
-            std::string number;
-            
-            SpecialNumber(const char* interpretable);
+        struct SpecialNumber;
 
-            MACRO_TRANS_SIG_HDR;
-        };
         struct Switch: public BlockBased {
             Expression* expression;
             LabeledStatementList* list;
 
             Switch(Expression* expression, LabeledStatementList* list): BlockBased(nullptr), expression(expression), list(list) {}
             
+            MACRO_ELAB_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
         };
 
         struct LabeledStatementList: public Node {
             bool isDefault; // Is this the default case in a switch statement?
-            Expression* expression;
+            Expression* label;
             SpecialNumber* specialNumber;
 
             Statement* statements;
 
-            LabeledStatementList(bool isDefault, Expression* expression, SpecialNumber* specialNumber, Statement* statements): isDefault(isDefault), expression(expression), specialNumber(specialNumber), statements(statements) {}
+            LabeledStatementList(bool isDefault, Expression* label, SpecialNumber* specialNumber, Statement* statements): isDefault(isDefault), label(label), specialNumber(specialNumber), statements(statements) {}
+
+            MACRO_ELAB_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
         };
 
@@ -406,6 +402,16 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR;
         };
 
+        struct SpecialNumber: public Node {
+            unsigned int numBits;
+            uint8 radix;
+            std::string number;
+            
+            SpecialNumber(const char* interpretable);
+
+            MACRO_TRANS_SIG_HDR;
+        };
+
         struct Unary: public Expression {
             enum class Operation {
                 negate = 0,
@@ -460,16 +466,6 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR;
         };
 
-        struct Ternary: public Expression {
-            Expression* condition;
-
-            Ternary(Expression* condition, Expression* left, Expression* right): condition(condition) {
-                this->left = left; this->right = right;
-            }
-
-            MACRO_TRANS_SIG_HDR;
-        };
-
         struct RepeatConcatenation: public Expression {
             RepeatConcatenation(Expression* repeatCount, Expression* repeatable) {
                 this->left = repeatCount; this->right = repeatable;
@@ -508,15 +504,23 @@ namespace Phi {
         };
 
         struct ExpressionPair: public Node {
-            Expression* label; // If nullptr, default
+            // If both of the following are nullptr, it's default
+            Expression* label;
+            SpecialNumber* specialNumber;
+
             Expression* result;
-            ExpressionPair(Expression* label, Expression* result): label(label), result(result) {}
+            
+            ExpressionPair(Expression* label, SpecialNumber* specialNumber, Expression* result): label(label), specialNumber(specialNumber), result(result) {}
+            MACRO_ELAB_SIG_HDR;
         };
 
         struct Multiplexer: public Expression {
-            Multiplexer(Expression* selection, ExpressionPair* options) {
+            // Node* selection could either be specialNumber or expression!!
+            Multiplexer(Node* selection, ExpressionPair* options) {
                 this->left = selection; this->right = options;
             }
+
+            MACRO_ELAB_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
         };
     }

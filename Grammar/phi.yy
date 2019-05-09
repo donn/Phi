@@ -602,10 +602,10 @@ concatenatable:
 
 mux:
     KEYWORD_MUX expression mux_block {
-        $$ = epsilon;
+        $$ = new Multiplexer($2, (ExpressionPair*)$3);
     }
-    | KEYWORD_MUX FW_SPECIAL mux_block {
-        $$ = epsilon;
+    | KEYWORD_MUX special_number mux_block {
+        $$ = new Multiplexer($2, (ExpressionPair*)$3);
     }
     ;
 
@@ -642,15 +642,23 @@ mux_block:
 labeled_expression_list:
     { $$ = epsilon; }
     | expression ':' expression ',' labeled_expression_list {
-        auto node = new ExpressionPair($1, $3);
+        auto node = new ExpressionPair($1, nullptr, $3);
+        node->right = $5;
+        $$ = node;
+    }
+    | special_number ':' expression ',' labeled_expression_list {
+        auto node = new ExpressionPair(nullptr, (SpecialNumber*)$1, $3);
         node->right = $5;
         $$ = node;
     }
     | expression ':' expression {
-        $$ = new ExpressionPair($1, $3);;
+        $$ = new ExpressionPair($1, nullptr, $3);
+    }
+    | special_number ':' expression {
+        $$ = new ExpressionPair(nullptr, (SpecialNumber*)$1, $3);
     }
     | KEYWORD_DEFAULT ':' expression {
-        $$ = new ExpressionPair(nullptr, $3);;
+        $$ = new ExpressionPair(nullptr, nullptr, $3);
     }
     ;
 
