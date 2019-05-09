@@ -123,8 +123,12 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
         pointer = pointerAsDriven;
         if (optionalAssignment) {
             if (width != optionalAssignment->numBits) {
-                throw "driving.widthMismatch";
+                context->addError(nullopt, "driving.widthMismatch");
             }
+            if (type == VariableLengthDeclaration::Type::var && optionalAssignment->type != Expression::Type::CompileTime) {
+                context->addError(nullopt, "driving.hardwareDominance");
+            }
+
             pointerAsDriven->drive(optionalAssignment);
         } 
     } else {
@@ -158,6 +162,8 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
         }
     }
     tryElaborate(module, context);
+
+    context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, this));
     
     tryElaborate(parameters, context);
     tryElaborate(ports, context);

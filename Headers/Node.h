@@ -154,15 +154,14 @@ namespace Phi {
         };
 
         // Statements
-        struct Statement: public Node {
+        struct Statement: public Node { // Abstract
             optional<std::string> annotation = nullopt;
             bool inComb = false;
         };
 
         // Block-Based Statements
-        struct BlockBased: public Statement {
+        struct BlockBased: public Statement { // Abstract
             Statement* contents;
-
             BlockBased(Statement* contents): contents(contents) {}
         };
 
@@ -293,7 +292,7 @@ namespace Phi {
         };
 
         // Nondeclarative Statements
-        struct Nondeclarative: public Statement {
+        struct Nondeclarative: public Statement { // Abstract
             LHExpression* lhs;
 
             Nondeclarative(LHExpression* lhs): lhs(lhs) {}
@@ -320,7 +319,7 @@ namespace Phi {
         };
 
         // Expression
-        struct Expression: public Node {
+        struct Expression: public Node { //Abstract
             enum class Type {
                 // In ascending order of precedence
                 CompileTime = 0,
@@ -329,12 +328,9 @@ namespace Phi {
                 Error = 0xFF
             };
 
-            Type type;
-            AccessWidth numBits;
-            optional<llvm::APInt> value;
-
-            Expression() { type = Type::Error; numBits = 0; value = nullopt; }
-            virtual ~Expression() {}
+            Type type = Type::Error;
+            AccessWidth numBits = 0;
+            optional<llvm::APInt> value = nullopt;
         };
 
         // Range
@@ -478,7 +474,8 @@ namespace Phi {
             RepeatConcatenation(Expression* repeatCount, Expression* repeatable) {
                 this->left = repeatCount; this->right = repeatable;
             }
-
+            
+            MACRO_ELAB_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
         };
 
@@ -486,7 +483,8 @@ namespace Phi {
             Concatenation(Expression* of, Expression* with) {
                 this->left = of; this->right = with;
             }
-
+            
+            MACRO_ELAB_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
         };
         

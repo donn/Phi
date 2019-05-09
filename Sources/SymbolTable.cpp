@@ -2,7 +2,6 @@
 #include "Node.h"
 
 #include <stack>
-#include <iostream>
 using namespace Phi;
 
 #define tableTop stack.back()
@@ -10,18 +9,15 @@ using namespace Phi;
 bool Driven::drive(Node::Expression* expression, optional<AccessWidth> fromOptional, optional<AccessWidth> toOptional) {
     AccessWidth from = fromOptional.has_value() ? fromOptional.value() : this->from;
     AccessWidth to = toOptional.has_value() ? toOptional.value() : this->to;
-
-    AccessWidth width;
+    
     // Check for any crossover
     if (from <= to) {
-        width = to - from + 1;
         for (auto& range: driveRanges) {
             if (from >= range.from && from <= range.to) {
                 return false;
             }
         }
     } else {
-        width = from - to + 1;
         for (auto& range: driveRanges) {
             if (from <= range.from && from >= range.to) {
                 return false;
