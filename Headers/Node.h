@@ -116,10 +116,10 @@ namespace Phi {
         struct TopLevelNamespace: public Declaration {
             Node* contents;
 
-            TopLevelNamespace(Identifier* identifier, Node* contents): Declaration(identifier), contents(contents) {}
-            
             MACRO_DEBUGLABEL_SIG_HDR;
             MACRO_GRAPHPRINT_SIG_HDR;
+
+            TopLevelNamespace(Identifier* identifier, Node* contents): Declaration(identifier), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR;
             MACRO_TRANS_SIG_HDR;
@@ -200,6 +200,7 @@ namespace Phi {
             std::string number;
             
             SpecialNumber(const char* interpretable);
+
             MACRO_TRANS_SIG_HDR;
         };
         struct Switch: public BlockBased {
@@ -207,6 +208,7 @@ namespace Phi {
             LabeledStatementList* list;
 
             Switch(Expression* expression, LabeledStatementList* list): BlockBased(nullptr), expression(expression), list(list) {}
+            
             MACRO_TRANS_SIG_HDR;
         };
 

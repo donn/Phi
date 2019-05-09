@@ -113,6 +113,6 @@ namespace Phi {
         void represent(std::ostream* stream);
 #endif
     };
-};
+}
 
 #endif

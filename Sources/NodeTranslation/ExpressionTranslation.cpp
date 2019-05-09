@@ -218,5 +218,5 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
     *stream << "}";\
 }
 
-LOCAL_CONCATDEF(LHConcatenation);
-LOCAL_CONCATDEF(Concatenation);
+LOCAL_CONCATDEF(LHConcatenation)
+LOCAL_CONCATDEF(Concatenation)

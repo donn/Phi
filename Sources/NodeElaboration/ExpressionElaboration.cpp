@@ -22,7 +22,6 @@ SpecialNumber::SpecialNumber(const char* interpretablePtr) {
     }
 
     std::string radixCharacter = match[2];
-    uint8_t radix;
 
     switch(radixCharacter[0]) {
         case 'b':

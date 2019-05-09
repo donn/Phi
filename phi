@@ -79,7 +79,8 @@ argument = ARGV[0]
 
 if argument.end_with?(".phi")
     # Treat as Phi
-    phic_invocation = "'#{phic}' #{passthroughOptions} #{argument}"
+    phic_invocation = "'#{phic}' #{passthroughOptions.map { |opt| "'#{opt}'"}.join(' ')} #{argument}"
+    puts phic_invocation
     system(phic_invocation)
 elsif argument.end_with?(".sv") || argument.end_with?(".v")
     # Treat as SystemVerilog

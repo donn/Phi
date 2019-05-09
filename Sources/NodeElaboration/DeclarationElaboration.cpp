@@ -5,8 +5,6 @@
 using namespace Phi::Node;
 
 void Port::MACRO_ELAB_SIG_IMP {
-    optional<AccessWidth> to = nullopt, from = nullopt;
-    
     auto pointer = std::make_shared<Driven>(identifier->idString, this);
     table->add(identifier->idString, pointer);
     tryElaborate(right, table, context);
@@ -107,8 +105,6 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 
     optional<AccessWidth> from = nullopt;
     optional<AccessWidth> to = nullopt;
-
-    AccessWidth i = 0;
 
     if (array) {
         if (optionalAssignment) {

@@ -83,17 +83,17 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
         example 2) default    : case_item_statement5;
     */
 
-    if(isDefault){
+    if (isDefault) {
         //default case 
         *stream << "default: ";
-    }else{
+    } else {
         //not default case
         if(LabeledStatementList::specialNumber!=nullptr){
             //special number 
             
             //convert each ? to z
             std::string modified_specialNumber = specialNumber->number;
-            for(int i=0; i<(specialNumber->number).size(); i++){
+            for(size_t i = 0; i<(specialNumber->number).size(); i++){
                 if(specialNumber->number[i]=='?'){
                     modified_specialNumber[i]='z';
                 }else{
