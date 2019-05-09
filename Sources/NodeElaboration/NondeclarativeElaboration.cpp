@@ -14,6 +14,7 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     DeclarationListItem* dliAttache;
     Port* portAttache;
     optional<AccessWidth> from = nullopt, to = nullopt;
+    AccessWidth width;
 
     tryElaborate(lhs, context);
 
@@ -44,7 +45,9 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     tryElaborate(expression, context);
     LHExpression::lhDrivenProcess(expression, context->table);
 
-    if (lhs->numBits != expression->numBits) {
+    width = driven->msbFirst ? driven->from - driven->to + 1 : driven->to - driven->from+ 1;
+
+    if (width != expression->numBits) {
         throw "driving.widthMismatch";
     }
     if (!driven->drive(expression, from, to)) {
