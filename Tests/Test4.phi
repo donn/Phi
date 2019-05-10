@@ -1,4 +1,4 @@
 module Example() {
-    Wire[7..0] k1 = $Sys.pow(8d2, 32d5);
+    Wire[7..0] k1 = $Sys.pow(8d2, 5);
     Wire[7..0] k2 = $Sys.log(8d100, 32d10);
 }

@@ -27,6 +27,7 @@ namespace Phi {
 
     struct Argument {
         typedef std::pair<llvm::APInt, AccessWidth> FunctionValue;
+        typedef std::vector<Argument> List;
         enum class Type {
             string = 0,
             expression
@@ -38,14 +39,17 @@ namespace Phi {
     };
 
     struct Function: public Symbol {
-        typedef std::vector<Argument> ArgList;
+    private:
+        std::function<Argument::FunctionValue(Argument::List*)> behavior;
+    public:
         std::vector<Argument::Type> parameterList;
-        std::function<Argument::FunctionValue(ArgList*)> call;
+
+        Argument::FunctionValue call(Argument::List* list);
 
         Function(std::string id,
                 std::vector<Argument::Type> parameterList,
-                std::function<Argument::FunctionValue(ArgList*)> behavior
-        ): Symbol(id, nullptr), parameterList(parameterList), call(behavior) {}
+                std::function<Argument::FunctionValue(Argument::List*)> behavior
+        ): Symbol(id, nullptr), behavior(behavior), parameterList(parameterList) {}
     };
 
     struct DriveRange {
