@@ -56,7 +56,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     using VLD = VariableLengthDeclaration;
     DeclarationListItem* rightDLI;
     std::shared_ptr<Symbol> pointer;
-    std::shared_ptr<Driven> pointerAsDriven;
+    std::shared_ptr<Driven> pointerAsDriven, resetValueDriven;
     std::shared_ptr<Container> pointerAsContainer;
     std::shared_ptr<SymbolArray> pointerAsArray;
 
@@ -137,8 +137,16 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             if (type == VLD::Type::reg) {
                 pointerAsContainer->space["clock"] = std::make_shared<Driven>("clock", this);
                 pointerAsContainer->space["reset"] = std::make_shared<Driven>("reset", this);
+                auto resetValueDriven = std::make_shared<Driven>("_0R", this, from.value(), to.value(), msbFirst);
+                if (optionalAssignment) {
+                    resetValueDriven->drive(optionalAssignment);
+                }
+                pointerAsContainer->space["_0R"] = resetValueDriven;
             } else {
                 pointerAsContainer->space["condition"] = std::make_shared<Driven>("condition", this);
+                if (optionalAssignment) {
+                    context->addError(nullopt, "driving.latchNoReset");
+                }
             }
             pointerAsDriven = pointerAsContainer; // Believe it or not, we need this cast first anyway.
             pointer = pointerAsDriven;

@@ -141,7 +141,9 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         *stream << "\nalways @ (posedge " + namespaceSoFar +"_clock or posedge " + namespaceSoFar +"_reset) begin \n";
         
         *stream << "if("+namespaceSoFar+"_reset) begin\n";
-        *stream << identifier->idString + "<= 0; \n";
+        *stream << identifier->idString + "<= ";
+        tryTranslate(optionalAssignment, stream, namespaceSoFar);
+        *stream << "; " << std::endl;
         *stream << "end \n";
 
         *stream << "else begin\n";

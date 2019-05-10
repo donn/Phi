@@ -2,6 +2,7 @@
 using namespace Phi::Node;
 
 void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
+    using VLD = VariableLengthDeclaration;
     // Declaration block because I'm using goto here
     std::vector<SymbolTable::Access> accesses;
     
@@ -44,12 +45,17 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     LHExpression::lhDrivenProcess(expression, context->table);
 
     if (dliAttache) {
-        if (dliAttache->type == VariableLengthDeclaration::Type::var) {
+        if (dliAttache->type == VLD::Type::var) {
             skipTranslation = true;
             if (expression->type != Expression::Type::CompileTime) {
                 context->addError(nullopt, "driving.hardwareDominance");
                 goto exit;
             }
+        } else if (dliAttache->type == VLD::Type::reg) {
+            skipTranslation = true;
+        } else if (dliAttache->type == VLD::Type::latch) {
+            context->addError(nullopt, "driving.latchNoReset");
+            goto exit;
         }
     }
 
@@ -76,12 +82,16 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
         context->addError(nullopt, "assignment.alreadyDriven");
     } else if (context->table->inComb()) {
         if (dliAttache) {
-            dliAttache->type = VariableLengthDeclaration::Type::wire_reg;
+            dliAttache->type = VLD::Type::wire_reg;
         }
         if (portAttache) {
             portAttache->polarity = Port::Polarity::output_reg;
         }
         inComb = true;
+    }
+
+    if (dliAttache && dliAttache->type == VLD::Type::reg) {
+        dliAttache->optionalAssignment = expression;
     }
 
 exit:
