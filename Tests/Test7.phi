@@ -1,0 +1,8 @@
+module LatchModule(
+    condition: Input,
+    data: Input
+){
+    Latch l;
+    l.condition = condition;
+    l.data = data;
+}

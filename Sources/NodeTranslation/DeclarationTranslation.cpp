@@ -165,7 +165,7 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         *stream << " ";
         *stream <<identifier->idString+ "; \n";
 
-        *stream << "always @ (" + namespaceSoFar +"_condition) begin";
+        *stream << "always @ (" + namespaceSoFar +"_condition) begin \n";
         
         *stream << "if("+namespaceSoFar+"_condition) begin\n";
         *stream << identifier->idString + "<=" + namespaceSoFar +"_data; \n";
