@@ -22,6 +22,10 @@ void Port::MACRO_ELAB_SIG_IMP {
     }
 
     pointer = std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst);
+            
+    if (polarity == Polarity::output) {
+        context->checks.push_back({pointer, Context::DriveCheck::Reason::isOutput, nullopt, nullopt});
+    }
     context->table->add(identifier->idString, pointer);
 
 exit:
@@ -144,6 +148,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
                     resetValueDriven->drive(optionalAssignment);
                 }
                 pointerAsContainer->space["_0R"] = resetValueDriven;
+                context->checks.push_back({resetValueDriven, Context::DriveCheck::Reason::usedAsRegisterReset, nullopt, nullopt});
             } else {
                 pointerAsContainer->space["condition"] = std::make_shared<Driven>("condition", this);
                 if (optionalAssignment && optionalAssignment->type != Expression::Type::Error) {
