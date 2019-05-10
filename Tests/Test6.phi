@@ -1,0 +1,7 @@
+module Multiplexer(
+    read: Input,
+    data: Input[31..0],
+    readData: Output[31..0]
+){
+    readData = mux read (1b0: 32b0, 1b1: data)
+}
