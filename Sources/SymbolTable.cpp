@@ -32,6 +32,41 @@ bool Driven::drive(Node::Expression* expression, optional<AccessWidth> fromOptio
 SymbolTable::SymbolTable() {
     head = std::make_shared<SymbolSpace>("", nullptr);
     stack.push_back(head);
+
+    // Create functions
+    stepIntoAndCreate("Sys", NULL);
+    using Parameter = Argument::Type;
+    auto sysPow = std::shared_ptr<Function>(new Function("pow", {Parameter::expression, Parameter::expression}, [](Function::ArgList* argList) {
+        auto& list = *argList;
+
+        // Check list
+        auto number = list[0].expression.value();
+        auto exponent = list[1].expression.value();
+
+        if (
+            number.second > 52
+            || exponent.second > 52
+        ) {
+            throw "pow.52bitexceeded";
+        }
+        
+        double numberD = number.first.getLimitedValue();
+        double exponentD = exponent.first.getLimitedValue();
+
+        double returnD;
+        
+        try {
+            returnD = std::pow(numberD, exponentD);
+        } catch (int error) {
+            returnD = INFINITY;
+        }
+
+        uint64 returnedValue = returnD;
+
+        return std::pair(llvm::APInt(number.second, returnedValue), number.second);
+    }));
+    add("pow", sysPow);
+    stepOut();
 }
 
 SymbolTable::~SymbolTable() {

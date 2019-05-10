@@ -22,4 +22,6 @@ typedef int64_t uint64;
 using AccessWidth = uint16;
 const AccessWidth maxAccessWidth = UINT16_MAX;
 
+#include <llvm/ADT/APInt.h>
+
 #endif // _types_h

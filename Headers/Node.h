@@ -484,23 +484,26 @@ namespace Phi {
         };
         
         // Procedural Call
-        struct Argument: public Node { // Abstract
-        };
+        struct Argument: public Node {}; // Abstract
 
-        struct StringArgument: public Node {
+        struct StringArgument: public Argument {
             std::string argument;
             StringArgument(const char* argument): argument(argument) {}
         };
         
-        struct ExpressionArgument: public Node {
+        struct ExpressionArgument: public Argument {
             Expression* argument;
             ExpressionArgument(Expression* argument): argument(argument) {}
+
+            MACRO_ELAB_SIG_HDR;
         };
 
         struct ProceduralCall: public Expression {
-            ProceduralCall(Expression* function, Argument* argument) {
+            ProceduralCall(LHExpression* function, Argument* argument) {
                 this->left = function; this->right = argument;
             }
+
+            MACRO_ELAB_SIG_HDR;
         };
 
         // Multiplexer

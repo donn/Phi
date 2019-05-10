@@ -133,7 +133,7 @@ description:
         context->head = node;
     }
     | KEYWORD_NAMESPACE identifier '{' description '}' description {
-        auto node = new TopLevelNamespace((Identifier*)$2, $4);
+        auto node = new TopLevelNamespace(static_cast<Identifier*>($2), $4);
         node->right = $6;
         $$ = node;
         context->head = node;
@@ -146,13 +146,13 @@ optional_semicolon:
 
 declaration:
     KEYWORD_MODULE identifier template_declaration '(' port_declaration_list ')' inheritance block optional_semicolon {
-        $$ = new TopLevelDeclaration((Identifier*)$2, TopLevelDeclaration::Type::module, (Port*)$5, $7, (Statement*)$8);
+        $$ = new TopLevelDeclaration(static_cast<Identifier*>($2), TopLevelDeclaration::Type::module, static_cast<Port*>($5), $7, static_cast<Statement*>($8));
     }
     | KEYWORD_MODULE error '}' {
         $$ = new ErrorNode();
     }
     | KEYWORD_INTERFACE identifier template_declaration '(' port_declaration_list ')' inheritance optional_semicolon {
-        $$ = new TopLevelDeclaration((Identifier*)$2, TopLevelDeclaration::Type::interface, (Port*)$5, $7);
+        $$ = new TopLevelDeclaration(static_cast<Identifier*>($2), TopLevelDeclaration::Type::interface, static_cast<Port*>($5), $7);
     }
     ;
 
@@ -165,12 +165,12 @@ port_declaration_list:
     ;
 populated_port_declaration_list:
     identifier ':' optional_annotation port_polarity optional_bus_declaration ',' populated_port_declaration_list {
-        auto node = new Port((Identifier*)$1, $4, (Range*)$5, $3);
+        auto node = new Port(static_cast<Identifier*>($1), $4, static_cast<Range*>($5), $3);
         node->right = $7;
         $$ = node;
     }
     | identifier ':' optional_annotation port_polarity optional_bus_declaration {
-        $$ = new Port((Identifier*)$1, $4, (Range*)$5, $3);
+        $$ = new Port(static_cast<Identifier*>($1), $4, static_cast<Range*>($5), $3);
     }
     ;
 port_polarity:
@@ -191,12 +191,12 @@ template_declaration:
     ;
 template_declaration_list:
     identifier optional_template_assignment template_declaration_list {
-        auto node = new TemplateDeclaration((Identifier*)$1, $2);
+        auto node = new TemplateDeclaration(static_cast<Identifier*>($1), $2);
         node->right = $3;
         $$ = node;
     }
     | identifier optional_template_assignment {
-        $$ = new TemplateDeclaration((Identifier*)$1, $2);
+        $$ = new TemplateDeclaration(static_cast<Identifier*>($1), $2);
     }
     ;
 optional_template_assignment:
@@ -227,21 +227,21 @@ inheritance_list:
 /* Statements */
 statement:
     optional_annotation subdeclaration optional_semicolon {
-        auto node = (Statement*)$2;
+        auto node = static_cast<Statement*>($2);
         if ($1) {
             node->annotation = $1;
         }
         $$ = node;
     }
     | optional_annotation nondeclarative_statement optional_semicolon {
-        auto node = (Statement*)$2;
+        auto node = static_cast<Statement*>($2);
         if ($1) {
             node->annotation = $1;
         }
         $$ = node;
     }
     | optional_annotation block_based {
-        auto node = (Statement*)$2;
+        auto node = static_cast<Statement*>($2);
         if ($1) {
             node->annotation = $1;
         }
@@ -270,16 +270,16 @@ block_based:
         $$ = $1;
     }
     | KEYWORD_FOR identifier KEYWORD_IN range block {
-        $$ = new ForLoop((Statement*)$5, (Range*)$4, (Identifier*)$2);
+        $$ = new ForLoop(static_cast<Statement*>($5), static_cast<Range*>($4), static_cast<Identifier*>($2));
     }
     | KEYWORD_NAMESPACE identifier block {
-        $$ = new Namespace((Statement*)$3, (Identifier*)$2);
+        $$ = new Namespace(static_cast<Statement*>($3), static_cast<Identifier*>($2));
     }
     | KEYWORD_SWITCH expression '{' labeled_statement_list '}' {
-        $$ = new Switch($2, (LabeledStatementList*)$4);
+        $$ = new Switch($2, static_cast<LabeledStatementList*>($4));
     }
     | KEYWORD_COMB block {
-        $$ = new Combinational((Statement*)$2);
+        $$ = new Combinational(static_cast<Statement*>($2));
     }
     | error '}' {
         $$ = new ErrorNode();
@@ -287,7 +287,7 @@ block_based:
     ;
 if:
     KEYWORD_IF expression block else {
-        $$ = new If((Statement*)$3, $2, (If*)$4);
+        $$ = new If(static_cast<Statement*>($3), $2, static_cast<If*>($4));
     }
     ;
 
@@ -297,24 +297,24 @@ else:
         $$ = $2;
     }
     | KEYWORD_ELSE block {
-        $$ = new If((Statement*)$2, nullptr, nullptr);
+        $$ = new If(static_cast<Statement*>($2), nullptr, nullptr);
     }
     ;
 
 labeled_statement_list:
     { $$ = epsilon; }
     | KEYWORD_CASE expression ':' statement_list labeled_statement_list {
-        auto node = new LabeledStatementList(false, (Expression*)$2, nullptr, (Statement*)$4);
+        auto node = new LabeledStatementList(false, static_cast<Expression*>($2), nullptr, static_cast<Statement*>($4));
         node->right = $5;
         $$ = node;
     }
     | KEYWORD_CASE special_number ':' statement_list labeled_statement_list {
-        auto node = new LabeledStatementList(false, nullptr, (SpecialNumber*)$2, (Statement*)$4);
+        auto node = new LabeledStatementList(false, nullptr, static_cast<SpecialNumber*>($2), static_cast<Statement*>($4));
         node->right = $5;
         $$ = node;
     }
     | KEYWORD_DEFAULT ':' statement_list {
-        $$ = new LabeledStatementList(false, nullptr, nullptr, (Statement*)$3);;
+        $$ = new LabeledStatementList(false, nullptr, nullptr, static_cast<Statement*>($3));;
     }
     ;
 
@@ -336,10 +336,10 @@ statement_list:
 /* Subdeclarations */
 subdeclaration:
     dynamic_width optional_bus_declaration declaration_list {
-        $$ = new VariableLengthDeclaration($1, (Range*)$2, (DeclarationListItem*)$3);
+        $$ = new VariableLengthDeclaration($1, static_cast<Range*>($2), static_cast<DeclarationListItem*>($3));
     }
     | lhexpression optional_template identifier optional_array_declaration optional_ports {
-        $$ = new InstanceDeclaration((Identifier*)$3, $1, (ExpressionIDPair*)$2, $4, (ExpressionIDPair*)$5);
+        $$ = new InstanceDeclaration(static_cast<Identifier*>($3), $1, static_cast<ExpressionIDPair*>($2), $4, static_cast<ExpressionIDPair*>($5));
     }
     ;
 
@@ -373,12 +373,12 @@ optional_array_declaration:
     
 declaration_list:
     identifier optional_array_declaration optional_assignment ',' declaration_list {
-        auto node = new DeclarationListItem((Identifier*)$1, $2, $3);
+        auto node = new DeclarationListItem(static_cast<Identifier*>($1), $2, $3);
         node->right = $5;
         $$ = node;
     }
     | identifier optional_array_declaration optional_assignment {
-        $$ = new DeclarationListItem((Identifier*)$1, $2, $3);
+        $$ = new DeclarationListItem(static_cast<Identifier*>($1), $2, $3);
     }
     ;
 optional_assignment:
@@ -397,12 +397,12 @@ optional_template:
 template_list:
     { $$ = epsilon; }
     | identifier ':' '(' expression ')' ',' template_list {
-        auto node = new ExpressionIDPair((Identifier*)$1, $4);
+        auto node = new ExpressionIDPair(static_cast<Identifier*>($1), $4);
         node->right = $7;
         $$ = node;
     }
     | identifier ':' '(' expression ')' {
-        $$ = new ExpressionIDPair((Identifier*)$1, $4);
+        $$ = new ExpressionIDPair(static_cast<Identifier*>($1), $4);
     }
     ;
 
@@ -424,12 +424,12 @@ ports:
 
 port_list:
     identifier ':' expression ',' port_list {
-        auto node = new ExpressionIDPair((Identifier*)$1, $3);
+        auto node = new ExpressionIDPair(static_cast<Identifier*>($1), $3);
         node->right = $5;
         $$ = node;
     }
     | identifier ':' expression {
-        $$ = new ExpressionIDPair((Identifier*)$1, $3);
+        $$ = new ExpressionIDPair(static_cast<Identifier*>($1), $3);
     }
     ;
 
@@ -443,20 +443,20 @@ nondeclarative_statement:
         $$ = new NondeclarativeAssignment($2, $5); 
     }
     | lhexpression ports {
-        $$ = new NondeclarativePorts($1, (ExpressionIDPair*)$2);
+        $$ = new NondeclarativePorts($1, static_cast<ExpressionIDPair*>($2));
     }
     ;
 
 /* Expressions */
 lhexpression:
     identifier {
-        $$ = new IdentifierExpression((Identifier*)$1);
+        $$ = new IdentifierExpression(static_cast<Identifier*>($1));
     } 
     | lhexpression '.' lhexpression {
         $$ = new PropertyAccess($1, $3);
     }
     | lhexpression '[' range ']' {
-        $$ = new RangeAccess($1, (Range*)$3);
+        $$ = new RangeAccess($1, static_cast<Range*>($3));
     }
     | lhexpression '[' expression ']' {
         $$ = new ArrayAccess($1, $3);
@@ -560,8 +560,8 @@ expression:
     | '(' expression ')' {
         $$ = $2;
     }
-    | '$' expression '(' procedural_call ')' {
-        $$ = new ProceduralCall($2, (Argument*)$4);
+    | '$' lhexpression '(' procedural_call ')' {
+        $$ = new ProceduralCall($2, (Node::Argument*)$4);
     }
     | mux {
         $$ = $1;
@@ -602,10 +602,10 @@ concatenatable:
 
 mux:
     KEYWORD_MUX expression mux_block {
-        $$ = new Multiplexer($2, (ExpressionPair*)$3);
+        $$ = new Multiplexer($2, static_cast<ExpressionPair*>($3));
     }
     | KEYWORD_MUX special_number mux_block {
-        $$ = new Multiplexer($2, (ExpressionPair*)$3);
+        $$ = new Multiplexer($2, static_cast<ExpressionPair*>($3));
     }
     ;
 
@@ -647,7 +647,7 @@ labeled_expression_list:
         $$ = node;
     }
     | special_number ':' expression ',' labeled_expression_list {
-        auto node = new ExpressionPair(nullptr, (SpecialNumber*)$1, $3);
+        auto node = new ExpressionPair(nullptr, static_cast<SpecialNumber*>($1), $3);
         node->right = $5;
         $$ = node;
     }
@@ -655,7 +655,7 @@ labeled_expression_list:
         $$ = new ExpressionPair($1, nullptr, $3);
     }
     | special_number ':' expression {
-        $$ = new ExpressionPair(nullptr, (SpecialNumber*)$1, $3);
+        $$ = new ExpressionPair(nullptr, static_cast<SpecialNumber*>($1), $3);
     }
     | KEYWORD_DEFAULT ':' expression {
         $$ = new ExpressionPair(nullptr, nullptr, $3);

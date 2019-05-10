@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 #include <set>
+#include <functional>
 
 namespace Phi {
     namespace Node {
@@ -22,6 +23,29 @@ namespace Phi {
 
         Symbol(std::string id, Node::Node* declarator): id(id), declarator(declarator) {}
         virtual ~Symbol() = default;
+    };
+
+    struct Argument {
+        typedef std::pair<llvm::APInt, AccessWidth> FunctionValue;
+        enum class Type {
+            string = 0,
+            expression
+        };
+
+        Type type;
+        optional<std::string> string;
+        optional<FunctionValue> expression; // pair<value, numBits>
+    };
+
+    struct Function: public Symbol {
+        typedef std::vector<Argument> ArgList;
+        std::vector<Argument::Type> parameterList;
+        std::function<Argument::FunctionValue(ArgList*)> call;
+
+        Function(std::string id,
+                std::vector<Argument::Type> parameterList,
+                std::function<Argument::FunctionValue(ArgList*)> behavior
+        ): Symbol(id, nullptr), parameterList(parameterList), call(behavior) {}
     };
 
     struct DriveRange {

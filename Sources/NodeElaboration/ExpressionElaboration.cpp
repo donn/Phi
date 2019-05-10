@@ -533,6 +533,50 @@ void ExpressionPair::MACRO_ELAB_SIG_IMP {
                 throw "expr.widthMismatch";
             }
         }
-
     }
+}
+
+void ExpressionArgument::MACRO_ELAB_SIG_IMP {
+    tryElaborate(argument, context);
+    tryElaborate(right, context);
+}
+
+void ProceduralCall::MACRO_ELAB_SIG_IMP {
+    tryElaborate(left, context);
+    optional<AccessWidth> trash;
+    auto function = static_cast<LHExpression*>(left);
+    auto accessList = function->accessList(&trash, &trash);
+    auto symbolOptional = context->table->find(&accessList, &trash, &trash);
+    if (!symbolOptional.has_value()) {
+        throw "symbol.dne";
+    }
+    auto symbol = std::dynamic_pointer_cast<Function>(symbolOptional.value());
+
+    tryElaborate(right, context);
+
+    //PII
+    std::vector<Phi::Argument> args;
+    auto head = static_cast<Argument*>(right);
+    while (head) {
+        if (auto stringArgument = dynamic_cast<StringArgument*>(head)) {
+            args.push_back({Phi::Argument::Type::string, stringArgument->argument, nullopt});
+        } else {
+            auto expressionArgument = static_cast<ExpressionArgument*>(head);
+            auto expression = expressionArgument->argument;
+            if (expression->type == Type::RunTime) {
+                throw "arg.hardwareExpression";
+            }
+            if (expression->type == Type::Error) {
+                return;
+            }
+            
+            args.push_back({Phi::Argument::Type::expression, nullopt, std::pair(expression->value.value(), expression->numBits)});
+        }
+        head = static_cast<Argument*>(head->right);
+    }
+
+    type = Type::CompileTime;
+    auto result = symbol->call(&args);
+    value = result.first;
+    numBits = result.second;
 }

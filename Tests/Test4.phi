@@ -1,0 +1,3 @@
+module Example() {
+    Wire[7..0] k = $Sys.pow(8d2, 32d5);
+}
