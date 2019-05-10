@@ -9,11 +9,14 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     optional< std::shared_ptr<Symbol> > symbolOptional;
     std::shared_ptr<Symbol> symbol;
     std::shared_ptr<Driven> driven;
+    std::shared_ptr<Container> container = nullptr;
 
     DeclarationListItem* dliAttache;
     Port* portAttache;
     optional<AccessWidth> from = nullopt, to = nullopt;
     AccessWidth width;
+
+    bool elevate = false;
 
     // Elaborate left hand side
     tryElaborate(lhs, context);
@@ -52,7 +55,11 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
                 goto exit;
             }
         } else if (dliAttache->type == VLD::Type::reg) {
-            skipTranslation = true;
+            if ((container = std::dynamic_pointer_cast<Container>(driven))){
+                skipTranslation = true;
+                driven = std::dynamic_pointer_cast<Driven>(container->space["_0R"]);
+                elevate = true;
+            }
         } else if (dliAttache->type == VLD::Type::latch) {
             context->addError(nullopt, "driving.latchNoReset");
             goto exit;
@@ -90,7 +97,7 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
         inComb = true;
     }
 
-    if (dliAttache && dliAttache->type == VLD::Type::reg) {
+    if (elevate) {
         dliAttache->optionalAssignment = expression;
     }
 

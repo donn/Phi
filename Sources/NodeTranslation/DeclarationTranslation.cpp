@@ -103,18 +103,17 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     }
 
     switch(type){
+        case VLD::Type::wire_reg:
+            // wire reg
+            *stream << "reg ";
+            break;
         case VLD::Type::wire:
             //wire
-            *stream << "wire";
+            *stream << "wire ";
             break;
 
         case VLD::Type::reg:
-        case VLD::Type::wire_reg:
-            //reg
-            break;
-
         case VLD::Type::latch:
-            //latch --> leave for final presentation ??
             break;
 
         default:

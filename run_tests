@@ -5,4 +5,5 @@ files = Dir["Tests/Test*.phi"]
 for file in files
     puts "Testing #{file}..."
     system("./phic #{file}")
+    system("iverilog #{file}.sv")
 end

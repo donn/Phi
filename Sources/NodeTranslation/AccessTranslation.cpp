@@ -33,7 +33,7 @@ void PropertyAccess::MACRO_TRANS_SIG_IMP {
     rightPart.erase(0, 1);
     rightPart.erase(rightPart.length() - 1, 1);
 
-    *stream << "_" << leftPart.length() << leftPart << "_" << rightPart << std::endl;
+    *stream << "\\_" << leftPart.length() << leftPart << "_" << rightPart << " ";
     
 }
 
