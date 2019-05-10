@@ -13,8 +13,8 @@ namespace Phi {
     namespace Node {
         struct Node;
     }
-
     class Context {
+        friend class Parser;
         struct Error {
             Location loc;
             std::string message;
@@ -22,14 +22,29 @@ namespace Phi {
 
         std::string executableName;
         std::vector<Error> errorList;
-    public:
-        Context(const char* argv0): executableName(argv0) {
-            files.push_back("\\");
-        }
 
         std::list<std::string> files;
         std::vector<std::string> currentFileLines;
         Node::Node* head = nullptr;
+    public:
+        struct DriveCheck {
+            enum class Reason {
+                isOutput = 0,
+                usedAsInput = 1,
+                usedAsRegisterReset = 2
+            };
+            
+            std::shared_ptr<Driven> target;
+            Reason reason;
+            std::optional<AccessWidth> from;
+            std::optional<AccessWidth> to;
+        };
+        std::vector<DriveCheck> checks;
+        SymbolTable* table = nullptr;
+        
+        Context(const char* argv0): executableName(argv0) {
+            files.push_back("\\");
+        }
 
         void setFile(std::string currentFile);
 
@@ -38,8 +53,7 @@ namespace Phi {
         void prettyPrintErrors(std::ostream* out);
 
         void elaborate(SymbolTable* table);
-        SymbolTable* table = nullptr;
-
+        void driveChecks();
         void translate(std::ostream* stream, std::string namespaceSoFar);
 
 #if YYDEBUG

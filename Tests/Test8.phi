@@ -1,0 +1,12 @@
+module Counter(
+    clock: Input,
+    reset: Input,
+    output: Output[31..0]
+) {
+    Register[31..0] counter = 32b0
+    counter.clock = clock
+    counter.reset = reset
+    counter.data = counter &+ 32b1
+
+    output = counter
+}

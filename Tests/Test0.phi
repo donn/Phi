@@ -9,7 +9,7 @@ module Beta(a: Input, b: Output, c: Output) {
     Register l = 1b0
     l.data = theta[0] // _1l_data
     l.clock = ~a
-    l.reset = c
+    l.reset = theta[1]
 
     b = theta[1]
 }

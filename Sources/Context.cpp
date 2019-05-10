@@ -82,6 +82,29 @@ void Context::elaborate(SymbolTable* tablePtr) {
     table = nullptr;
 }
 
+void Context::driveChecks() {
+    for (auto& check: checks) {
+        auto from = check.from.has_value() ? check.from.value() : check.target->from;
+        auto to = check.to.has_value() ? check.to.value() : check.target->to;
+
+        auto coverage = check.target->checkRangeCoverage(from, to);
+
+        if (coverage.size() == 0) {
+            switch (check.reason) {
+                case DriveCheck::Reason::isOutput:
+                    addError(nullopt, "driveCheck.outputNotDriven");
+                    break;
+                case DriveCheck::Reason::usedAsInput:
+                    addError(nullopt, "driveCheck.inputDriverNotDriven");
+                    break;
+                case DriveCheck::Reason::usedAsRegisterReset:
+                    addError(nullopt, "driveCheck.registerResetNotSet");
+                    break;
+            }
+        }
+    }
+}
+
 void Context::MACRO_TRANS_SIG_IMP {
     head->translate(stream, namespaceSoFar);
 }
