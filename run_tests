@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-files = Dir["Tests/*.phi"]
+files = Dir["Tests/Test*.phi"]
 
 for file in files
     puts "Testing #{file}..."

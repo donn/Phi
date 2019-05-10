@@ -1,10 +1,10 @@
 module instruction_memory(
   pc: Input[31..0],
   instruction: Output[31..0]
-){
+) {
 
   //15 rows of 32 bits
-  Register [31..0] inst_mem [15];
+  Register[31..0] inst_mem [15];
   
   for i in 0..14 {
   	inst_mem[i] = $interpretFromFile("instructions.txt", i);

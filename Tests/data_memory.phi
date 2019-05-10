@@ -17,6 +17,6 @@ module data_memory(
   //data_mem[address].data = write_data;
 
 
-  //read_data = mux(MemRead == 1b1) (1b1:data_mem[address], 1b0: 32b0)
+  read_data = mux (MemRead) (1b1:data_mem[address], 1b0: 32b0) // Problem is part of registers/latches
 
 }

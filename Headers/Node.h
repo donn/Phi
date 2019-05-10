@@ -518,6 +518,8 @@ namespace Phi {
 
         struct Multiplexer: public Expression {
             // Node* selection could either be specialNumber or expression!!
+            bool inComb = false;
+
             Multiplexer(Node* selection, ExpressionPair* options) {
                 this->left = selection; this->right = options;
             }

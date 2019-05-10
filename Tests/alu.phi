@@ -19,11 +19,11 @@ module alu(
 
   comb {
       switch(alu_control){
-        case 3b000: result = data_1 + data_2
-        case 3b001: result = data_1 - data_2
+        case 3b000: result = data_1 &+ data_2
+        case 3b001: result = data_1 &- data_2
         case 3b010: result = ~data_1
-        case 3b011: result = data_1<<data_2
-        case 3b100: result = data_1>>data_2
+        case 3b011: result = data_1 << data_2
+        case 3b100: result = data_1 >> data_2
         case 3b101: result = data_1 & data_2
         case 3b110: result = data_1 | data_2
         case 3b111:
@@ -32,7 +32,7 @@ module alu(
             } else {
               result = 32d0
             }
-        default: result = data_1 + data_2
+        default: result = data_1 &+ data_2
       }
   }
 

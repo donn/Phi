@@ -11,7 +11,7 @@
 namespace Phi {
     using Location = Phi::location;
     namespace Node {
-        class Node;
+        struct Node;
     }
 
     class Context {

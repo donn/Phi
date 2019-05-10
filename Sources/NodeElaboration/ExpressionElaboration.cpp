@@ -8,7 +8,7 @@ using namespace Phi::Node;
 // Numbers
 SpecialNumber::SpecialNumber(const char* interpretablePtr) {
     auto interpretable = std::string(interpretablePtr);
-    auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9x]+)");
+    auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9?]+)");
 
     auto match = std::smatch();
     std::regex_match(interpretable, match, regex); // If it doesn't match, the regex here and in the .l file are mismatched.
@@ -17,6 +17,8 @@ SpecialNumber::SpecialNumber(const char* interpretablePtr) {
     if (prospectiveWidth < 0 || prospectiveWidth > maxAccessWidth) {
         throw "expr.tooWide";
     }
+
+    numBits = prospectiveWidth;
 
     std::string radixCharacter = match[2];
 
@@ -39,6 +41,8 @@ SpecialNumber::SpecialNumber(const char* interpretablePtr) {
         default:
             throw "FATAL";
     }
+    
+    number = match[3];
 }
 
 Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
@@ -495,7 +499,8 @@ void Multiplexer::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
     // TODO: Multiplexer runtime vs compiletime
         // Selection algorithm
-    type = Type::CompileTime;
+    type = Type::RunTime;
+    inComb = context->table->inComb();
     
     // Limitation: Cannot verify integrity
 

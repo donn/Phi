@@ -54,8 +54,13 @@ void SpecialNumber::MACRO_TRANS_SIG_IMP {
         default:
             break;
     }
-    *stream << number;
-    *stream << ";";
+    auto copy = number;
+    for (size_t i = 0; i < copy.size(); i += 1) {
+        if (copy[i] == '?') {
+            copy[i] = 'z';
+        }
+    }
+    *stream << copy;
     
     tryTranslate(right, stream, namespaceSoFar);
 }

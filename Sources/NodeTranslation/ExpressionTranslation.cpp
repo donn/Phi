@@ -2,6 +2,8 @@
 
 #include <string>
 #include <fstream>
+#include <ios>
+#include <sstream>
 
 using namespace Phi::Node;
 
@@ -162,39 +164,88 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
                 this->left = selection; this->right = options;
             }
     */
-
-    /*
-    assign q = ( select == 0 )? d[0] : ( select == 1 )? d[1] : ( select == 2 )? d[2] : d[3];
-    */
    
     // PII
     ExpressionPair* cur = (ExpressionPair*)right;
     Expression* selection = (Expression*)left;
-    while(cur != NULL) {
-        *stream << "(";
-        tryTranslate(selection, stream, namespaceSoFar); 
-        *stream << "=";
-        tryTranslate(cur->label, stream, namespaceSoFar);
-        *stream << ")";
-        *stream << "?";
-        tryTranslate(cur->result, stream, namespaceSoFar);
-        *stream << ":";
+    while (cur != NULL) {
+        if (cur->right) {
+            *stream << "(";
+            if (cur->label) {
+                tryTranslate(selection, stream, namespaceSoFar);
+                *stream << " == ";
+                tryTranslate(cur->label, stream, namespaceSoFar);
+            } else {
+                // We need to account for all possibilities...
+                // The problem is, "inside", which is a part SystemVerilog doesn't work in iverilog
+                // Thus, for expressions with less than 256 possibilities, we will MANUALLY expand them
+                // PII
+                auto number = cur->specialNumber->number;
+                auto radix = cur->specialNumber->radix;
+                auto radixString = (radix == 2) ? "b" : (radix == 16) ? "h" : "o";
+                size_t count = 0;
+                for (size_t i = 0; i < number.size(); i += 1) {
+                    if (number[i] == '?') {
+                        count += 1;
+                    }
+                }
 
-        //get next node
+                #define output_sn(numStr) *stream << cur->specialNumber->numBits << "'" << radixString << numStr << " "
+
+                double possibilitiesF = pow(cur->specialNumber->radix, count);
+                if (possibilitiesF > 256) {
+                    tryTranslate(selection, stream, namespaceSoFar);
+                    *stream << "inside ";
+                    *stream << "{ ";
+                    output_sn(number);
+                    *stream << "} ";
+                } else {
+                    auto positions = std::vector<size_t>();
+                    for (size_t i = 0; i < number.size(); i += 1) {
+                        if (number[i] == '?') {
+                            positions.push_back(i);
+                        }
+                    }
+                    size_t possibilities = possibilitiesF;
+                    for (size_t i = 0; i < possibilities; i += 1) {
+                        auto currentPossibility = llvm::APInt(count, i).toString(radix, false);
+                        if (currentPossibility.length() < count) {
+                            currentPossibility = std::string(count - currentPossibility.length(), '0') + currentPossibility;
+                        }
+                        auto numberCopy = number;
+                        for (size_t j = 0; j < currentPossibility.size(); j += 1) {
+                            numberCopy[positions[j]] = currentPossibility[j];
+                        }
+                        *stream << "( ";
+                        tryTranslate(selection, stream, namespaceSoFar);
+                        *stream << "== ";
+                        output_sn(numberCopy);
+                        *stream << ") ";
+                        if (i + 1 != possibilities) {
+                            *stream << "|| ";
+                        }
+                    }
+                }
+            }
+            *stream << ") ";
+            *stream << "? ";
+        }
+        tryTranslate(cur->result, stream, namespaceSoFar);
+        if (cur->right) {
+            *stream << ": ";
+        }
+        
         cur = (ExpressionPair*)cur->right;
     }
-    //cur == NULL
-    //last node
-    tryTranslate(cur->result, stream, namespaceSoFar); 
 }
 
 #define LOCAL_CONCATDEF(x) void x::MACRO_TRANS_SIG_IMP {\
     \
-    *stream << "{";\
+    *stream << "{ ";\
     tryTranslate(left, stream, namespaceSoFar); \
-    *stream << ",";\
+    *stream << ", ";\
     tryTranslate(right, stream, namespaceSoFar); \
-    *stream << "}";\
+    *stream << "} ";\
 }
 
 LOCAL_CONCATDEF(LHConcatenation)

@@ -132,7 +132,7 @@ module datapath(
 
 
   /* write back to register file*/
-  write_data = mux(MemtoReg==1b0) (1b0: alu_result, 1b1: read_data)
+  write_data = mux (~MemtoReg) (1b0: alu_result, 1b1: read_data)
 
 
 
