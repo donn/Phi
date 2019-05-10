@@ -488,7 +488,10 @@ namespace Phi {
 
         struct StringArgument: public Argument {
             std::string argument;
-            StringArgument(const char* argument): argument(argument) {}
+            StringArgument(const char* argument): argument(argument) {
+                this->argument.erase(0, 1);
+                this->argument.erase(this->argument.length() - 1, 1);
+            }
         };
         
         struct ExpressionArgument: public Argument {

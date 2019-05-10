@@ -1,8 +1,10 @@
 #include "SymbolTable.h"
 #include "Node.h"
 
+#include <fstream>
 #include <stack>
-#include <math.h>
+#include <regex>
+#include <cmath>
 using namespace Phi;
 
 #define tableTop stack.back()
@@ -103,7 +105,7 @@ SymbolTable::SymbolTable() {
     double returnD;
         
     try {
-        returnD = std::log(numberD);
+        returnD = std::log(numberD) / std::log(baseD);
     } catch (int error) {
         returnD = INFINITY;
     }
@@ -147,8 +149,201 @@ SymbolTable::SymbolTable() {
     add("pow", sysPow);
 
 
-    stepOut();
+    auto sysinterpretFromFile = std::shared_ptr<Function>(new Function("interpretFromFile", {Parameter::string, Parameter::expression}, [](Argument::List* argList) {
+        auto& list = *argList;
+
+        // Check list
+        auto fileName = list[0].string.value();
+        auto lineNumberAPInt = list[1].expression.value().first;
+        auto lineNumber = lineNumberAPInt.getLimitedValue();
+
+        //open file 
+        std::ifstream f;
+        f.open(fileName);
+        if (!f) {
+            throw "io.fileNotFound";
+        }
+        
+        //read from file
+        std::string line;
+        uint counter = 1;
+        while(getline(f, line)) {
+            if (counter == lineNumber) {
+                std::cout << line << std::endl;
+                break;
+            }
+            counter += 1;
+        }
+
+        //close file
+        f.close();
+        
+
+        //convert line from string in to llvm::APInt
+        auto interpretable = line;
+
+        auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9]+)");
+        
+        auto match = std::smatch();
+        std::regex_match(interpretable, match, regex); // If it doesn't match, the regex here and in the .l file are mismatched.
+
+        AccessWidth prospectiveWidth;
+        try {
+            prospectiveWidth = std::stoi(match[1]);
+        } catch (std::invalid_argument& error) {
+            throw "interpretFromFile.notANumber";
+        }
+
+        if (prospectiveWidth < 0 || prospectiveWidth > maxAccessWidth) {
+            throw "expr.tooWide";
+        }
+
+        std::string radixCharacter = match[2];
+        uint8_t radix;
+
+        switch(radixCharacter[0]) {
+            case 'b':
+                radix = 2;
+                break;
+            case 'o':
+                radix = 8;
+                break;
+            case 'd':
+                radix = 10;
+                break;
+            case 'x':
+                radix = 16;
+                break;
+            case 'h':
+                throw "fixedNumber.usedVerilogH";
+                break;
+            default:
+                throw "FATAL";
+        }
+        auto ref = llvm::StringRef(match[3]);
+        auto value = llvm::APInt(prospectiveWidth, ref, radix);
+        
+        return std::pair(value, prospectiveWidth);
+    }));
+    add("interpretFromFile", sysinterpretFromFile);
+
+
+
+    auto sysfromFile = std::shared_ptr<Function>(new Function("fromFile", {Parameter::string, Parameter::expression, Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
+    auto& list = *argList;
+
+
+    // Check list
+    auto fileName = list[0].string.value();
+    auto offsetAPInt = list[1].expression.value().first;
+    auto offset = offsetAPInt.getLimitedValue();
+    auto bytesAPIInt = list[2].expression.value().first;
+    auto bytes = bytesAPIInt.getLimitedValue();
+    auto endianAPIInt = list[3].expression.value().first;
+    auto endian = endianAPIInt.getLimitedValue(); // (1b0: Little endian, 1b1: big endian)
+
+    //open binary file 
+    std::ifstream binaryFile;
+    binaryFile.open(fileName, std::ios::in | std::ios::binary);
+    if (!binaryFile) {
+        throw "io.fileNotFound";
+    }
+
+    //example
+    // FA BE FC FA
+    // offset = 1 --> start form BE
+    // bytes = 2 --> BE FC
+    // little--> FC BE , big--> BE FC
+
+    // Seek to offset from the beginning of the file 
+    uint start = offset*2;
+    binaryFile.seekg(start , std::ios::beg); 
+
+    //read from file
+    uint length = bytes*2;
+    char buffer[length];
+    binaryFile.read (buffer, length);
+
+    // (1b0: Little endian, 1b1: big endian)
+    if(endian == 0){
+        // little endian
+        // FC BE RC --> RC BE FC 
+        char tempBuffer[length];
+        int j=0;
+        for(uint i=length; i>0; i=i-2){
+            tempBuffer[i] = buffer[j];
+            tempBuffer[i-1] = buffer[j+1];
+            // increment j
+            j=j+2;
+        }
+        //adjust buffer
+        for(uint i=0; i<length; i++){
+            buffer[i] = tempBuffer[i];
+        }
+    }else if(endian == 1){
+        // big endian
+        // do nothing 
+    }else {
+        throw "endianUnspecified";
+    }
+    //convert from array of characters to string
+    std::string line = buffer;
+
+    //close file
+    binaryFile.close();
+        
+    //convert line from string in to llvm::APInt
+    auto interpretable = line;
+
+    auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9]+)");
+        
+    auto match = std::smatch();
+    std::regex_match(interpretable, match, regex); // If it doesn't match, the regex here and in the .l file are mismatched.
+
+    AccessWidth prospectiveWidth;
+    try {
+        prospectiveWidth = std::stoi(match[1]);
+    } catch (std::invalid_argument& error) {
+        throw "FromFile.notANumber";
+    }
+
+    if (prospectiveWidth < 0 || prospectiveWidth > maxAccessWidth) {
+        throw "expr.tooWide";
+    }
+
+    std::string radixCharacter = match[2];
+    uint8_t radix;
+
+    switch(radixCharacter[0]) {
+        case 'b':
+            radix = 2;
+            break;
+        case 'o':
+            radix = 8;
+            break;
+        case 'd':
+            radix = 10;
+            break;
+        case 'x':
+            radix = 16;
+            break;
+        case 'h':
+            throw "fixedNumber.usedVerilogH";
+            break;
+        default:
+            throw "FATAL";
+        }
+    auto ref = llvm::StringRef(match[3]);
+    auto value = llvm::APInt(prospectiveWidth, ref, radix);
+        
+    return std::pair(value, prospectiveWidth);
+}));
+add("fromFile", sysfromFile);
+
+
+stepOut();
 }
+
 
 SymbolTable::~SymbolTable() {
 }
