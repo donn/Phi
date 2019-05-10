@@ -6,12 +6,10 @@ module Beta(a: Input, b: Output, c: Output) {
         c = theta[0]
     }
 
-    Register l
-    l.data = theta[0]
+    Register l = 1b0
+    l.data = theta[0] // _1l_data
     l.clock = ~a
     l.reset = c
-    l.enable = a
-
 
     b = theta[1]
 }

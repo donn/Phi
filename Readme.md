@@ -18,6 +18,7 @@ All running dependencies, plus:
 * A POSIX environment
 * A C++17 compiler that supports **standard** C++17
     * No GCC or Clang specific extensions are used. Any used by accident are a bug we are interested in fixing.
+    * We still recommend Clang + LLDB for debugging.
 * Git
 * Make
 * GNU Bison
@@ -50,7 +51,9 @@ export LLVM_CONFIG="/usr/local/opt/llvm/bin/llvm-config"
 ```
 
 ### GNU/Linux
-Install git, gcc, make and buson using your package manager.
+Install git, gcc, make and bison using your package manager.
+
+If you have Clang and you want to use it, you can export and set the `CC` and `CXX` environment variables to `clang` and `clang++` respectively.
 
 #### Debian-based OSes (incl. Ubuntu, elementary...)
 Using apt...

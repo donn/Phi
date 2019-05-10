@@ -50,7 +50,7 @@ namespace Phi {
 
         bool msbFirst; // e.g. true: [31..0], false: [0..31]
 
-        Driven(std::string id, Node::Node* declarator, AccessWidth from = 1, AccessWidth to = 1, bool msbFirst = true): Symbol(id, declarator), from(from), to(to), msbFirst(msbFirst) {}
+        Driven(std::string id, Node::Node* declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): Symbol(id, declarator), from(from), to(to), msbFirst(msbFirst) {}
 
         bool drive(Node::Expression* expression, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt);
 
@@ -66,6 +66,10 @@ namespace Phi {
 #if YYDEBUG
         int represent(std::ostream* stream, int* node);
 #endif
+    };
+
+    struct Container: public SymbolSpace, public Driven {
+        Container(std::string id, Node::Node* declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): SymbolSpace(id, declarator, false), Driven(id, declarator, from, to, msbFirst) {} 
     };
 
     struct SymbolArray: public Symbol {

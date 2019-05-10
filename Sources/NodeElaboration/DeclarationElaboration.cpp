@@ -53,9 +53,11 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
 }
 
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
+    using VLD = VariableLengthDeclaration;
     DeclarationListItem* rightDLI;
     std::shared_ptr<Symbol> pointer;
     std::shared_ptr<Driven> pointerAsDriven;
+    std::shared_ptr<Container> pointerAsContainer;
     std::shared_ptr<SymbolArray> pointerAsArray;
 
     tryElaborate(array, context);
@@ -118,8 +120,6 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     LHExpression::lhDrivenProcess(optionalAssignment, context->table);
 
     if (size == 1) {
-        pointerAsDriven = std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst);
-        pointer = pointerAsDriven;
         if (optionalAssignment) {
             if (width != optionalAssignment->numBits) {
                 context->addError(nullopt, "driving.widthMismatch");
@@ -127,9 +127,29 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             if (type == VariableLengthDeclaration::Type::var && optionalAssignment->type != Expression::Type::CompileTime) {
                 context->addError(nullopt, "driving.hardwareDominance");
             }
-
-            pointerAsDriven->drive(optionalAssignment);
         } 
+        switch (type) {
+        case VLD::Type::reg:
+        case VLD::Type::latch:
+            pointerAsContainer = std::make_shared<Container>(identifier->idString, this, from.value(), to.value(), msbFirst);
+            pointerAsContainer->space["data"] = std::make_shared<Driven>("data", this, from.value(), to.value(), msbFirst);
+            // TO-DO: Figure out enable
+            if (type == VLD::Type::reg) {
+                pointerAsContainer->space["clock"] = std::make_shared<Driven>("clock", this);
+                pointerAsContainer->space["reset"] = std::make_shared<Driven>("reset", this);
+            } else {
+                pointerAsContainer->space["condition"] = std::make_shared<Driven>("condition", this);
+            }
+            pointerAsDriven = pointerAsContainer; // Believe it or not, we need this cast first anyway.
+            pointer = pointerAsDriven;
+            break;
+        default:
+            pointerAsDriven = std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst);
+            if (optionalAssignment) {
+                pointerAsDriven->drive(optionalAssignment);
+            }
+            pointer = pointerAsArray;
+        }
     } else {
         pointerAsArray = std::make_shared<SymbolArray>(identifier->idString, this, size);
         for (AccessWidth i = 0; i < size; i += 1) {
