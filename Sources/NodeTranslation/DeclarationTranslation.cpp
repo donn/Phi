@@ -125,8 +125,8 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
 
     //add wires,regs, always @ block, inside always @ block
     if(type==VLD::Type::reg){
-        *stream << "wire "+ namespaceSoFar+"_clock; \n";
-        *stream << "wire "+ namespaceSoFar+"_reset; \n";
+        *stream << "wire "+ namespaceSoFar +"_clock; \n";
+        *stream << "wire "+ namespaceSoFar +"_reset; \n";
         
         *stream << "wire ";
         tryTranslate(bus, stream, namespaceSoFar);

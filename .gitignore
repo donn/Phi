@@ -11,7 +11,7 @@ phic
 *.phi.sv
 
 *.dot
-*.png
+/*.png
 
 *.out
 *.vcd
