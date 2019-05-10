@@ -2,6 +2,7 @@
 #include "Node.h"
 
 #include <stack>
+#include <math.h>
 using namespace Phi;
 
 #define tableTop stack.back()
@@ -51,6 +52,69 @@ SymbolTable::SymbolTable() {
     // Create functions
     stepIntoAndCreate("Sys", NULL);
     using Parameter = Argument::Type;
+
+
+    auto sysAbs= std::shared_ptr<Function>(new Function("abs", {Parameter::expression}, [](Argument::List* argList) {
+        auto& list = *argList;
+
+        // Check list
+        auto number = list[0].expression.value();
+
+        if (
+            number.second > 52
+        ) {
+            throw "abs.52bitexceeded";
+        }
+        
+        double numberD = number.first.getLimitedValue();
+
+        double returnD;
+        
+        try {
+            returnD = std::abs(numberD);
+        } catch (int error) {
+            returnD = INFINITY;
+        }
+
+        uint64 returnedValue = returnD;
+
+        return std::pair(llvm::APInt(number.second, returnedValue), number.second);
+    }));
+    add("abs", sysAbs);
+
+
+    auto sysLog= std::shared_ptr<Function>(new Function("log", {Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
+    auto& list = *argList;
+
+    // Check list
+    auto number = list[0].expression.value();
+    auto base = list[1].expression.value();
+
+    if (
+        number.second > 52
+        || base.second > 52
+    ) {
+        throw "log.52bitexceeded";
+    }
+        
+    double numberD = number.first.getLimitedValue();
+    double baseD = base.first.getLimitedValue();
+
+    double returnD;
+        
+    try {
+        returnD = std::log(numberD);
+    } catch (int error) {
+        returnD = INFINITY;
+    }
+
+    uint64 returnedValue = returnD;
+
+    return std::pair(llvm::APInt(number.second, returnedValue), number.second);
+    }));
+    add("log", sysLog);
+
+
     auto sysPow = std::shared_ptr<Function>(new Function("pow", {Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
         auto& list = *argList;
 
@@ -81,6 +145,8 @@ SymbolTable::SymbolTable() {
         return std::pair(llvm::APInt(number.second, returnedValue), number.second);
     }));
     add("pow", sysPow);
+
+
     stepOut();
 }
 
