@@ -121,11 +121,13 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 
     if (size == 1) {
         if (optionalAssignment) {
-            if (width != optionalAssignment->numBits) {
-                context->addError(nullopt, "driving.widthMismatch");
-            }
-            if (type == VariableLengthDeclaration::Type::var && optionalAssignment->type != Expression::Type::CompileTime) {
-                context->addError(nullopt, "driving.hardwareDominance");
+            if (optionalAssignment->type != Expression::Type::Error) {
+                if (width != optionalAssignment->numBits) {
+                    context->addError(nullopt, "driving.widthMismatch");
+                }
+                if (type == VariableLengthDeclaration::Type::var && optionalAssignment->type != Expression::Type::CompileTime) {
+                    context->addError(nullopt, "driving.hardwareDominance");
+                }
             }
         } 
         switch (type) {
@@ -138,13 +140,13 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
                 pointerAsContainer->space["clock"] = std::make_shared<Driven>("clock", this);
                 pointerAsContainer->space["reset"] = std::make_shared<Driven>("reset", this);
                 auto resetValueDriven = std::make_shared<Driven>("_0R", this, from.value(), to.value(), msbFirst);
-                if (optionalAssignment) {
+                if (optionalAssignment && optionalAssignment->type != Expression::Type::Error) {
                     resetValueDriven->drive(optionalAssignment);
                 }
                 pointerAsContainer->space["_0R"] = resetValueDriven;
             } else {
                 pointerAsContainer->space["condition"] = std::make_shared<Driven>("condition", this);
-                if (optionalAssignment) {
+                if (optionalAssignment && optionalAssignment->type != Expression::Type::Error) {
                     context->addError(nullopt, "driving.latchNoReset");
                 }
             }
@@ -153,7 +155,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             break;
         default:
             pointerAsDriven = std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst);
-            if (optionalAssignment) {
+            if (optionalAssignment && optionalAssignment->type != Expression::Type::Error) {
                 pointerAsDriven->drive(optionalAssignment);
             }
             pointer = pointerAsDriven;

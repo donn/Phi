@@ -29,6 +29,21 @@ bool Driven::drive(Node::Expression* expression, optional<AccessWidth> fromOptio
     return true;
 }
 
+Argument::FunctionValue Function::call(Argument::List* listPtr) {
+    // First: Check
+    auto& list = *listPtr;
+    if (list.size() != parameterList.size()){
+        throw "function.unexpectedParameterCount";
+    }
+    for (size_t i = 0; i < list.size(); i += 1) {
+        if (list[i].type != parameterList[i]) {
+            throw "function.invalidParameters";
+        }
+    }
+    // Second: Execute
+    return behavior(listPtr);
+}
+
 SymbolTable::SymbolTable() {
     head = std::make_shared<SymbolSpace>("", nullptr);
     stack.push_back(head);
@@ -36,7 +51,7 @@ SymbolTable::SymbolTable() {
     // Create functions
     stepIntoAndCreate("Sys", NULL);
     using Parameter = Argument::Type;
-    auto sysPow = std::shared_ptr<Function>(new Function("pow", {Parameter::expression, Parameter::expression}, [](Function::ArgList* argList) {
+    auto sysPow = std::shared_ptr<Function>(new Function("pow", {Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
         auto& list = *argList;
 
         // Check list

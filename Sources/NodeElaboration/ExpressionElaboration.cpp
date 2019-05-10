@@ -574,9 +574,10 @@ void ProceduralCall::MACRO_ELAB_SIG_IMP {
         }
         head = static_cast<Argument*>(head->right);
     }
+    
+    auto result = symbol->call(&args);
 
     type = Type::CompileTime;
-    auto result = symbol->call(&args);
     value = result.first;
     numBits = result.second;
 }
