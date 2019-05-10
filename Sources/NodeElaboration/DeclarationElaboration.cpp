@@ -148,7 +148,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             if (optionalAssignment) {
                 pointerAsDriven->drive(optionalAssignment);
             }
-            pointer = pointerAsArray;
+            pointer = pointerAsDriven;
         }
     } else {
         pointerAsArray = std::make_shared<SymbolArray>(identifier->idString, this, size);
