@@ -249,32 +249,26 @@ SymbolTable::SymbolTable() {
         throw "io.fileNotFound";
     }
 
-    //example
-    // FA BE FC FA
-    // offset = 1 --> start form BE
-    // bytes = 2 --> BE FC
-    // little--> FC BE , big--> BE FC
-
     // Seek to offset from the beginning of the file 
-    uint start = offset*2;
+    uint start = offset;
     binaryFile.seekg(start , std::ios::beg); 
 
     //read from file
-    uint length = bytes*2;
-    char buffer[length];
+    uint length = bytes;
+    std::vector<uint8> buffer(length);
     binaryFile.read (buffer, length);
 
     // (1b0: Little endian, 1b1: big endian)
     if(endian == 0){
         // little endian
         // FC BE RC --> RC BE FC 
-        char tempBuffer[length];
+        uint8 tempBuffer[length];
         int j=0;
-        for(uint i=length; i>0; i=i-2){
+        for(uint i=length; i>0; i=i-1){
             tempBuffer[i] = buffer[j];
-            tempBuffer[i-1] = buffer[j+1];
-            // increment j
-            j=j+2;
+            //increment j
+            j++;
+
         }
         //adjust buffer
         for(uint i=0; i<length; i++){
@@ -286,56 +280,12 @@ SymbolTable::SymbolTable() {
     }else {
         throw "endianUnspecified";
     }
-    //convert from array of characters to string
-    std::string line = buffer;
-
+    
     //close file
     binaryFile.close();
-        
-    //convert line from string in to llvm::APInt
-    auto interpretable = line;
 
-    auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9]+)");
-        
-    auto match = std::smatch();
-    std::regex_match(interpretable, match, regex); // If it doesn't match, the regex here and in the .l file are mismatched.
+    llvm::APInt value(length)
 
-    AccessWidth prospectiveWidth;
-    try {
-        prospectiveWidth = std::stoi(match[1]);
-    } catch (std::invalid_argument& error) {
-        throw "FromFile.notANumber";
-    }
-
-    if (prospectiveWidth < 0 || prospectiveWidth > maxAccessWidth) {
-        throw "expr.tooWide";
-    }
-
-    std::string radixCharacter = match[2];
-    uint8_t radix;
-
-    switch(radixCharacter[0]) {
-        case 'b':
-            radix = 2;
-            break;
-        case 'o':
-            radix = 8;
-            break;
-        case 'd':
-            radix = 10;
-            break;
-        case 'x':
-            radix = 16;
-            break;
-        case 'h':
-            throw "fixedNumber.usedVerilogH";
-            break;
-        default:
-            throw "FATAL";
-        }
-    auto ref = llvm::StringRef(match[3]);
-    auto value = llvm::APInt(prospectiveWidth, ref, radix);
-        
     return std::pair(value, prospectiveWidth);
 }));
 add("fromFile", sysfromFile);
