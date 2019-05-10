@@ -2,6 +2,7 @@
 
 #include <string>
 #include <fstream>
+#include <sstream>
 
 using namespace Phi::Node;
 
@@ -18,9 +19,22 @@ void PropertyAccess::MACRO_TRANS_SIG_IMP {
     //             this->left = object; this->right = property;
     //         }
 
-    tryTranslate(left, stream, namespaceSoFar); //object
-    *stream << ".";
-    tryTranslate(right, stream, namespaceSoFar); //property
+    // TO-DO: Make sure this hack works with arrays/indices
+
+    std::stringstream tempStream;
+    tryTranslate(left, &tempStream, "");
+    auto leftPart = tempStream.str();
+    leftPart.erase(0, 1);
+    leftPart.erase(leftPart.length() - 1, 1);
+    tempStream.str("");
+    
+    tryTranslate(right, &tempStream, "");
+    auto rightPart = tempStream.str();
+    rightPart.erase(0, 1);
+    rightPart.erase(rightPart.length() - 1, 1);
+
+    *stream << "_" << leftPart.length() << leftPart << "_" << rightPart << std::endl;
+    
 }
 
 void ArrayAccess::MACRO_TRANS_SIG_IMP {
