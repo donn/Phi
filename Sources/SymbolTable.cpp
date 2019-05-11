@@ -5,6 +5,7 @@
 #include <stack>
 #include <regex>
 #include <cmath>
+#include <string>
 using namespace Phi;
 
 #define tableTop stack.back()
@@ -261,7 +262,7 @@ SymbolTable::SymbolTable() {
         // (1b0: Little endian, 1b1: big endian)
         if(endian == 0){
             // little endian
-            // FC BE RC --> RC BE FC 
+            // swaping
             std::vector<char> tempBufferContiguous(length);
             char* tempBuffer = &tempBufferContiguous[0];
             int j=0;
@@ -269,7 +270,6 @@ SymbolTable::SymbolTable() {
                 tempBuffer[i] = buffer[j];
                 //increment j
                 j++;
-
             }
             //adjust buffer
             for(uint i=0; i<length; i++){
@@ -285,12 +285,23 @@ SymbolTable::SymbolTable() {
         //close file
         binaryFile.close();
 
-        auto value = llvm::APInt(bytes * 8, 0);
+        for(uint i=0; i<length; i++){
+            std::cout<<buffer[i];
+        }
+        std::cout<<std::endl;
 
-        // TO-DO: Actual value
+        auto value = llvm::APInt(bytes * 8, 0);
+        for(uint i=0; i<length; i++){
+            value = value | buffer[i];
+            if(i!=length-1)
+                value = value << 8;
+        }
+
         return std::pair(value, bytes * 8);
     }));
     add("fromFile", sysfromFile);
+
+
     stepOut();
 }
 

@@ -43,7 +43,7 @@ module register_file_tb;
 	end
 	
 	always 
-    #5  clk =  ~clk; 
+    #5  clk = ~clk; 
 
 
     initial begin
