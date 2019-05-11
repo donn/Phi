@@ -68,9 +68,11 @@ namespace Phi {
         struct Identifier: public Node {
             std::string idString;
 
+            MACRO_DEBUGLABEL_SIG_HDR;
+
             Identifier(const char* identifier);
 
-            MACRO_DEBUGLABEL_SIG_HDR;
+            // No elaboration needed.
             MACRO_TRANS_SIG_HDR;
         };
 
@@ -80,7 +82,7 @@ namespace Phi {
         struct Range;
 
         // Declarations
-        struct Declaration: public Node {
+        struct Declaration: public Node { // Abstract
             Identifier* identifier;
 
             Declaration(Identifier* identifier): identifier(identifier) {}
@@ -148,6 +150,7 @@ namespace Phi {
             Expression* assignment;
 
             TemplateDeclaration(Identifier* identifier, Expression* assignment): Declaration(identifier) {}
+            // TO-DO: Parameterization support
         };
 
         // Statements
@@ -309,6 +312,7 @@ namespace Phi {
             NondeclarativePorts(LHExpression* lhs, ExpressionIDPair* ports): Nondeclarative(lhs), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR;
+            // No translation needed.
         };
 
         // Expression
@@ -340,7 +344,7 @@ namespace Phi {
         };      
 
         // Left Hand Expressions
-        struct LHExpression: public Expression {
+        struct LHExpression: public Expression { // Abstract
             std::vector<SymbolTable::Access> accessList(optional<AccessWidth>* from, optional<AccessWidth>* to);
             static void lhDrivenProcess(Node* suspect, Phi::SymbolTable* table);
 
@@ -355,38 +359,41 @@ namespace Phi {
 
             IdentifierExpression(Identifier* identifier): identifier(identifier) {}
 
-            MACRO_ELAB_SIG_HDR {}
+            // No elaboration needed.
             MACRO_TRANS_SIG_HDR;
         };
 
         struct PropertyAccess: public LHExpression {
-            PropertyAccess(Expression* object, Expression* property) {
+            PropertyAccess(LHExpression* object, LHExpression* property) {
                 this->left = object; this->right = property;
             }
 
+            // No elaboration needed.
             MACRO_TRANS_SIG_HDR;
         };
 
         struct ArrayAccess: public LHExpression {
             bool index = true; // If false, translation should treat this as a namespace array access
 
-            ArrayAccess(Expression* object, Expression* width) {
+            ArrayAccess(LHExpression* object, Expression* width) {
                 this->left = object; this->right = width;
             }
 
+            // Elaborated upon via PII.
             MACRO_TRANS_SIG_HDR;
         };
         
         struct RangeAccess: public LHExpression {
-            RangeAccess(Expression* object, Range* range) {
+            RangeAccess(LHExpression* object, Range* range) {
                 this->left = object; this->right = (Node*)range;
             }
 
+            // Elaborated upon via PII.
             MACRO_TRANS_SIG_HDR;
         };
 
         struct LHConcatenation: public LHExpression {
-            LHConcatenation(Expression* of, Expression* with) {
+            LHConcatenation(LHExpression* of, LHExpression* with) {
                 this->left = of; this->right = with;
             }
 
@@ -397,6 +404,7 @@ namespace Phi {
         struct Literal: public Expression {
             Literal(const char* interpretable, bool widthIncluded = true);
 
+            // No elaboration needed.
             MACRO_TRANS_SIG_HDR;
         };
 
