@@ -87,17 +87,24 @@ namespace Phi {
     };
 
     struct SymbolSpace: public Symbol {
-        std::map< std::string, std::shared_ptr<Symbol> > space;
-        bool isComb;
+        enum class Type {
+            module = 0,
+            comb,
+            other
+        };
 
-        SymbolSpace(std::string id, Node::Node* declarator, bool isComb = false): Symbol(id, declarator), isComb(isComb) {}
+        Type type;
+        std::map< std::string, std::shared_ptr<Symbol> > space;
+        std::map< std::string, Node::Node* > annotations;
+
+        SymbolSpace(std::string id, Node::Node* declarator, Type type = Type::other): Symbol(id, declarator), type(type) {}
 #if YYDEBUG
         int represent(std::ostream* stream, int* node);
 #endif
     };
 
     struct Container: public SymbolSpace, public Driven {
-        Container(std::string id, Node::Node* declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): SymbolSpace(id, declarator, false), Driven(id, declarator, from, to, msbFirst) {} 
+        Container(std::string id, Node::Node* declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): SymbolSpace(id, declarator), Driven(id, declarator, from, to, msbFirst) {} 
     };
 
     struct SymbolArray: public Symbol {
@@ -136,10 +143,10 @@ namespace Phi {
         optional< std::shared_ptr<Symbol> > find(std::vector<Access>* accesses, optional<AccessWidth>* from, optional<AccessWidth>* to);
         void stepInto(std::string id);
         void stepIntoComb(Node::Node* attached);
-        void stepIntoAndCreate(std::string id, Node::Node* declarator);
+        void stepIntoAndCreate(std::string id, Node::Node* declarator, SymbolSpace::Type type = SymbolSpace::Type::other);
         void stepOut();
-
-        bool inComb();
+        
+        std::shared_ptr<SymbolSpace> findNearest(SymbolSpace::Type type);
 
 #if YYDEBUG
         void represent(std::ostream* stream);

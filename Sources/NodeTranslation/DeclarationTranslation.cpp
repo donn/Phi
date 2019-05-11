@@ -72,6 +72,9 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
         // Contents
         tryTranslate(contents, stream, namespaceSoFar);
 
+        // Addenda
+        tryTranslate(addenda, stream, namespaceSoFar);
+
         *stream <<std::endl;
         *stream << "endmodule" << std::endl;
 
@@ -146,7 +149,13 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         *stream << "end \n";
 
         *stream << "else begin\n";
+        if (hasEnable) {
+            *stream << "if (" << namespaceSoFar+"_enable" << ") begin\n";
+        }
         *stream << identifier->idString + "<=" + namespaceSoFar+ "_data; \n";
+        if (hasEnable) {
+            *stream << "end\n";
+        }
         *stream << "end \n";
 
         *stream << "end \n";
