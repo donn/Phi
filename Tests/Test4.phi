@@ -4,4 +4,5 @@ module Example() {
     Wire[7..0] k3 = $Sys.abs(8d100);
 
     Wire[31..0] k4 = $Sys.interpretFromFile("example.txt", 3);
+    Wire[31..0] k5 = $Sys.fromFile("example.bin", 3, 4, 0);
 }

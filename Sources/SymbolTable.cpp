@@ -228,7 +228,7 @@ SymbolTable::SymbolTable() {
     add("interpretFromFile", sysinterpretFromFile);
 
 
-
+/*
     auto sysfromFile = std::shared_ptr<Function>(new Function("fromFile", {Parameter::string, Parameter::expression, Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
         auto& list = *argList;
 
@@ -261,7 +261,7 @@ SymbolTable::SymbolTable() {
         // (1b0: Little endian, 1b1: big endian)
         if(endian == 0){
             // little endian
-            // FC BE RC --> RC BE FC 
+            // swaping
             std::vector<char> tempBufferContiguous(length);
             char* tempBuffer = &tempBufferContiguous[0];
             int j=0;
@@ -269,7 +269,6 @@ SymbolTable::SymbolTable() {
                 tempBuffer[i] = buffer[j];
                 //increment j
                 j++;
-
             }
             //adjust buffer
             for(uint i=0; i<length; i++){
@@ -291,6 +290,8 @@ SymbolTable::SymbolTable() {
         return std::pair(value, bytes * 8);
     }));
     add("fromFile", sysfromFile);
+*/
+
     stepOut();
 }
 
