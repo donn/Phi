@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+files = Dir["CPU/*.phi"]
+
+for file in files
+    puts "Testing #{file}..."
+    system("./phic #{file}")
+    system("iverilog -g2005-sv #{file}.sv")
+end
