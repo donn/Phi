@@ -16,10 +16,10 @@ void Range::MACRO_ELAB_SIG_IMP {
     auto from = static_cast<Expression*>(this->from);
     auto to = static_cast<Expression*>(this->to);
     
-    if (from->type == Expression::Type::RunTime || to->type == Expression::Type::RunTime) {
+    if (from->type == Expression::Type::runTime || to->type == Expression::Type::runTime) {
         throw "range.runTimeValue";
     }
-    if (from->type == Expression::Type::Error || to->type == Expression::Type::Error) {
+    if (from->type == Expression::Type::error || to->type == Expression::Type::error) {
         return;
     }
 
@@ -35,8 +35,8 @@ void Range::getValues(AccessWidth* fromRef, AccessWidth* toRef) {
     auto from = static_cast<Expression*>(this->from);
     auto to = static_cast<Expression*>(this->to);
 
-    assert(!(from->type == Expression::Type::RunTime || to->type == Expression::Type::RunTime));
-    if (from->type == Expression::Type::Error || to->type == Expression::Type::Error) {
+    assert(!(from->type == Expression::Type::runTime || to->type == Expression::Type::runTime));
+    if (from->type == Expression::Type::error || to->type == Expression::Type::error) {
         throw "driven.rangeError";
     }
 

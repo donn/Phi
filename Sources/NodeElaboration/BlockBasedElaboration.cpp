@@ -6,16 +6,16 @@ void If::MACRO_ELAB_SIG_IMP {
     LHExpression::lhDrivenProcess(expression, context->table);
     
     // If NOT in a comb block, we do need to elaborate. Otherwise... nyet.
-    if (context->table->inComb()) {
+    if (context->table->findNearest(SymbolSpace::Type::comb)) {
         return;
     }
 
-    if (expression->type == Expression::Type::Error) {
+    if (expression->type == Expression::Type::error) {
         //evaluation prolly failed
         return;
     }
 
-    if (expression->type == Expression::Type::RunTime) {
+    if (expression->type == Expression::Type::runTime) {
         throw "elaboration.softwareExpr";
         return;
     }

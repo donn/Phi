@@ -24,7 +24,7 @@ void Phi::Node::tryElaborate(Phi::Node::Node* node, MACRO_ELAB_PARAMS) {
 void Phi::Node::tryTranslate(Phi::Node::Node* node, MACRO_TRANS_PARAMS) {
     if (node) {
         auto asExpr = dynamic_cast<Expression*>(node);
-        if (asExpr && asExpr->type == Expression::Type::CompileTime) {
+        if (asExpr && asExpr->type == Expression::Type::compileTime) {
             auto str = asExpr->value.value().toString(16, false);
             *stream << asExpr->numBits << "'h" << str;
         } else {

@@ -128,13 +128,16 @@ namespace Phi {
         struct TopLevelDeclaration: public Declaration {
             enum class Type {
                 module = 0,
-                interface
+                interface = 1
             };
+            constexpr static SymbolSpace::Type declTypeMap[] = {SymbolSpace::Type::module, SymbolSpace::Type::other};
 
             Type type;
             Port* ports;
             Expression* inheritance;
             Statement* contents;
+
+            Statement* addenda = nullptr;
 
             MACRO_DEBUGLABEL_SIG_HDR;
             MACRO_GRAPHPRINT_SIG_HDR;
@@ -255,6 +258,8 @@ namespace Phi {
             Expression* array;
             Expression* optionalAssignment;
 
+            bool hasEnable = false;
+
             MACRO_DEBUGLABEL_SIG_HDR;
 
             DeclarationListItem(Identifier* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
@@ -319,13 +324,13 @@ namespace Phi {
         struct Expression: public Node { //Abstract
             enum class Type {
                 // In ascending order of precedence
-                CompileTime = 0,
-                ParameterSensitive,
-                RunTime,
-                Error = 0xFF
+                compileTime = 0,
+                parameterSensitive,
+                runTime,
+                error = 0xFF
             };
 
-            Type type = Type::Error;
+            Type type = Type::error;
             AccessWidth numBits = 0;
             optional<llvm::APInt> value = nullopt;
         };
@@ -496,7 +501,10 @@ namespace Phi {
 
         struct StringArgument: public Argument {
             std::string argument;
-            StringArgument(const char* argument): argument(argument) {}
+            StringArgument(const char* argument): argument(argument) {
+                this->argument.erase(0, 1);
+                this->argument.erase(this->argument.length() - 1, 1);
+            }
         };
         
         struct ExpressionArgument: public Argument {

@@ -28,16 +28,12 @@ namespace Phi {
         Node::Node* head = nullptr;
     public:
         struct DriveCheck {
-            enum class Reason {
-                isOutput = 0,
-                usedAsInput = 1,
-                usedAsRegisterReset = 2
-            };
-            
             std::shared_ptr<Driven> target;
-            Reason reason;
-            std::optional<AccessWidth> from;
-            std::optional<AccessWidth> to;
+            optional<AccessWidth> from;
+            optional<AccessWidth> to;
+            std::function<void()> effect;
+
+            DriveCheck(std::shared_ptr<Driven> target, optional<AccessWidth> from, optional<AccessWidth> to, std::function<void()> effect): target(target), from(from), to(to), effect(effect) {}
         };
         std::vector<DriveCheck> checks;
         SymbolTable* table = nullptr;

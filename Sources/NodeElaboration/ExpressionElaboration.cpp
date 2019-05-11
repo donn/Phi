@@ -47,7 +47,7 @@ SpecialNumber::SpecialNumber(const char* interpretablePtr) {
 
 Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
     auto interpretable = std::string(interpretablePtr);
-    type = Type::CompileTime;
+    type = Type::compileTime;
 
     if (!widthIncluded) {
         auto ref = llvm::StringRef(interpretable);
@@ -115,10 +115,10 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWi
         if (auto pointer = dynamic_cast<IdentifierExpression*>(top)) {
             vector.push_back(PSA::ID(&pointer->identifier->idString));
         } else if (auto pointer = dynamic_cast<Expression*>(top)) {
-            if (pointer->type == Type::Error) {
+            if (pointer->type == Type::error) {
                 throw "access.errorValue";
             }
-            if (pointer->type == Type::RunTime) {
+            if (pointer->type == Type::runTime) {
                 throw "access.runTimeValue";
             }
             AccessWidth value = pointer->value.value().getLimitedValue();
@@ -185,12 +185,12 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
 
     // Check if RunTime
     if (dynamic_cast<Port*>(driven->declarator)) {
-        lh->type = Expression::Type::RunTime;
+        lh->type = Expression::Type::runTime;
         return;
     }
     if (auto dli = dynamic_cast<DeclarationListItem*>(driven->declarator)) {
         if (dli->type != VariableLengthDeclaration::Type::var) {
-            lh->type = Expression::Type::RunTime;
+            lh->type = Expression::Type::runTime;
             return;
         }
     }
@@ -203,7 +203,7 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
         }
         auto unwrapped = range.value();
         lh->type = unwrapped.expression->type;
-        if (lh->type == Expression::Type::CompileTime) {
+        if (lh->type == Expression::Type::compileTime) {
             auto trueIndex = driven->msbFirst ? index - range->to : index - range->from;
             auto value = unwrapped.expression->value.value();
             lh->value = value.extractBits(1, trueIndex);
@@ -214,7 +214,7 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
             throw "driven.usedBeforeInitializing";
         }
 
-        lh->type = Expression::Type::CompileTime;
+        lh->type = Expression::Type::compileTime;
         
         AccessWidth fromSoFar = fromUnwrapped, toSoFar = toUnwrapped;
         AccessWidth bitCount = 0;
@@ -230,7 +230,7 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
                 if (r.expression->type > lh->type) {
                     lh->type = r.expression->type;
                 }
-                if (r.expression->type == Expression::Type::CompileTime &&
+                if (r.expression->type == Expression::Type::compileTime &&
                     fromSoFar <= r.from && fromSoFar >= r.to) {
                     auto cap = std::max(toSoFar, r.to);
                     auto trueFrom = fromSoFar - r.to;
@@ -254,7 +254,7 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
                 if (r.expression->type > lh->type) {
                     lh->type = r.expression->type;
                 }
-                if (r.expression->type == Expression::Type::CompileTime &&
+                if (r.expression->type == Expression::Type::compileTime &&
                     fromSoFar >= r.from && fromSoFar <= r.to) {
                     auto cap = std::min(toSoFar, r.to);
                     auto trueFrom = fromSoFar - r.from;
@@ -271,7 +271,7 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
             }
         }
 
-        if (lh->type == Expression::Type::CompileTime) {
+        if (lh->type == Expression::Type::compileTime) {
             lh->value = value;
         }
     }
@@ -283,14 +283,14 @@ void Unary::MACRO_ELAB_SIG_IMP {
     auto rightExpr = static_cast<Expression*>(right);
 
     // Abort if error
-    if (rightExpr->type == Expression::Type::Error) {
-        type = Expression::Type::Error;
+    if (rightExpr->type == Expression::Type::error) {
+        type = Expression::Type::error;
         return;
     }
 
     numBits = rightExpr->numBits;
 
-    if (rightExpr->type == Expression::Type::CompileTime) {
+    if (rightExpr->type == Expression::Type::compileTime) {
         auto rightUnwrapped = rightExpr->value.value();
         switch (operation) {
             case Operation::negate:
@@ -308,11 +308,11 @@ void Unary::MACRO_ELAB_SIG_IMP {
                 rightUnwrapped = rightUnwrapped.isNullValue() ? llvm::APInt(1, 0) : llvm::APInt(1, 1);
                 break;
         }
-        type = Expression::Type::CompileTime;
+        type = Expression::Type::compileTime;
         value = rightUnwrapped;
     }
-    if (rightExpr->type == Expression::Type::RunTime) {
-        type = Expression::Type::RunTime;
+    if (rightExpr->type == Expression::Type::runTime) {
+        type = Expression::Type::runTime;
     }
 }
 
@@ -325,8 +325,8 @@ void Binary::MACRO_ELAB_SIG_IMP {
     auto rightExpr = static_cast<Expression*>(right);
 
     // Abort if error
-    if (leftExpr->type == Expression::Type::Error || rightExpr->type == Expression::Type::Error) {
-        type = Expression::Type::Error;
+    if (leftExpr->type == Expression::Type::error || rightExpr->type == Expression::Type::error) {
+        type = Expression::Type::error;
         return;
     }
 
@@ -341,12 +341,13 @@ void Binary::MACRO_ELAB_SIG_IMP {
                 break;
             case Operation::mul:
                 numBits = leftExpr->numBits + rightExpr->numBits;
+                break;
             default:
                 numBits = leftExpr->numBits;
         }
     }
 
-    if (leftExpr->type == Expression::Type::CompileTime && rightExpr->type == Expression::Type::CompileTime) {
+    if (leftExpr->type == Expression::Type::compileTime && rightExpr->type == Expression::Type::compileTime) {
         auto leftUnwrapped = leftExpr->value.value();
         auto rightUnwrapped = rightExpr->value.value();
         if (leftExpr->numBits != rightExpr->numBits) {
@@ -453,10 +454,10 @@ void Binary::MACRO_ELAB_SIG_IMP {
             }
         }
         
-        type = Expression::Type::CompileTime;
+        type = Expression::Type::compileTime;
     }
-    if (rightExpr->type == Expression::Type::RunTime) {
-        type = Expression::Type::RunTime;
+    if (rightExpr->type == Expression::Type::runTime) {
+        type = Expression::Type::runTime;
     }
 }
 
@@ -484,8 +485,8 @@ void RepeatConcatenation::MACRO_ELAB_SIG_IMP {
     auto rightExpr = static_cast<Expression*>(right);
     type = rightExpr->type;
     
-    if (leftExpr->type == Type::RunTime) {
-        type = Type::Error;
+    if (leftExpr->type == Type::runTime) {
+        type = Type::error;
         throw "concat.cannotRepeatOnHardwareExpression";
     }
 
@@ -499,8 +500,8 @@ void Multiplexer::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
     // TODO: Multiplexer runtime vs compiletime
         // Selection algorithm
-    type = Type::RunTime;
-    inComb = context->table->inComb();
+    type = Type::runTime;
+    inComb = context->table->findNearest(SymbolSpace::Type::comb) != nullptr;
     
     // Limitation: Cannot verify integrity
 
@@ -563,10 +564,10 @@ void ProceduralCall::MACRO_ELAB_SIG_IMP {
         } else {
             auto expressionArgument = static_cast<ExpressionArgument*>(head);
             auto expression = expressionArgument->argument;
-            if (expression->type == Type::RunTime) {
+            if (expression->type == Type::runTime) {
                 throw "arg.hardwareExpression";
             }
-            if (expression->type == Type::Error) {
+            if (expression->type == Type::error) {
                 return;
             }
             
@@ -577,7 +578,7 @@ void ProceduralCall::MACRO_ELAB_SIG_IMP {
     
     auto result = symbol->call(&args);
 
-    type = Type::CompileTime;
+    type = Type::compileTime;
     value = result.first;
     numBits = result.second;
 }

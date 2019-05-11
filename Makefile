@@ -30,7 +30,7 @@ YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cc,$(YACC)))
 YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
 CPP_LY_FLAGS = $(shell $(LLVM_CONFIG) --cxxflags) -fexceptions -std=c++17
-CPP_FLAGS = $(CPP_LY_FLAGS) -Wall -pedantic
+CPP_FLAGS = $(CPP_LY_FLAGS) -Wall -Wimplicit-fallthrough -pedantic
 
 SOURCES = 
 HEADERS =
@@ -76,41 +76,50 @@ $(BUILD_DIR)/git_version.h:
 
 $(YACC_OUT): $(YACC)
 	mkdir -p $(@D)
+	@echo "\033[1;32m>> Generating parser... \033[0m"
 	$(BISON) $(YACC_FLAGS) -o $@ -d $^
 
 $(REFLEX_LIB_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(REFLEX_LIB_HEADER_DIR)
 	mkdir -p $(@D)
+	@echo "\033[1;32m>> Compiling $< \033[0m"
 	$(CXX) $(CPP_LY_FLAGS) -c -I$(REFLEX_LIB_HEADER_DIR) -o $@ $<
 
 $(REFLEX_UNICODE_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(REFLEX_LIB_HEADER_DIR)
 	mkdir -p $(@D)
+	@echo "\033[1;32m>> Compiling $< \033[0m"
 	$(CXX) $(CPP_LY_FLAGS) -c -I$(REFLEX_LIB_HEADER_DIR) -o $@ $<
 
 Intermediates/reflex: $(REFLEX_MESS)
 	mkdir -p $(@D)
+	@echo "\033[1;32m>> Compiling and linking the RE-flex binary \033[0m"
 	$(CXX) $(CPP_LY_FLAGS) -I $(REFLEX_LIB_HEADER_DIR) -o $@ $^
 
 $(LEX_OUT): $(LEX) $(YACC_OUT) Intermediates/reflex
 	mkdir -p $(@D)
+	@echo "\033[1;32m>> Generating scanner... \033[0m"
 	Intermediates/reflex -o $@ --header-file=$(LEX_HEADER) $<
 
 $(LEX_HEADER): $(LEX_OUT)
-	@echo "\033[1;32m>> Lex header generated.\033[0m"
+	@echo "\033[1;32m>> Scanner header generated.\033[0m"
 
 $(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS)
 	mkdir -p $(@D)
+	@echo "\033[1;32m>> Compiling $< \033[0m"
 	$(CC) $(C_FLAGS) -c -I$(HEADER_DIR) -o $@ $<
 
 $(CPP_LY_OBJECTS): %.o : %.cc $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 	mkdir -p $(@D)
+	@echo "\033[1;32m>> Compiling $< \033[0m"
 	$(CXX) $(CPP_LY_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) -I /usr/local/include/ $(LIBRARY_HEADER_PATHS) -c -o $@ $<
 
 $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 	mkdir -p $(@D)
+	@echo "\033[1;32m>> Compiling $< \033[0m"
 	$(CXX) $(CPP_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(REFLEX_UNICODE_OBJECTS)
 	mkdir -p $(@D)
+	@echo "\033[1;32m>> Linking $(BINARY) \033[0m"
 	$(CXX) -o $@ $^ $(LD_FLAGS)
 	@echo "\033[1;32m>> Build complete.\033[0m"
 

@@ -90,17 +90,7 @@ void Context::driveChecks() {
         auto coverage = check.target->checkRangeCoverage(from, to);
 
         if (coverage.size() == 0) {
-            switch (check.reason) {
-                case DriveCheck::Reason::isOutput:
-                    addError(nullopt, "driveCheck.outputNotDriven");
-                    break;
-                case DriveCheck::Reason::usedAsInput:
-                    addError(nullopt, "driveCheck.inputDriverNotDriven");
-                    break;
-                case DriveCheck::Reason::usedAsRegisterReset:
-                    addError(nullopt, "driveCheck.registerResetNotSet");
-                    break;
-            }
+            check.effect();
         }
     }
 }

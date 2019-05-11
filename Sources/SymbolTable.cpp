@@ -1,8 +1,10 @@
 #include "SymbolTable.h"
 #include "Node.h"
 
+#include <fstream>
 #include <stack>
-#include <math.h>
+#include <regex>
+#include <cmath>
 using namespace Phi;
 
 #define tableTop stack.back()
@@ -84,33 +86,33 @@ SymbolTable::SymbolTable() {
 
 
     auto sysLog= std::shared_ptr<Function>(new Function("log", {Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
-    auto& list = *argList;
+        auto& list = *argList;
 
-    // Check list
-    auto number = list[0].expression.value();
-    auto base = list[1].expression.value();
+        // Check list
+        auto number = list[0].expression.value();
+        auto base = list[1].expression.value();
 
-    if (
-        number.second > 52
-        || base.second > 52
-    ) {
-        throw "log.52bitexceeded";
-    }
-        
-    double numberD = number.first.getLimitedValue();
-    double baseD = base.first.getLimitedValue();
+        if (
+            number.second > 52
+            || base.second > 52
+        ) {
+            throw "log.52bitexceeded";
+        }
+            
+        double numberD = number.first.getLimitedValue();
+        double baseD = base.first.getLimitedValue();
 
-    double returnD;
-        
-    try {
-        returnD = std::log(numberD);
-    } catch (int error) {
-        returnD = INFINITY;
-    }
+        double returnD;
+            
+        try {
+            returnD = std::log(numberD) / std::log(baseD);
+        } catch (int error) {
+            returnD = INFINITY;
+        }
 
-    uint64 returnedValue = returnD;
+        uint64 returnedValue = returnD;
 
-    return std::pair(llvm::APInt(number.second, returnedValue), number.second);
+        return std::pair(llvm::APInt(number.second, returnedValue), number.second);
     }));
     add("log", sysLog);
 
@@ -147,15 +149,158 @@ SymbolTable::SymbolTable() {
     add("pow", sysPow);
 
 
+    auto sysinterpretFromFile = std::shared_ptr<Function>(new Function("interpretFromFile", {Parameter::string, Parameter::expression}, [](Argument::List* argList) {
+        auto& list = *argList;
+
+        // Check list
+        auto fileName = list[0].string.value();
+        auto lineNumberAPInt = list[1].expression.value().first;
+        auto lineNumber = lineNumberAPInt.getLimitedValue();
+
+        //open file 
+        std::ifstream f;
+        f.open(fileName);
+        if (!f) {
+            throw "io.fileNotFound";
+        }
+        
+        //read from file
+        std::string line;
+        uint counter = 1;
+        while(getline(f, line)) {
+            if (counter == lineNumber) {
+                std::cout << line << std::endl;
+                break;
+            }
+            counter += 1;
+        }
+
+        //close file
+        f.close();
+        
+
+        //convert line from string in to llvm::APInt
+        auto interpretable = line;
+
+        auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9]+)");
+        
+        auto match = std::smatch();
+        std::regex_match(interpretable, match, regex); // If it doesn't match, the regex here and in the .l file are mismatched.
+
+        AccessWidth prospectiveWidth;
+        try {
+            prospectiveWidth = std::stoi(match[1]);
+        } catch (std::invalid_argument& error) {
+            throw "interpretFromFile.notANumber";
+        }
+
+        if (prospectiveWidth < 0 || prospectiveWidth > maxAccessWidth) {
+            throw "expr.tooWide";
+        }
+
+        std::string radixCharacter = match[2];
+        uint8_t radix;
+
+        switch(radixCharacter[0]) {
+            case 'b':
+                radix = 2;
+                break;
+            case 'o':
+                radix = 8;
+                break;
+            case 'd':
+                radix = 10;
+                break;
+            case 'x':
+                radix = 16;
+                break;
+            case 'h':
+                throw "fixedNumber.usedVerilogH";
+                break;
+            default:
+                throw "FATAL";
+        }
+        auto ref = llvm::StringRef(match[3]);
+        auto value = llvm::APInt(prospectiveWidth, ref, radix);
+        
+        return std::pair(value, prospectiveWidth);
+    }));
+    add("interpretFromFile", sysinterpretFromFile);
+
+
+
+    auto sysfromFile = std::shared_ptr<Function>(new Function("fromFile", {Parameter::string, Parameter::expression, Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
+        auto& list = *argList;
+
+
+        // Check list
+        auto fileName = list[0].string.value();
+        auto offsetAPInt = list[1].expression.value().first;
+        auto offset = offsetAPInt.getLimitedValue();
+        auto bytesAPIInt = list[2].expression.value().first;
+        auto bytes = bytesAPIInt.getLimitedValue();
+        auto endianAPIInt = list[3].expression.value().first;
+        auto endian = endianAPIInt.getLimitedValue(); // (1b0: Little endian, 1b1: big endian)
+
+        //open binary file 
+        std::ifstream binaryFile;
+        binaryFile.open(fileName, std::ios::in | std::ios::binary);
+        if (!binaryFile) {
+            throw "io.fileNotFound";
+        }
+
+        // Seek to offset from the beginning of the file 
+        uint start = offset;
+        binaryFile.seekg(start , std::ios::beg); 
+
+        //read from file
+        uint length = bytes;
+        std::vector<char> buffer(length);
+        binaryFile.read(&buffer[0], length);
+
+        // (1b0: Little endian, 1b1: big endian)
+        if(endian == 0){
+            // little endian
+            // FC BE RC --> RC BE FC 
+            std::vector<char> tempBufferContiguous(length);
+            char* tempBuffer = &tempBufferContiguous[0];
+            int j=0;
+            for(uint i=length; i>0; i=i-1){
+                tempBuffer[i] = buffer[j];
+                //increment j
+                j++;
+
+            }
+            //adjust buffer
+            for(uint i=0; i<length; i++){
+                buffer[i] = tempBuffer[i];
+            }
+        }else if(endian == 1){
+            // big endian
+            // do nothing 
+        }else {
+            throw "endianUnspecified";
+        }
+        
+        //close file
+        binaryFile.close();
+
+        auto value = llvm::APInt(bytes * 8, 0);
+
+        // TO-DO: Actual value
+        return std::pair(value, bytes * 8);
+    }));
+    add("fromFile", sysfromFile);
     stepOut();
 }
+
 
 SymbolTable::~SymbolTable() {
 }
 
 void SymbolTable::add(std::string id, std::shared_ptr<Symbol> symbol) {
     if (tableTop->space.find(id) != tableTop->space.end()) {
-        throw std::string("symbol.redefinition(`") + id + "`)";
+        throw "symbol.redefinition";
     }
 
     tableTop->space[id] = symbol;
@@ -164,18 +309,18 @@ void SymbolTable::add(std::string id, std::shared_ptr<Symbol> symbol) {
 void SymbolTable::stepInto(std::string space) {
     auto iterator = tableTop->space.find(space);
     if (iterator == tableTop->space.end()) {
-        throw std::string("symbol.dne(`") + space + "`)";
+        throw "symbol.dne";
     }
     auto& object = *iterator;
     stack.push_back(std::dynamic_pointer_cast<SymbolSpace>(object.second));
 }
 
-void SymbolTable::stepIntoAndCreate(std::string space, Node::Node* declarator) {
+void SymbolTable::stepIntoAndCreate(std::string space, Node::Node* declarator, SymbolSpace::Type type) {
     if (tableTop->space.find(space) != tableTop->space.end()) {
-        throw std::string("symbol.redefinition(`") + space + "`)";
+        throw "symbol.redefinition";
     }
 
-    tableTop->space[space] = std::make_shared<SymbolSpace>(space, declarator);
+    tableTop->space[space] = std::make_shared<SymbolSpace>(space, declarator, type);
     stepInto(space);
 }
 
@@ -303,17 +448,17 @@ void SymbolTable::stepOut() {
 }
 
 void SymbolTable::stepIntoComb(Node::Node* attached) {
-    tableTop->space["_comb"] = std::make_shared<SymbolSpace>("_comb", attached, true);
+    tableTop->space["_comb"] = std::make_shared<SymbolSpace>("_comb", attached, SymbolSpace::Type::comb);
     stepInto("_comb");
 }
 
-bool SymbolTable::inComb() {
+std::shared_ptr<SymbolSpace> SymbolTable::findNearest(SymbolSpace::Type type) {
     for (auto iterator = stack.rbegin(); iterator != stack.rend(); iterator++) {
-        if ((*iterator)->isComb) {
-            return true;
+        if ((*iterator)->type == type) {
+            return *iterator;
         }
     }
-    return false;
+    return nullptr;
 } 
 
 #if YYDEBUG

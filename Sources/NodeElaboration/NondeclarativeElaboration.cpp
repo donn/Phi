@@ -50,7 +50,7 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     if (dliAttache) {
         if (dliAttache->type == VLD::Type::var) {
             skipTranslation = true;
-            if (expression->type != Expression::Type::CompileTime) {
+            if (expression->type != Expression::Type::compileTime) {
                 context->addError(nullopt, "driving.hardwareDominance");
                 goto exit;
             }
@@ -89,7 +89,7 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     }
     if (!driven->drive(expression, from, to)) {
         context->addError(nullopt, "assignment.alreadyDriven");
-    } else if (context->table->inComb()) {
+    } else if (context->table->findNearest(SymbolSpace::Type::comb)) {
         if (dliAttache) {
             dliAttache->type = VLD::Type::wire_reg;
         }
