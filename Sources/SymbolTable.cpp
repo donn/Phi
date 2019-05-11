@@ -5,6 +5,7 @@
 #include <stack>
 #include <regex>
 #include <cmath>
+#include <string>
 using namespace Phi;
 
 #define tableTop stack.back()
@@ -228,7 +229,7 @@ SymbolTable::SymbolTable() {
     add("interpretFromFile", sysinterpretFromFile);
 
 
-/*
+
     auto sysfromFile = std::shared_ptr<Function>(new Function("fromFile", {Parameter::string, Parameter::expression, Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
         auto& list = *argList;
 
@@ -284,13 +285,22 @@ SymbolTable::SymbolTable() {
         //close file
         binaryFile.close();
 
-        auto value = llvm::APInt(bytes * 8, 0);
+        for(uint i=0; i<length; i++){
+            std::cout<<buffer[i];
+        }
+        std::cout<<std::endl;
 
-        // TO-DO: Actual value
+        auto value = llvm::APInt(bytes * 8, 0);
+        for(uint i=0; i<length; i++){
+            value = value | buffer[i];
+            if(i!=length-1)
+                value = value << 8;
+        }
+
         return std::pair(value, bytes * 8);
     }));
     add("fromFile", sysfromFile);
-*/
+
 
     stepOut();
 }
