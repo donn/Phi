@@ -151,130 +151,166 @@ void LHExpression::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
 }
 
+
+// This is a second process for LHExpressions that are about to be USED AS EXPRESSIONS
 void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
-    auto lh = dynamic_cast<LHExpression*>(suspect);
-    if (!lh) { return; }
+    auto potential = dynamic_cast<LHExpression*>(suspect);
+    if (!potential) { return; }
 
-    // Get and verify symbol
-    optional<AccessWidth> from, to;
-    auto accesses = lh->accessList(&from, &to);
-    auto symbol = table->find(&accesses, &from, &to);
+    std::vector<LHExpression*> expressions;
 
-    if (!symbol.has_value()) {
-        throw "symbol.dne";
+    AccessWidth widthSum = 0;
+    Type totalType = Type::compileTime;
+
+    if (auto concatenation = dynamic_cast<LHConcatenation*>(potential)) {
+        // Same algorithm as above, but implemented slightly differently
+        std::stack<LHExpression*> lhStack;
+        lhStack.push(concatenation);
+        while (!lhStack.empty()) {
+            auto top = lhStack.top();
+            lhStack.pop();
+            if (top->left && top->right) {
+                lhStack.push(static_cast<LHExpression*>(top->right));
+                lhStack.push(static_cast<LHExpression*>(top->left));
+                continue;
+            }
+            expressions.push_back(top);
+        }
+        // TO-DO: LHConcatenation runTime vs compileTime
+        totalType = Type::runTime;
+    } else {
+        expressions.push_back(potential);
     }
+    
+    for (auto& lh: expressions) {
+        // Get and verify symbol
+        optional<AccessWidth> from, to;
+        auto accesses = lh->accessList(&from, &to);
+        auto symbol = table->find(&accesses, &from, &to);
 
-    auto unwrapped = symbol.value();
-    auto driven = std::dynamic_pointer_cast<Phi::Driven>(unwrapped);
+        if (!symbol.has_value()) {
+            throw "symbol.dne";
+        }
 
-    if (!driven) {
-        throw "symbol.notADriven";
-    }
+        auto unwrapped = symbol.value();
+        auto driven = std::dynamic_pointer_cast<Phi::Driven>(unwrapped);
 
-    if (!from.has_value() || !to.has_value()) {
-        assert(!from.has_value() && !to.has_value());
+        if (!driven) {
+            throw "symbol.notADriven";
+        }
 
-        from = driven->from;
-        to = driven->to;
-    }
+        if (!from.has_value() || !to.has_value()) {
+            assert(!from.has_value() && !to.has_value());
 
-    auto fromUnwrapped = from.value();
-    auto toUnwrapped = to.value();
+            from = driven->from;
+            to = driven->to;
+        }
 
-    lh->numBits = driven->msbFirst ? (fromUnwrapped - toUnwrapped + 1) : (toUnwrapped - fromUnwrapped + 1);
+        auto fromUnwrapped = from.value();
+        auto toUnwrapped = to.value();
 
-    // Check if RunTime
-    if (dynamic_cast<Port*>(driven->declarator)) {
-        lh->type = Expression::Type::runTime;
-        return;
-    }
-    if (auto dli = dynamic_cast<DeclarationListItem*>(driven->declarator)) {
-        if (dli->type != VariableLengthDeclaration::Type::var) {
+        lh->numBits = driven->msbFirst ? (fromUnwrapped - toUnwrapped + 1) : (toUnwrapped - fromUnwrapped + 1);
+
+        // Check if RunTime
+        if (dynamic_cast<Port*>(driven->declarator)) {
             lh->type = Expression::Type::runTime;
             return;
         }
-    }
-
-    if (lh->numBits == 1) {
-        auto index = fromUnwrapped;
-        auto range = driven->checkRangeCoverage(index);
-        if (!range.has_value()) {
-            throw "driven.usedBeforeInitializing";
-        }
-        auto unwrapped = range.value();
-        lh->type = unwrapped.expression->type;
-        if (lh->type == Expression::Type::compileTime) {
-            auto trueIndex = driven->msbFirst ? index - range->to : index - range->from;
-            auto value = unwrapped.expression->value.value();
-            lh->value = value.extractBits(1, trueIndex);
-        }
-    } else {
-        auto rangeList = driven->checkRangeCoverage(fromUnwrapped, toUnwrapped);
-        if (rangeList.size() == 0) {
-            throw "driven.usedBeforeInitializing";
+        if (auto dli = dynamic_cast<DeclarationListItem*>(driven->declarator)) {
+            if (dli->type != VariableLengthDeclaration::Type::var) {
+                lh->type = Expression::Type::runTime;
+                return;
+            }
         }
 
-        lh->type = Expression::Type::compileTime;
-        
-        AccessWidth fromSoFar = fromUnwrapped, toSoFar = toUnwrapped;
-        AccessWidth bitCount = 0;
-        AccessWidth fullCount;
-        llvm::APInt value;
-
-        // TODO: Transform to concatenation!
-        if (driven->msbFirst) {
-            fullCount = fromSoFar - toSoFar + 1;
-            value = llvm::APInt(fullCount, 0);
-
-            for (auto& r: rangeList) {
-                if (r.expression->type > lh->type) {
-                    lh->type = r.expression->type;
-                }
-                if (r.expression->type == Expression::Type::compileTime &&
-                    fromSoFar <= r.from && fromSoFar >= r.to) {
-                    auto cap = std::max(toSoFar, r.to);
-                    auto trueFrom = fromSoFar - r.to;
-                    auto trueTo = cap - r.to;
-                    auto trueCount = trueFrom - trueTo + 1;
-                    
-                    auto extractedBits = r.expression->value.value().
-                        extractBits(trueCount, trueTo).zext(fullCount);
-                    
-                    value <<= bitCount;
-                    value |= extractedBits;
-                    bitCount += trueCount;
-                    fromSoFar = cap - 1;
-                }
+        if (lh->numBits == 1) {
+            auto index = fromUnwrapped;
+            auto range = driven->checkRangeCoverage(index);
+            if (!range.has_value()) {
+                throw "driven.usedBeforeInitializing";
+            }
+            auto unwrapped = range.value();
+            lh->type = unwrapped.expression->type;
+            if (lh->type == Expression::Type::compileTime) {
+                auto trueIndex = driven->msbFirst ? index - range->to : index - range->from;
+                auto value = unwrapped.expression->value.value();
+                lh->value = value.extractBits(1, trueIndex);
             }
         } else {
-            fullCount = toSoFar - fromSoFar + 1;
-            value = llvm::APInt(fullCount, 0);
+            auto rangeList = driven->checkRangeCoverage(fromUnwrapped, toUnwrapped);
+            if (rangeList.size() == 0) {
+                throw "driven.usedBeforeInitializing";
+            }
 
-            for (auto& r: rangeList) {
-                if (r.expression->type > lh->type) {
-                    lh->type = r.expression->type;
-                }
-                if (r.expression->type == Expression::Type::compileTime &&
-                    fromSoFar >= r.from && fromSoFar <= r.to) {
-                    auto cap = std::min(toSoFar, r.to);
-                    auto trueFrom = fromSoFar - r.from;
-                    auto trueTo = cap - r.from;
-                    auto trueCount = trueTo - trueFrom + 1;
+            lh->type = Expression::Type::compileTime;
+            
+            AccessWidth fromSoFar = fromUnwrapped, toSoFar = toUnwrapped;
+            AccessWidth bitCount = 0;
+            AccessWidth fullCount;
+            llvm::APInt value;
 
-                    auto extractedBits = r.expression->value.value().
-                        extractBits(trueCount, trueFrom).zext(fullCount);
-                    
-                    value |= extractedBits << bitCount;
-                    bitCount += trueCount;
-                    fromSoFar = cap + 1;
+            if (driven->msbFirst) {
+                fullCount = fromSoFar - toSoFar + 1;
+                value = llvm::APInt(fullCount, 0);
+
+                for (auto& r: rangeList) {
+                    if (r.expression->type > lh->type) {
+                        lh->type = r.expression->type;
+                    }
+                    if (r.expression->type == Expression::Type::compileTime &&
+                        fromSoFar <= r.from && fromSoFar >= r.to) {
+                        auto cap = std::max(toSoFar, r.to);
+                        auto trueFrom = fromSoFar - r.to;
+                        auto trueTo = cap - r.to;
+                        auto trueCount = trueFrom - trueTo + 1;
+                        
+                        auto extractedBits = r.expression->value.value().
+                            extractBits(trueCount, trueTo).zext(fullCount);
+                        
+                        value <<= bitCount;
+                        value |= extractedBits;
+                        bitCount += trueCount;
+                        fromSoFar = cap - 1;
+                    }
                 }
+            } else {
+                fullCount = toSoFar - fromSoFar + 1;
+                value = llvm::APInt(fullCount, 0);
+
+                for (auto& r: rangeList) {
+                    if (r.expression->type > lh->type) {
+                        lh->type = r.expression->type;
+                    }
+                    if (r.expression->type == Expression::Type::compileTime &&
+                        fromSoFar >= r.from && fromSoFar <= r.to) {
+                        auto cap = std::min(toSoFar, r.to);
+                        auto trueFrom = fromSoFar - r.from;
+                        auto trueTo = cap - r.from;
+                        auto trueCount = trueTo - trueFrom + 1;
+
+                        auto extractedBits = r.expression->value.value().
+                            extractBits(trueCount, trueFrom).zext(fullCount);
+                        
+                        value |= extractedBits << bitCount;
+                        bitCount += trueCount;
+                        fromSoFar = cap + 1;
+                    }
+                }
+            }
+
+            if (lh->type > totalType) {
+                totalType = lh->type;
+            }
+
+            if (lh->type == Expression::Type::compileTime) {
+                lh->value = value;
             }
         }
 
-        if (lh->type == Expression::Type::compileTime) {
-            lh->value = value;
-        }
+        widthSum += lh->numBits;
     }
+
+    potential->numBits = widthSum; 
 }
 
 void Unary::MACRO_ELAB_SIG_IMP {
@@ -472,6 +508,9 @@ void Concatenation::MACRO_ELAB_SIG_IMP {
 
     type = std::max(leftExpr->type, rightExpr->type);
 
+    // TODO: Concatenation runtime vs compiletime
+    type = Type::runTime;
+
     numBits = leftExpr->numBits + rightExpr->numBits;
 }
 
@@ -489,6 +528,9 @@ void RepeatConcatenation::MACRO_ELAB_SIG_IMP {
         type = Type::error;
         throw "concat.cannotRepeatOnHardwareExpression";
     }
+
+    // TODO: Concatenation runtime vs compiletime
+    type = Type::runTime;
 
     numBits = leftExpr->value.value().getLimitedValue() * rightExpr->numBits;
 }

@@ -1,0 +1,4 @@
+module Example() {
+    Var[3..0] s, k, y
+    {s, k, y} = 12xBAD
+}

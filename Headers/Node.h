@@ -12,30 +12,30 @@
 // Elaboration Macros
 #define MACRO_ELAB_PARAMS Phi::Context* context
 #define MACRO_ELAB_SIG_IMP elaborate (MACRO_ELAB_PARAMS)
-#define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP
+#define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP;
 
 // Translation Macros
 #define MACRO_TRANS_PARAMS std::ostream* stream, std::string namespaceSoFar
 #define MACRO_TRANS_SIG_IMP translate (MACRO_TRANS_PARAMS)
-#define MACRO_TRANS_SIG_HDR virtual void MACRO_TRANS_SIG_IMP
+#define MACRO_TRANS_SIG_HDR virtual void MACRO_TRANS_SIG_IMP;
 
 // Debug Macros
 #if YYDEBUG
     #define MACRO_DEBUGLABEL_PARAMS
     #define MACRO_DEBUGLABEL_SIG_IMP debugLabel (MACRO_DEBUGLABEL_PARAMS)
-    #define MACRO_DEBUGLABEL_SIG_HDR virtual std::string MACRO_DEBUGLABEL_SIG_IMP
+    #define MACRO_DEBUGLABEL_SIG_HDR virtual std::string MACRO_DEBUGLABEL_SIG_IMP;
 
     #define MACRO_GRAPHPRINT_PARAMS std::ostream* stream, int* node
     #define MACRO_GRAPHPRINT_SIG_IMP graphPrint (MACRO_GRAPHPRINT_PARAMS)
-    #define MACRO_GRAPHPRINT_SIG_HDR virtual int MACRO_GRAPHPRINT_SIG_IMP
+    #define MACRO_GRAPHPRINT_SIG_HDR virtual int MACRO_GRAPHPRINT_SIG_IMP;
 #else
     #define MACRO_DEBUGLABEL_PARAMS
     #define MACRO_DEBUGLABEL_SIG_IMP
-    #define MACRO_DEBUGLABEL_SIG_HDR \/\/
+    #define MACRO_DEBUGLABEL_SIG_HDR
 
     #define MACRO_GRAPHPRINT_PARAMS
     #define MACRO_GRAPHPRINT_SIG_IMP 
-    #define MACRO_GRAPHPRINT_SIG_HDR \/\/
+    #define MACRO_GRAPHPRINT_SIG_HDR 
 #endif
 
 namespace Phi {
@@ -50,30 +50,30 @@ namespace Phi {
             Node(Node* right): right(right) {}
             virtual ~Node() {}
 
-            MACRO_DEBUGLABEL_SIG_HDR;
-            MACRO_GRAPHPRINT_SIG_HDR;
+            MACRO_DEBUGLABEL_SIG_HDR
+            MACRO_GRAPHPRINT_SIG_HDR
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         void tryElaborate(Node* node, MACRO_ELAB_PARAMS);
         void tryTranslate(Node* node, MACRO_TRANS_PARAMS);
 
         struct ErrorNode: public Node {
-            MACRO_TRANS_SIG_HDR;
+            MACRO_TRANS_SIG_HDR
         };
 
         // Molecular
         struct Identifier: public Node {
             std::string idString;
 
-            MACRO_DEBUGLABEL_SIG_HDR;
+            MACRO_DEBUGLABEL_SIG_HDR
 
             Identifier(const char* identifier);
 
             // No elaboration needed.
-            MACRO_TRANS_SIG_HDR;
+            MACRO_TRANS_SIG_HDR
         };
 
         // Some forward declarations
@@ -99,8 +99,8 @@ namespace Phi {
 
             optional<std::string> annotation;
 
-            MACRO_DEBUGLABEL_SIG_HDR;
-            MACRO_GRAPHPRINT_SIG_HDR;
+            MACRO_DEBUGLABEL_SIG_HDR
+            MACRO_GRAPHPRINT_SIG_HDR
 
             Port(Identifier* identifier, bool polarity, Range* bus, const char* annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus) {
                 if (annotation) {
@@ -108,20 +108,20 @@ namespace Phi {
                 }
             }
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         struct TopLevelNamespace: public Declaration {
             Node* contents;
 
-            MACRO_DEBUGLABEL_SIG_HDR;
-            MACRO_GRAPHPRINT_SIG_HDR;
+            MACRO_DEBUGLABEL_SIG_HDR
+            MACRO_GRAPHPRINT_SIG_HDR
 
             TopLevelNamespace(Identifier* identifier, Node* contents): Declaration(identifier), contents(contents) {}
             
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         struct Statement;
@@ -139,20 +139,20 @@ namespace Phi {
 
             Statement* addenda = nullptr;
 
-            MACRO_DEBUGLABEL_SIG_HDR;
-            MACRO_GRAPHPRINT_SIG_HDR;
+            MACRO_DEBUGLABEL_SIG_HDR
+            MACRO_GRAPHPRINT_SIG_HDR
 
             TopLevelDeclaration(Identifier* identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         // Templating
         struct TemplateDeclaration: public Declaration {
             Expression* assignment;
 
-            TemplateDeclaration(Identifier* identifier, Expression* assignment): Declaration(identifier) {}
+            TemplateDeclaration(Identifier* identifier, Expression* assignment): Declaration(identifier), assignment(assignment) {}
             // TO-DO: Parameterization support
         };
 
@@ -173,8 +173,8 @@ namespace Phi {
             If* elseBlock;
 
             If(Statement* contents, Expression* expression, If* elseBlock): BlockBased(contents), expression(expression), elseBlock(elseBlock) {}
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         struct ForLoop: public BlockBased {
@@ -182,16 +182,16 @@ namespace Phi {
             Identifier* identifier;
 
             ForLoop(Statement* contents, Range* range, Identifier* identifier): BlockBased(contents), range(range), identifier(identifier) {}
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         struct Namespace: public BlockBased {
             Identifier* identifier;
 
             Namespace(Statement* contents, Identifier* identifier): BlockBased(contents), identifier(identifier) {}
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
 
         };
 
@@ -204,8 +204,8 @@ namespace Phi {
 
             Switch(Expression* expression, LabeledStatementList* list): BlockBased(nullptr), expression(expression), list(list) {}
             
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         struct LabeledStatementList: public Node {
@@ -217,16 +217,16 @@ namespace Phi {
 
             LabeledStatementList(bool isDefault, Expression* label, SpecialNumber* specialNumber, Statement* statements): isDefault(isDefault), label(label), specialNumber(specialNumber), statements(statements) {}
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         struct Combinational: public BlockBased {
             
             Combinational(Statement* contents): BlockBased(contents) {}
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         // Subdeclarations
@@ -243,13 +243,13 @@ namespace Phi {
             Range* bus;
             DeclarationListItem* declarationList;
 
-            MACRO_GRAPHPRINT_SIG_HDR;
-            MACRO_DEBUGLABEL_SIG_HDR;
+            MACRO_GRAPHPRINT_SIG_HDR
+            MACRO_DEBUGLABEL_SIG_HDR
 
             VariableLengthDeclaration(Type type, Range* bus, DeclarationListItem* declarationList): type(type), bus(bus), declarationList(declarationList) {}
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         struct DeclarationListItem: public Declaration {
@@ -260,12 +260,12 @@ namespace Phi {
 
             bool hasEnable = false;
 
-            MACRO_DEBUGLABEL_SIG_HDR;
+            MACRO_DEBUGLABEL_SIG_HDR
 
             DeclarationListItem(Identifier* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
 
         };
 
@@ -279,8 +279,8 @@ namespace Phi {
 
             InstanceDeclaration(Identifier* identifier, LHExpression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         struct ExpressionIDPair: public Declaration {
@@ -288,8 +288,8 @@ namespace Phi {
 
             ExpressionIDPair(Identifier* identifier, Expression* expression): Declaration(identifier), expression(expression) {}
             
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         // Nondeclarative Statements
@@ -303,12 +303,12 @@ namespace Phi {
             Expression* expression;
             bool skipTranslation = false;
 
-            MACRO_GRAPHPRINT_SIG_HDR;
+            MACRO_GRAPHPRINT_SIG_HDR
 
             NondeclarativeAssignment(LHExpression* lhs, Expression* expression): Nondeclarative(lhs), expression(expression) {}
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
         
         struct NondeclarativePorts: public Nondeclarative {
@@ -316,7 +316,7 @@ namespace Phi {
 
             NondeclarativePorts(LHExpression* lhs, ExpressionIDPair* ports): Nondeclarative(lhs), ports(ports) {}
 
-            MACRO_ELAB_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
             // No translation needed.
         };
 
@@ -342,8 +342,8 @@ namespace Phi {
 
             Range(Expression* from, Expression* to): from(from), to(to) {}
             
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
 
             void getValues(AccessWidth* from, AccessWidth* to); // CALL ONLY AFTER ELABORATION!!
         };      
@@ -353,19 +353,19 @@ namespace Phi {
             std::vector<SymbolTable::Access> accessList(optional<AccessWidth>* from, optional<AccessWidth>* to);
             static void lhDrivenProcess(Node* suspect, Phi::SymbolTable* table);
 
-            MACRO_ELAB_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
         };
 
         
         struct IdentifierExpression: public LHExpression {
             Identifier* identifier;
 
-            MACRO_GRAPHPRINT_SIG_HDR;
+            MACRO_GRAPHPRINT_SIG_HDR
 
             IdentifierExpression(Identifier* identifier): identifier(identifier) {}
 
             // No elaboration needed.
-            MACRO_TRANS_SIG_HDR;
+            MACRO_TRANS_SIG_HDR
         };
 
         struct PropertyAccess: public LHExpression {
@@ -374,7 +374,7 @@ namespace Phi {
             }
 
             // No elaboration needed.
-            MACRO_TRANS_SIG_HDR;
+            MACRO_TRANS_SIG_HDR
         };
 
         struct ArrayAccess: public LHExpression {
@@ -384,8 +384,8 @@ namespace Phi {
                 this->left = object; this->right = width;
             }
 
-            // Elaborated upon via PII.
-            MACRO_TRANS_SIG_HDR;
+            // Inherits elaboration.
+            MACRO_TRANS_SIG_HDR
         };
         
         struct RangeAccess: public LHExpression {
@@ -393,8 +393,8 @@ namespace Phi {
                 this->left = object; this->right = (Node*)range;
             }
 
-            // Elaborated upon via PII.
-            MACRO_TRANS_SIG_HDR;
+            // Inherits elaboration.
+            MACRO_TRANS_SIG_HDR
         };
 
         struct LHConcatenation: public LHExpression {
@@ -402,7 +402,8 @@ namespace Phi {
                 this->left = of; this->right = with;
             }
 
-            MACRO_TRANS_SIG_HDR;
+            //Inherits elaboration.
+            MACRO_TRANS_SIG_HDR
         };
 
         
@@ -410,7 +411,7 @@ namespace Phi {
             Literal(const char* interpretable, bool widthIncluded = true);
 
             // No elaboration needed.
-            MACRO_TRANS_SIG_HDR;
+            MACRO_TRANS_SIG_HDR
         };
 
         struct SpecialNumber: public Node {
@@ -420,7 +421,7 @@ namespace Phi {
             
             SpecialNumber(const char* interpretable);
 
-            MACRO_TRANS_SIG_HDR;
+            MACRO_TRANS_SIG_HDR
         };
 
         struct Unary: public Expression {
@@ -433,8 +434,8 @@ namespace Phi {
             Operation operation;
             Unary(Operation operation, Expression* right): operation(operation) { this->right = right; }
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         struct Binary: public Expression {
@@ -473,8 +474,8 @@ namespace Phi {
                 this->left = left; this->right = right;
             }
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         // Concatenation
@@ -483,8 +484,8 @@ namespace Phi {
                 this->left = repeatCount; this->right = repeatable;
             }
             
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         struct Concatenation: public Expression {
@@ -492,8 +493,8 @@ namespace Phi {
                 this->left = of; this->right = with;
             }
             
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
         
         // Procedural Call
@@ -511,7 +512,7 @@ namespace Phi {
             Expression* argument;
             ExpressionArgument(Expression* argument): argument(argument) {}
 
-            MACRO_ELAB_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
         };
 
         struct ProceduralCall: public Expression {
@@ -519,7 +520,7 @@ namespace Phi {
                 this->left = function; this->right = argument;
             }
 
-            MACRO_ELAB_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
         };
 
         // Multiplexer
@@ -531,7 +532,7 @@ namespace Phi {
             Expression* result;
             
             ExpressionPair(Expression* label, SpecialNumber* specialNumber, Expression* result): label(label), specialNumber(specialNumber), result(result) {}
-            MACRO_ELAB_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
             // Translation not needed due to PII by Multiplexer
         };
 
@@ -543,8 +544,8 @@ namespace Phi {
                 this->left = selection; this->right = options;
             }
 
-            MACRO_ELAB_SIG_HDR;
-            MACRO_TRANS_SIG_HDR;
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
     }
 }

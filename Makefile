@@ -30,8 +30,7 @@ YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cc,$(YACC)))
 YACC_FLAGS = --verbose
 C_FLAGS = -pedantic
 CPP_LY_FLAGS = $(shell $(LLVM_CONFIG) --cxxflags) -fexceptions -std=c++17
-CPP_FLAGS = $(CPP_LY_FLAGS) -Wall -Wimplicit-fallthrough -pedantic
-
+CPP_FLAGS = $(CPP_LY_FLAGS) -Wall -pedantic
 SOURCES = 
 HEADERS =
 
