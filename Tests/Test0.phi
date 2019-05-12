@@ -5,7 +5,7 @@ module Beta(a: Input, b: Output, c: Output) {
         theta = {2{{a}}}
         c = theta[0]
     }
-
+    
     Register l = 1b0
     l.data = theta[0] // _1l_data
     l.clock = ~a

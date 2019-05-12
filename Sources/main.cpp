@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
     auto currentTime = *std::localtime(&timeObject);
     output << "   Generated on: " <<  std::put_time(&currentTime, "%Y-%m-%d %H:%M:%S") << std::endl;
     output << "*/" << std::endl << std::endl;
-    context.translate(&output, namespaceSoFar);
+    context.translate(&output);
     output.close();
 
     return EX_OK;

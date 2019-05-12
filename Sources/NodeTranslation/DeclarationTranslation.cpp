@@ -23,25 +23,25 @@ void Port::MACRO_TRANS_SIG_IMP {
     }
     
     // bus --> bus points to null ? no range : range [from:to] ;
-    tryTranslate(bus, stream, namespaceSoFar);
+    tryTranslate(bus, stream, namespaceSoFar, indent);
 
     // identifier 
     *stream << " ";
-    tryTranslate(identifier, stream, namespaceSoFar);
+    tryTranslate(identifier, stream, namespaceSoFar, indent);
 
     *stream << ";";
-    *stream << std::endl;
+    *stream << MACRO_EOL;
 
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 
 }
 
 void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
     //adjust namespaceSoFar
     namespaceSoFar = namespaceSoFar + "_" + std::to_string((identifier->idString).length()) + identifier->idString;
-    tryTranslate(contents, stream, namespaceSoFar);
+    tryTranslate(contents, stream, namespaceSoFar, indent);
 
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
@@ -49,50 +49,57 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
     if (type == TopLevelDeclaration::Type::module) {
         
         *stream << "module ";
-        tryTranslate(identifier, stream, namespaceSoFar);
+        tryTranslate(identifier, stream, namespaceSoFar, indent);
         //adjust namespaceSoFar after entering the module to be nothing 
         namespaceSoFar = "";
-        *stream << " (" << std::endl;
+        *stream << " (";
+        *indent += 1;
+        *stream << MACRO_EOL;
         auto pointer = ports;
         
         // PII
         while (pointer) {
-            tryTranslate(pointer->identifier, stream, namespaceSoFar);
-            *stream << ", " << std::endl;
+            tryTranslate(pointer->identifier, stream, namespaceSoFar, indent);
+            *stream << ", " << MACRO_EOL;
             pointer = (Port*)pointer->right;
         }
+        *indent -= 1;
         *stream << ")";
 
 
-        *stream << ";" << std::endl;
+        *stream << ";" << MACRO_EOL;
+
+        *indent += 1;
+
+        *stream << MACRO_EOL;
+
         // Get ready for ports
-        tryTranslate(ports, stream, namespaceSoFar);
-        *stream << std::endl;
+        tryTranslate(ports, stream, namespaceSoFar, indent);
+        *stream << MACRO_EOL;
 
         // Contents
-        tryTranslate(contents, stream, namespaceSoFar);
+        tryTranslate(contents, stream, namespaceSoFar, indent);
 
         // Addenda
-        tryTranslate(addenda, stream, namespaceSoFar);
+        tryTranslate(addenda, stream, namespaceSoFar, indent);
 
-        *stream <<std::endl;
-        *stream << "endmodule" << std::endl;
+        *indent -= 1;
+        *stream << MACRO_EOL;
+        *stream << "endmodule" << MACRO_EOL;
 
     } else if (type == TopLevelDeclaration::Type::interface){
         // Interfaces are elaboration-only
     }
-    
 
-    
 
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void VariableLengthDeclaration::MACRO_TRANS_SIG_IMP {
 
-    tryTranslate(declarationList, stream, namespaceSoFar);
+    tryTranslate(declarationList, stream, namespaceSoFar, indent);
     
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void DeclarationListItem::MACRO_TRANS_SIG_IMP {
@@ -121,77 +128,96 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
 
         default:
             // Var handled during elaboration
-            tryTranslate(right, stream, namespaceSoFar);
+            tryTranslate(right, stream, namespaceSoFar, indent);
             return;
     };
 
     //add wires,regs, always @ block, inside always @ block
-    if(type==VLD::Type::reg){
-        *stream << "wire "+ namespaceSoFar +"_clock; \n";
-        *stream << "wire "+ namespaceSoFar +"_reset; \n";
+    if(type==VLD::Type::reg) {
+        *stream << "wire "+ namespaceSoFar +"_clock; " << MACRO_EOL;
+        *stream << "wire "+ namespaceSoFar +"_reset; " << MACRO_EOL;
         
         *stream << "wire ";
-        tryTranslate(bus, stream, namespaceSoFar);
+        tryTranslate(bus, stream, namespaceSoFar, indent);
         *stream << " ";
-        *stream <<namespaceSoFar+"_data; \n";
+        *stream <<namespaceSoFar+"_data; " << MACRO_EOL;
         
         *stream << "reg ";
-        tryTranslate(bus, stream, namespaceSoFar);
+        tryTranslate(bus, stream, namespaceSoFar, indent);
         *stream << " ";
-        *stream << identifier->idString + "; \n";
+        *stream << identifier->idString + "; " << MACRO_EOL;
 
-        *stream << "\nalways @ (posedge " + namespaceSoFar +"_clock or posedge " + namespaceSoFar +"_reset) begin \n";
-        
-        *stream << "if("+namespaceSoFar+"_reset) begin\n";
-        *stream << identifier->idString + "<= ";
-        tryTranslate(optionalAssignment, stream, namespaceSoFar);
-        *stream << "; " << std::endl;
-        *stream << "end \n";
+        *stream << MACRO_EOL;
 
-        *stream << "else begin\n";
-        if (hasEnable) {
-            *stream << "if (" << namespaceSoFar+"_enable" << ") begin\n";
-        }
-        *stream << identifier->idString + "<=" + namespaceSoFar+ "_data; \n";
-        if (hasEnable) {
-            *stream << "end\n";
-        }
-        *stream << "end \n";
+        *indent += 1;
+        *stream << "always @ (posedge " + namespaceSoFar +"_clock or posedge " + namespaceSoFar +"_reset) begin " << MACRO_EOL;
+            *indent += 1;
+            *stream << "if("+namespaceSoFar+"_reset) begin" << MACRO_EOL;
+                *stream << MACRO_EOL;
+                *stream << identifier->idString + "<= ";
+                tryTranslate(optionalAssignment, stream, namespaceSoFar, indent);
+                *stream << "; " << MACRO_EOL;
+            *indent -= 1;
+            *stream << "end " << MACRO_EOL;
+            *indent += 1;
+            *stream << "else begin" << MACRO_EOL;
+                if (hasEnable) {
+                    *indent += 1;
+                    *stream << "if (" << namespaceSoFar+"_enable" << ") begin" << MACRO_EOL;
+                }
+                *stream << identifier->idString + "<=" + namespaceSoFar+ "_data; " << MACRO_EOL;
+                if (hasEnable) {
+                    *indent -= 1;
+                    *stream << "end" << MACRO_EOL;
+                }
+            *indent -= 1;
+            *stream << "end " << MACRO_EOL;
+        *indent -= 1;
+        *stream << "end " << MACRO_EOL;
 
-        *stream << "end \n";
+        *stream << MACRO_EOL;
 
-        tryTranslate(right, stream, namespaceSoFar);
+        tryTranslate(right, stream, namespaceSoFar, indent);
     }else if(type==VLD::Type::latch){
-        *stream << "wire "+ namespaceSoFar+"_condition; \n";
+        *stream << "wire "+ namespaceSoFar+"_condition; " << MACRO_EOL;
         
         *stream << "wire ";
-        tryTranslate(bus, stream, namespaceSoFar);
-        *stream << " ";
-        *stream <<namespaceSoFar+"_data; \n";
+        tryTranslate(bus, stream, namespaceSoFar, indent);
+        *stream <<namespaceSoFar+"_data; " << MACRO_EOL;
 
         *stream << "reg ";
-        tryTranslate(bus, stream, namespaceSoFar);
+        tryTranslate(bus, stream, namespaceSoFar, indent);
         *stream << " ";
-        *stream <<identifier->idString+ "; \n";
+        *stream <<identifier->idString+ "; " << MACRO_EOL;
 
-        *stream << "always @ (" + namespaceSoFar +"_condition) begin \n";
+        *indent += 1;
+        *stream << "always @ (" + namespaceSoFar +"_condition) begin " << MACRO_EOL;
+        *indent += 1;
+            *stream << "if("+namespaceSoFar+"_condition) begin" << MACRO_EOL;  
+                if (hasEnable) {
+                    *indent += 1;
+                    *stream << "if (" << namespaceSoFar+"_enable" << ") begin" << MACRO_EOL;
+                }
+                *stream << identifier->idString + "<=" + namespaceSoFar+ "_data; " << MACRO_EOL;
+                if (hasEnable) {
+                    *indent -= 1;
+                    *stream << "end" << MACRO_EOL;
+                }
+            *indent -= 1;
+            *stream << "end " << MACRO_EOL;
+        *indent -= 1;
+        *stream << "end " << MACRO_EOL;
         
-        *stream << "if("+namespaceSoFar+"_condition) begin\n";
-        *stream << identifier->idString + "<=" + namespaceSoFar +"_data; \n";
-        *stream << "end \n";
-        
-        *stream << "end \n";
-        
-        tryTranslate(right, stream, namespaceSoFar);
+        tryTranslate(right, stream, namespaceSoFar, indent);
     }else{
-        tryTranslate(bus, stream, namespaceSoFar);
+        tryTranslate(bus, stream, namespaceSoFar, indent);
         *stream << " ";
-        tryTranslate(identifier, stream, namespaceSoFar);
+        tryTranslate(identifier, stream, namespaceSoFar, indent);
 
         // Expression* array;
         if (array) {
             *stream << "[";
-            tryTranslate(array, stream, namespaceSoFar);
+            tryTranslate(array, stream, namespaceSoFar, indent);
             *stream << "]";
         }
 
@@ -200,13 +226,13 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
             *stream << "=";
             *stream << " ";
             *stream << "(";
-            tryTranslate(optionalAssignment, stream, namespaceSoFar);
+            tryTranslate(optionalAssignment, stream, namespaceSoFar, indent);
             *stream << ")";
         }
 
-        *stream << "; " << std::endl;
+        *stream << "; " << MACRO_EOL;
 
-        tryTranslate(right, stream, namespaceSoFar);
+        tryTranslate(right, stream, namespaceSoFar, indent);
     }
     
 
@@ -228,22 +254,22 @@ void InstanceDeclaration::MACRO_TRANS_SIG_IMP {
     //         ExpressionIDPair* ports;
     // }
 
-    *stream << "\n";
+    *stream << MACRO_EOL;
 
-    tryTranslate(module, stream, namespaceSoFar);
+    tryTranslate(module, stream, namespaceSoFar, indent);
     if (parameters) {
         *stream << " #(";
-        tryTranslate(parameters, stream, namespaceSoFar);
+        tryTranslate(parameters, stream, namespaceSoFar, indent);
         *stream << ")";
     }
 
     *stream << " ";
-    tryTranslate(identifier, stream, namespaceSoFar);
+    tryTranslate(identifier, stream, namespaceSoFar, indent);
     *stream << "(";
-    tryTranslate(ports, stream, namespaceSoFar);
-    *stream << "); \n";
+    tryTranslate(ports, stream, namespaceSoFar, indent);
+    *stream << "); " << MACRO_EOL;
 
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void ExpressionIDPair::MACRO_TRANS_SIG_IMP {
@@ -258,13 +284,13 @@ void ExpressionIDPair::MACRO_TRANS_SIG_IMP {
     // }
     
     *stream << ".";
-    tryTranslate(identifier, stream, namespaceSoFar);
+    tryTranslate(identifier, stream, namespaceSoFar, indent);
     *stream << "(";
-    tryTranslate(expression, stream, namespaceSoFar);
+    tryTranslate(expression, stream, namespaceSoFar, indent);
     *stream << ")";
 
     if (right) {
-        *stream << "," << std::endl;
-        tryTranslate(right, stream, namespaceSoFar);
+        *stream << "," << MACRO_EOL;
+        tryTranslate(right, stream, namespaceSoFar, indent);
     }
 }

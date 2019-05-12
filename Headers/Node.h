@@ -15,9 +15,12 @@
 #define MACRO_ELAB_SIG_HDR virtual void MACRO_ELAB_SIG_IMP;
 
 // Translation Macros
-#define MACRO_TRANS_PARAMS std::ostream* stream, std::string namespaceSoFar
+#define MACRO_TRANS_PARAMS std::ostream* stream, std::string namespaceSoFar, int* indent
 #define MACRO_TRANS_SIG_IMP translate (MACRO_TRANS_PARAMS)
 #define MACRO_TRANS_SIG_HDR virtual void MACRO_TRANS_SIG_IMP;
+
+#define MACRO_INDENT std::string(*indent * 4, ' ')
+#define MACRO_EOL std::endl << MACRO_INDENT
 
 // Debug Macros
 #if YYDEBUG
@@ -222,6 +225,7 @@ namespace Phi {
         };
 
         struct Combinational: public BlockBased {
+            std::vector< std::function<void()> > conclusionTriggers;
             
             Combinational(Statement* contents): BlockBased(contents) {}
 
@@ -332,7 +336,13 @@ namespace Phi {
 
             Type type = Type::error;
             AccessWidth numBits = 0;
-            optional<llvm::APInt> value = nullopt;
+            optional<llvm::APInt> value = nullopt; // Value iff compileTime
+ 
+            static Expression* abstract(Type type, AccessWidth numBits = 0, optional<llvm::APInt> value = nullopt) {
+                auto abstractExpression = new Expression();
+                abstractExpression->type = type; abstractExpression->numBits = numBits; abstractExpression->value = value;
+                return abstractExpression;
+            }
         };
 
         // Range

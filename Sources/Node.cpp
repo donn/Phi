@@ -8,7 +8,7 @@ void Node::MACRO_ELAB_SIG_IMP {
 }
 
 void Node::MACRO_TRANS_SIG_IMP {
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void Phi::Node::tryElaborate(Phi::Node::Node* node, MACRO_ELAB_PARAMS) {
@@ -28,7 +28,7 @@ void Phi::Node::tryTranslate(Phi::Node::Node* node, MACRO_TRANS_PARAMS) {
             auto str = asExpr->value.value().toString(16, false);
             *stream << asExpr->numBits << "'h" << str;
         } else {
-            node->translate(stream, namespaceSoFar);
+            node->translate(stream, namespaceSoFar, indent);
         }
     }
 }

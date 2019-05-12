@@ -80,10 +80,9 @@ namespace Phi {
 
         Driven(std::string id, Node::Node* declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): Symbol(id, declarator), from(from), to(to), msbFirst(msbFirst) {}
 
-        bool drive(Node::Expression* expression, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt);
-
         std::vector<DriveRange> checkRangeCoverage(AccessWidth from, AccessWidth to);
         optional<DriveRange> checkRangeCoverage(AccessWidth unit);
+        bool drive(Node::Expression* expression, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt, bool dry = false);
     };
 
     struct SymbolSpace: public Symbol {

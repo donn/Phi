@@ -97,11 +97,8 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     std::shared_ptr<Driven> pointerAsDriven, clockDriven, resetDriven, enableDriven, resetValueDriven;
     std::shared_ptr<Container> pointerAsContainer;
     std::shared_ptr<SymbolArray> pointerAsArray;
-    std::shared_ptr<SymbolSpace> declarativeModule;
+    std::shared_ptr<SymbolSpace> declarativeModule, comb;
     std::map<std::string, Node*>::iterator clockAnnotation, resetAnnotation, enableAnnotation;
-
-    tryElaborate(array, context);
-    LHExpression::lhDrivenProcess(array, context->table);
 
     AccessWidth size = 1;
     AccessWidth width = 1;
@@ -110,6 +107,11 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 
     optional<AccessWidth> from = nullopt;
     optional<AccessWidth> to = nullopt;
+
+    tryElaborate(array, context);
+    LHExpression::lhDrivenProcess(array, context->table);
+
+    declarativeModule = context->table->findNearest(SymbolSpace::Type::module);
 
     if (array) {
         if (optionalAssignment) {
@@ -174,7 +176,6 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             pointerAsContainer->space["data"] = std::make_shared<Driven>("data", this, from.value(), to.value(), msbFirst);
             // TO-DO: Figure out enable
             if (type == VLD::Type::reg) {
-                declarativeModule = context->table->findNearest(SymbolSpace::Type::module);
                 assert(declarativeModule);
                 clockDriven = std::make_shared<Driven>("clock", this);
                 pointerAsContainer->space["clock"] = clockDriven;
@@ -224,7 +225,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 
                         *placement = nda;
                     } else {
-                        context->addError(nullopt, "register.clockUndriven");
+                        context->addError(nullopt, "register.resetUndriven");
                     }
                 }));
 
@@ -246,7 +247,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             enableDriven = std::make_shared<Driven>("enable", this);
             pointerAsContainer->space["enable"] = enableDriven;
             enableAnnotation = declarativeModule->annotations.find("@enable");
-            context->checks.push_back(Context::DriveCheck(clockDriven, nullopt, nullopt, [=]() {
+            context->checks.push_back(Context::DriveCheck(enableDriven, nullopt, nullopt, [=]() {
                 if (enableAnnotation != declarativeModule->annotations.end()) {
                     auto port = static_cast<Port*>(enableAnnotation->second);
 
@@ -285,7 +286,12 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
         }
         pointer = pointerAsArray;
     }
-    context->table->add(identifier->idString, pointer);
+    if ((comb = context->table->findNearest(SymbolSpace::Type::comb))) {
+        context->addError(nullopt, "comb.declarationNotAllowed");
+        goto exit;
+    } else {
+        context->table->add(identifier->idString, pointer);
+    }
 
 exit:
     //PII
@@ -298,6 +304,7 @@ exit:
 }
 
 void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
+
     if (array) {
         tryElaborate(array, context);
         if (array->type == Expression::Type::parameterSensitive) {
@@ -310,11 +317,15 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
     }
     tryElaborate(module, context);
 
-    context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, this));
     
     tryElaborate(parameters, context);
     tryElaborate(ports, context);
-    //TODO: Port Checking
+
+    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+        context->addError(nullopt, "comb.declarationNotAllowed");
+    } else {
+        context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, this));
+    }
 
     tryElaborate(right, context);
 }

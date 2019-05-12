@@ -50,7 +50,7 @@ namespace Phi {
 
         void elaborate(SymbolTable* table);
         void driveChecks();
-        void translate(std::ostream* stream, std::string namespaceSoFar);
+        void translate(std::ostream* stream);
 
 #if YYDEBUG
         int trace = 0;

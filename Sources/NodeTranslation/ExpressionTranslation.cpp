@@ -16,7 +16,7 @@ void Literal::MACRO_TRANS_SIG_IMP {
 
 void IdentifierExpression::MACRO_TRANS_SIG_IMP {
     //variable name
-    tryTranslate(identifier, stream, namespaceSoFar);
+    tryTranslate(identifier, stream, namespaceSoFar, indent);
 }
 
 void Unary::MACRO_TRANS_SIG_IMP {
@@ -25,17 +25,17 @@ void Unary::MACRO_TRANS_SIG_IMP {
             //two's complement
             *stream << "-";
             *stream << "(";
-            tryTranslate(right, stream, namespaceSoFar);
+            tryTranslate(right, stream, namespaceSoFar, indent);
             *stream << ")";
     }else if(operation == Unary::Operation::bitwiseNot){
             //one's complement
             *stream << "~";
             *stream << "(";
-            tryTranslate(right, stream, namespaceSoFar);
+            tryTranslate(right, stream, namespaceSoFar, indent);
             *stream << ")";
     }else if (operation == Unary::Operation::allAnd){
             for(int i=0; i<Expression::numBits; i++){
-            tryTranslate(right, stream, namespaceSoFar);
+            tryTranslate(right, stream, namespaceSoFar, indent);
             *stream << "[";
             *stream << i;
             *stream << "]";
@@ -44,7 +44,7 @@ void Unary::MACRO_TRANS_SIG_IMP {
         }
     }else if(operation == Unary::Operation::allOr){
         for(int i=0; i<Expression::numBits; i++){
-            tryTranslate(right, stream, namespaceSoFar);
+            tryTranslate(right, stream, namespaceSoFar, indent);
             *stream << "[";
             *stream << i;
             *stream << "]";
@@ -72,10 +72,10 @@ void Binary::MACRO_TRANS_SIG_IMP {
     ){
         //handle if the operation is for signed numbers
         *stream << "$signed(";
-        tryTranslate(left, stream, namespaceSoFar);
+        tryTranslate(left, stream, namespaceSoFar, indent);
         *stream << ")";
     }else{
-        tryTranslate(left, stream, namespaceSoFar);
+        tryTranslate(left, stream, namespaceSoFar, indent);
     }
     
 
@@ -137,10 +137,10 @@ void Binary::MACRO_TRANS_SIG_IMP {
     ){
         //handle if the operation is for signed numbers
         *stream << "$signed(";
-        tryTranslate(right, stream, namespaceSoFar);
+        tryTranslate(right, stream, namespaceSoFar, indent);
         *stream << ")";
     }else{
-        tryTranslate(right, stream, namespaceSoFar);
+        tryTranslate(right, stream, namespaceSoFar, indent);
     }
 }
 
@@ -149,10 +149,10 @@ void RepeatConcatenation::MACRO_TRANS_SIG_IMP {
     //example in verilog : {2 {3'b110} }
 
     *stream << "{";
-    tryTranslate(left, stream, namespaceSoFar); //repeatCount
+    tryTranslate(left, stream, namespaceSoFar, indent); //repeatCount
 
     *stream << "{";
-    tryTranslate(right, stream, namespaceSoFar); // repeatable
+    tryTranslate(right, stream, namespaceSoFar, indent); // repeatable
     *stream << "}";
 
     *stream << "}";
@@ -172,9 +172,9 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
         if (cur->right) {
             *stream << "(";
             if (cur->label) {
-                tryTranslate(selection, stream, namespaceSoFar);
+                tryTranslate(selection, stream, namespaceSoFar, indent);
                 *stream << " == ";
-                tryTranslate(cur->label, stream, namespaceSoFar);
+                tryTranslate(cur->label, stream, namespaceSoFar, indent);
             } else {
                 // We need to account for all possibilities...
                 // The problem is, "inside", which is a part SystemVerilog doesn't work in iverilog
@@ -194,7 +194,7 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
 
                 double possibilitiesF = pow(cur->specialNumber->radix, count);
                 if (possibilitiesF > 256) {
-                    tryTranslate(selection, stream, namespaceSoFar);
+                    tryTranslate(selection, stream, namespaceSoFar, indent);
                     *stream << "inside ";
                     *stream << "{ ";
                     output_sn(number);
@@ -217,7 +217,7 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
                             numberCopy[positions[j]] = currentPossibility[j];
                         }
                         *stream << "( ";
-                        tryTranslate(selection, stream, namespaceSoFar);
+                        tryTranslate(selection, stream, namespaceSoFar, indent);
                         *stream << "== ";
                         output_sn(numberCopy);
                         *stream << ") ";
@@ -230,7 +230,7 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
             *stream << ") ";
             *stream << "? ";
         }
-        tryTranslate(cur->result, stream, namespaceSoFar);
+        tryTranslate(cur->result, stream, namespaceSoFar, indent);
         if (cur->right) {
             *stream << ": ";
         }
@@ -242,9 +242,9 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
 #define LOCAL_CONCATDEF(x) void x::MACRO_TRANS_SIG_IMP {\
     \
     *stream << "{ ";\
-    tryTranslate(left, stream, namespaceSoFar); \
+    tryTranslate(left, stream, namespaceSoFar, indent); \
     *stream << ", ";\
-    tryTranslate(right, stream, namespaceSoFar); \
+    tryTranslate(right, stream, namespaceSoFar, indent); \
     *stream << "} ";\
 }
 

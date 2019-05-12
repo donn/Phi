@@ -5,5 +5,9 @@ files = Dir["Tests/Test*.phi"]
 for file in files
     puts "Testing #{file}..."
     system("./phic #{file}")
-    system("iverilog -g2005-sv #{file}.sv")
+    if $? != 0
+        puts "Regression in #{file}..."
+    else
+        system("iverilog -g2005-sv #{file}.sv")
+    end
 end

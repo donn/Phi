@@ -26,36 +26,34 @@ void If::MACRO_TRANS_SIG_IMP {
         if((expression!=NULL) )
         {
             *stream << "if ( ";
-            tryTranslate(expression, stream, namespaceSoFar);
+            tryTranslate(expression, stream, namespaceSoFar, indent);
             *stream << " ) ";
         }   
-        *stream << "begin";
-        tryTranslate(contents, stream, namespaceSoFar);
-        *stream << "end";
+        *stream << "begin ";
+        *indent += 1;
+        *stream << MACRO_EOL;
+        tryTranslate(contents, stream, namespaceSoFar, indent);
+        *indent -= 1;
+        *stream << "end " << MACRO_EOL;
 
         if (elseBlock!=NULL) {
-            *stream << " else ";
-            tryTranslate(elseBlock, stream, namespaceSoFar);
+            *stream << "else ";
+            tryTranslate(elseBlock, stream, namespaceSoFar, indent);
         }
     }
 
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void ForLoop::MACRO_TRANS_SIG_IMP {
-    //translate iff inside comb block
-    if(Statement::inComb){
-
-    }
-
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void Namespace::MACRO_TRANS_SIG_IMP {
     //adjust namespace
     namespaceSoFar = namespaceSoFar + "_" + std::to_string((identifier->idString).length()) + identifier->idString; 
-    tryTranslate(contents, stream, namespaceSoFar);
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(contents, stream, namespaceSoFar, indent);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void Switch::MACRO_TRANS_SIG_IMP {
@@ -97,15 +95,17 @@ void Switch::MACRO_TRANS_SIG_IMP {
     //always inside comb block
     *stream << "casez";
     *stream << "(";
-    tryTranslate(expression, stream, namespaceSoFar);
+    tryTranslate(expression, stream, namespaceSoFar, indent);
     *stream << " ) ";
-    *stream << "\n";
-    tryTranslate(list, stream, namespaceSoFar);
+    *indent += 1;
+    *stream << MACRO_EOL;
+    tryTranslate(list, stream, namespaceSoFar, indent);
+    *indent -= 1;
     *stream << "endcase";
-    *stream << "\n";
+    *stream << MACRO_EOL;
     
 
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void Combinational::MACRO_TRANS_SIG_IMP {
@@ -115,11 +115,12 @@ void Combinational::MACRO_TRANS_SIG_IMP {
     //         Statement* contents;
     // }
 
-    *stream << "always @* \n";
-    *stream << "begin \n";
-    tryTranslate(contents, stream, namespaceSoFar);
-    *stream << "end \n";
+    *indent += 1;
+    *stream << "always @* begin " << MACRO_EOL;
+        tryTranslate(contents, stream, namespaceSoFar, indent);
+    *indent -= 1;
+    *stream << "end " << MACRO_EOL;
 
     
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }

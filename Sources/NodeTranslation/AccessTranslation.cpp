@@ -22,13 +22,13 @@ void PropertyAccess::MACRO_TRANS_SIG_IMP {
     // TO-DO: Make sure this hack works with arrays/indices
 
     std::stringstream tempStream;
-    tryTranslate(left, &tempStream, "");
+    tryTranslate(left, &tempStream, "", indent);
     auto leftPart = tempStream.str();
     leftPart.erase(0, 1);
     leftPart.erase(leftPart.length() - 1, 1);
     tempStream.str("");
     
-    tryTranslate(right, &tempStream, "");
+    tryTranslate(right, &tempStream, "", indent);
     auto rightPart = tempStream.str();
     rightPart.erase(0, 1);
     rightPart.erase(rightPart.length() - 1, 1);
@@ -54,11 +54,11 @@ void ArrayAccess::MACRO_TRANS_SIG_IMP {
         auto width = static_cast<Expression*>(right);
         auto value = width->value.value();
         namespaceSoFar = namespaceSoFar + "_0A" + std::to_string(value.getLimitedValue());
-        tryTranslate(right, stream, namespaceSoFar); 
+        tryTranslate(right, stream, namespaceSoFar, indent); 
     }else{
-        tryTranslate(left, stream, namespaceSoFar); //object
+        tryTranslate(left, stream, namespaceSoFar, indent); //object
         *stream << "[";
-        tryTranslate(right, stream, namespaceSoFar); //width
+        tryTranslate(right, stream, namespaceSoFar, indent); //width
         *stream << "]";
     }
     
@@ -73,6 +73,6 @@ void RangeAccess::MACRO_TRANS_SIG_IMP {
     //         }
 
 
-    tryTranslate(left, stream, namespaceSoFar); //object
-    tryTranslate(right, stream, namespaceSoFar); //range
+    tryTranslate(left, stream, namespaceSoFar, indent); //object
+    tryTranslate(right, stream, namespaceSoFar, indent); //range
 }

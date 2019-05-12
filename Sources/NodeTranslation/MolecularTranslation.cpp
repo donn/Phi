@@ -8,7 +8,7 @@ using namespace Phi::Node;
 void Identifier::MACRO_TRANS_SIG_IMP {
     *stream << "\\" << namespaceSoFar << idString << " ";
 
-    tryTranslate(right, stream, namespaceSoFar); 
+    tryTranslate(right, stream, namespaceSoFar, indent); 
 }
 
 void ErrorNode::MACRO_TRANS_SIG_IMP {
@@ -62,7 +62,7 @@ void SpecialNumber::MACRO_TRANS_SIG_IMP {
     }
     *stream << copy;
     
-    tryTranslate(right, stream, namespaceSoFar);
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void LabeledStatementList::MACRO_TRANS_SIG_IMP {
@@ -97,7 +97,7 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
     if (isDefault) {
         //default case 
         *stream << "default:";
-        *stream << "\n";
+        *stream << MACRO_EOL;
     } else {
         //not default case
         if(LabeledStatementList::specialNumber!=nullptr){
@@ -114,16 +114,16 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
             }
             *stream << modified_specialNumber;
             *stream << ":";
-            *stream << "\n";
+            *stream << MACRO_EOL;
         }else{
             //expression 
-            tryTranslate(label, stream, namespaceSoFar); 
+            tryTranslate(label, stream, namespaceSoFar, indent); 
             *stream << ":";
-            *stream << "\n";
+            *stream << MACRO_EOL;
         }
     }
-    tryTranslate(statements, stream, namespaceSoFar); 
-    tryTranslate(right, stream, namespaceSoFar); 
+    tryTranslate(statements, stream, namespaceSoFar, indent); 
+    tryTranslate(right, stream, namespaceSoFar, indent); 
 }
 
 void Range::MACRO_TRANS_SIG_IMP {
@@ -136,11 +136,11 @@ void Range::MACRO_TRANS_SIG_IMP {
     //             }
 
     *stream << "[";
-    tryTranslate(from, stream, namespaceSoFar); //from
+    tryTranslate(from, stream, namespaceSoFar, indent); //from
     *stream << ":";
-    tryTranslate(to, stream, namespaceSoFar); //to
-    *stream << "]";
+    tryTranslate(to, stream, namespaceSoFar, indent); //to
+    *stream << "] ";
 
-    tryTranslate(right, stream, namespaceSoFar); 
+    tryTranslate(right, stream, namespaceSoFar, indent); 
 }
 

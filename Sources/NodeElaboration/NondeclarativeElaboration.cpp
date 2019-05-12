@@ -8,11 +8,14 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     
     optional< std::shared_ptr<Symbol> > symbolOptional;
     std::shared_ptr<Symbol> symbol;
+    std::shared_ptr<SymbolSpace> comb;
     std::shared_ptr<Driven> driven;
     std::shared_ptr<Container> container = nullptr;
 
+    Combinational* combDeclarator;
     DeclarationListItem* dliAttache;
     Port* portAttache;
+
     optional<AccessWidth> from = nullopt, to = nullopt;
     AccessWidth width;
 
@@ -87,9 +90,14 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     if (width != expression->numBits) {
         context->addError(nullopt, "driving.widthMismatch");
     }
-    if (!driven->drive(expression, from, to)) {
+
+    if (!driven->drive(expression, from, to, true)) {
         context->addError(nullopt, "assignment.alreadyDriven");
-    } else if (context->table->findNearest(SymbolSpace::Type::comb)) {
+        goto exit;
+    } 
+
+    if ((comb = context->table->findNearest(SymbolSpace::Type::comb))) {
+        combDeclarator = static_cast<Combinational*>(comb->declarator);
         if (dliAttache) {
             dliAttache->type = VLD::Type::wire_reg;
         }
@@ -97,6 +105,15 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
             portAttache->polarity = Port::Polarity::output_reg;
         }
         inComb = true;
+        combDeclarator->conclusionTriggers.push_back([=](){
+            //Unsafe allocation
+            auto exp = Expression::abstract(Expression::Type::runTime, width);
+            if (!driven->drive(exp, from, to)) { // If we accidentally created another unneeded one for this comb block, just deallocate
+                delete exp;
+            }
+        });
+    } else {
+        driven->drive(expression, from, to);
     }
 
     if (elevate) {
@@ -132,7 +149,13 @@ void NondeclarativePorts::MACRO_ELAB_SIG_IMP {
         goto exit;
     }
 
-    tryElaborate(ports, context);
+    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+        context->addError(nullopt, "comb.declarationNotAllowed");
+    } else {
+        tryElaborate(ports, context);
+    }
+
+    
     declarator->ports = ports;
 
 exit:

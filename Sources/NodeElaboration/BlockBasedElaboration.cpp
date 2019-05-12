@@ -4,32 +4,41 @@ using namespace Phi::Node;
 void If::MACRO_ELAB_SIG_IMP {
     tryElaborate(expression, context);
     LHExpression::lhDrivenProcess(expression, context->table);
-    
-    // If NOT in a comb block, we do need to elaborate. Otherwise... nyet.
-    if (context->table->findNearest(SymbolSpace::Type::comb)) {
-        return;
+
+    auto comb = context->table->findNearest(SymbolSpace::Type::comb);
+    if (comb) {
+        inComb = true;
     }
 
-    if (expression->type == Expression::Type::error) {
-        //evaluation prolly failed
-        return;
-    }
+    if (expression) {
+        if (expression->type == Expression::Type::error) {
+            return;
+        }
 
-    if (expression->type == Expression::Type::runTime) {
-        throw "elaboration.softwareExpr";
-        return;
-    }
+        if (expression->numBits != 1) {
+            context->addError(nullopt, "expr.notACondition");
+            return;
+        }
 
-    auto value = expression->value.value();
+        if (!inComb) {
+            if (expression->type == Expression::Type::runTime) {
+                throw "expr.hardwareInIf";
+                return;
+            }
 
-    if (expression->numBits != 1) {
-        context->addError(nullopt, "expr.notACondition");
-        return;
-    }
+            auto value = expression->value.value();
 
-    if (value == llvm::APInt(1, 1)) {
-        tryElaborate(contents, context);
+            if (value == llvm::APInt(1, 1)) {
+                tryElaborate(contents, context);
+            } else {
+                tryElaborate(elseBlock, context);
+            }
+        } else {
+            tryElaborate(contents, context);
+            tryElaborate(elseBlock, context);
+        }
     } else {
+        tryElaborate(contents, context);
         tryElaborate(elseBlock, context);
     }
     tryElaborate(right, context);
@@ -37,29 +46,47 @@ void If::MACRO_ELAB_SIG_IMP {
 
 void ForLoop::MACRO_ELAB_SIG_IMP {
     range->elaborate(context);
+    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+        context->addError(nullopt, "comb.forLoopNotAllowed");
+    }
     // PII
     // TODO
     tryElaborate(right, context);
 }
 
 void Combinational::MACRO_ELAB_SIG_IMP {
-    context->table->stepIntoComb(this);
-    tryElaborate(contents, context);
-    context->table->stepOut();
+    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+        context->addError(nullopt, "comb.nestingNotAllowed");
+    } else {
+        context->table->stepIntoComb(this);
+        tryElaborate(contents, context);
+        context->table->stepOut();
+        for (auto& fn: conclusionTriggers) {
+            fn();
+        }
+    }
     tryElaborate(right, context);
 }
 
 void Namespace::MACRO_ELAB_SIG_IMP {
-    context->table->stepIntoAndCreate(identifier->idString, this);
-    tryElaborate(contents, context);
-    context->table->stepOut();
+    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+        context->addError(nullopt, "comb.declarationNotAllowed");
+    } else {
+        context->table->stepIntoAndCreate(identifier->idString, this);
+        tryElaborate(contents, context);
+        context->table->stepOut();
+    }
     tryElaborate(right, context);
 }
 
 void Switch::MACRO_ELAB_SIG_IMP {
-    tryElaborate(expression, context);
-    LHExpression::lhDrivenProcess(expression, context->table);
-    tryElaborate(list, context);
+    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+        tryElaborate(expression, context);
+        LHExpression::lhDrivenProcess(expression, context->table);
+        tryElaborate(list, context);
+    } else {
+        context->addError(nullopt, "decl.switchOutsideComb");
+    }
 }
 
 void LabeledStatementList::MACRO_ELAB_SIG_IMP {

@@ -95,8 +95,10 @@ void Context::driveChecks() {
     }
 }
 
-void Context::MACRO_TRANS_SIG_IMP {
-    head->translate(stream, namespaceSoFar);
+void Context::translate(std::ostream* stream) {
+    int indent = 0;
+    std::string namespaceSoFar = "";
+    head->translate(stream, namespaceSoFar, &indent);
 }
 
 #if YYDEBUG

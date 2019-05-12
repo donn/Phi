@@ -10,29 +10,6 @@ using namespace Phi;
 
 #define tableTop stack.back()
 
-bool Driven::drive(Node::Expression* expression, optional<AccessWidth> fromOptional, optional<AccessWidth> toOptional) {
-    AccessWidth from = fromOptional.has_value() ? fromOptional.value() : this->from;
-    AccessWidth to = toOptional.has_value() ? toOptional.value() : this->to;
-    
-    // Check for any crossover
-    if (from <= to) {
-        for (auto& range: driveRanges) {
-            if (from >= range.from && from <= range.to) {
-                return false;
-            }
-        }
-    } else {
-        for (auto& range: driveRanges) {
-            if (from <= range.from && from >= range.to) {
-                return false;
-            }
-        }
-    }
-
-    driveRanges.emplace(DriveRange(expression, from, to));
-    return true;
-}
-
 Argument::FunctionValue Function::call(Argument::List* listPtr) {
     // First: Check
     auto& list = *listPtr;
@@ -391,6 +368,35 @@ optional<DriveRange> Driven::checkRangeCoverage(AccessWidth unit) {
     }
     return nullopt;
 }
+
+
+
+bool Driven::drive(Node::Expression* expression, optional<AccessWidth> fromOptional, optional<AccessWidth> toOptional, bool dry) {
+    AccessWidth from = fromOptional.has_value() ? fromOptional.value() : this->from;
+    AccessWidth to = toOptional.has_value() ? toOptional.value() : this->to;
+    
+    // Check for any crossover
+    if (from <= to) {
+        for (auto& range: driveRanges) {
+            if (from >= range.from && from <= range.to) {
+                return false;
+            }
+        }
+    } else {
+        for (auto& range: driveRanges) {
+            if (from <= range.from && from >= range.to) {
+                return false;
+            }
+        }
+    }
+
+    if (!dry) {
+        driveRanges.emplace(DriveRange(expression, from, to));
+    }
+    return true;
+}
+
+
 optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* accessesPtr, optional<AccessWidth>* from, optional<AccessWidth>* to) {
     auto& accesses = *accessesPtr;
     for (auto i = stack.rbegin(); i != stack.rend(); i++) {

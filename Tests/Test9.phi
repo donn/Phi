@@ -1,4 +1,21 @@
-module Example() {
-    Var[3..0] s, k, y
-    {s, k, y} = 12xBAD
+module Counter(
+    clock: @clock Input,
+    reset: @reset Input,
+    enable: @enable Input,
+    increment: Input,
+    output: Output[31..0]
+) {
+    Register[31..0] counter = 32b0
+    counter.reset = reset
+    counter.enable = enable
+
+    comb {
+        if (increment) {
+            counter.data = counter &+ 32b1
+        } else {
+            counter.data = counter &- 32b1;
+        }
+    }
+
+    output = counter
 }
