@@ -351,16 +351,34 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
     }
     tryElaborate(module, context);
 
-    
-    tryElaborate(parameters, context);
-    tryElaborate(ports, context);
+    std::optional<AccessWidth> trash;
 
-    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
-        context->addError(nullopt, "comb.declarationNotAllowed");
+    auto accesses = module->accessList(&from, &to);
+    auto symbolOptional = context->table->find(&accesses, &from, &to);
+
+    if (symbolOptional.has_value()) {
+        auto symbol = symbolOptional.value();
+        if (auto symSpace = std::dynamic_pointer_cast<SymbolSpace>(symbol) && symSpace->type == SymbolSpace::Type::module) {
+            if (context->table->findNearest(SymbolSpace::Type::module) != symSpace) {
+                if (!context->table->findNearest(SymbolSpace::Type::comb)) {
+                    context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, this));
+
+                    tryElaborate(parameters, context);
+                    tryElaborate(ports, context);
+
+                } else {
+                    context->addError(nullopt, "comb.declarationNotAllowed");
+                }
+            } else {
+                context->addError(nullopt, "module.recursion");
+            }
+        } else {
+            context->addError(nullopt, "symbol.notAModule");
+        }
     } else {
-        context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, this));
+        context->addError(nullopt, "symbol.dne");
     }
-
+    
     tryElaborate(right, context);
 }
 
