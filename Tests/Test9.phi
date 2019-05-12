@@ -6,8 +6,6 @@ module Counter(
     output: Output[31..0]
 ) {
     Register[31..0] counter = 32b0
-    counter.reset = reset
-    counter.enable = enable
 
     comb {
         if (increment) {

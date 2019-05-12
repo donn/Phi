@@ -135,8 +135,16 @@ int TopLevelDeclaration::MACRO_GRAPHPRINT_SIG_IMP {
         auto nodeID = ports->graphPrint(stream, node);
         *stream << current << " -- " << nodeID << ";" << std::endl;
     }
+    if (preambles) {
+        auto nodeID = preambles->graphPrint(stream, node);
+        *stream << current << " -- " << nodeID << ";" << std::endl;
+    }
     if (contents) {
         auto nodeID = contents->graphPrint(stream, node);
+        *stream << current << " -- " << nodeID << ";" << std::endl;
+    }
+    if (addenda) {
+        auto nodeID = addenda->graphPrint(stream, node);
         *stream << current << " -- " << nodeID << ";" << std::endl;
     }
     return current;

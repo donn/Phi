@@ -174,7 +174,7 @@ Syntactic tweaks are also numerous: as shown in Figure 2, the C-style for loop h
 \begin{lstlisting}
 module Counter(
    clock: @clock Input,
-   reset: @resetLow Input,
+   reset: @reset Input,
    output: Output[31..0]
 ) {
    Register[31..0] store = 32b0;

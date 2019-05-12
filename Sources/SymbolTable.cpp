@@ -147,7 +147,6 @@ SymbolTable::SymbolTable() {
         uint counter = 1;
         while(getline(f, line)) {
             if (counter == lineNumber) {
-                std::cout << line << std::endl;
                 break;
             }
             counter += 1;
@@ -261,11 +260,6 @@ SymbolTable::SymbolTable() {
         
         //close file
         binaryFile.close();
-
-        for(uint i=0; i<length; i++){
-            std::cout<<buffer[i];
-        }
-        std::cout<<std::endl;
 
         auto value = llvm::APInt(bytes * 8, 0);
         for(uint i=0; i<length; i++){

@@ -1,7 +1,7 @@
 namespace Phi{
     module Psi(){
         namespace Delta{
-            Wire a[32];
+            Wire a;
         }
     }
 }

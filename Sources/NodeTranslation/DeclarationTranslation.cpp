@@ -78,7 +78,12 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
         *stream << MACRO_EOL;
 
         // Contents
+        tryTranslate(preambles, stream, namespaceSoFar, indent);
+        *stream << MACRO_EOL;
+
+        // Contents
         tryTranslate(contents, stream, namespaceSoFar, indent);
+        *stream << MACRO_EOL;
 
         // Addenda
         tryTranslate(addenda, stream, namespaceSoFar, indent);
@@ -105,50 +110,58 @@ void VariableLengthDeclaration::MACRO_TRANS_SIG_IMP {
 void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     using VLD = VariableLengthDeclaration;
 
-    //adjust namespaceSoFar
-    if(type==VLD::Type::reg || type==VLD::Type::latch){
-        namespaceSoFar = namespaceSoFar +  "_" + std::to_string((identifier->idString).length()) + identifier->idString;
-    }else{
-        //do nothing
-    }
-
     switch(type){
         case VLD::Type::wire_reg:
-            // wire reg
+        case VLD::Type::reg:
+        case VLD::Type::latch:
             *stream << "reg ";
             break;
+
         case VLD::Type::wire:
             //wire
             *stream << "wire ";
             break;
-
-        case VLD::Type::reg:
-        case VLD::Type::latch:
-            break;
-
         default:
             // Var handled during elaboration
             tryTranslate(right, stream, namespaceSoFar, indent);
             return;
     };
 
+
+    tryTranslate(bus, stream, namespaceSoFar, indent);
+
+    if (trueIdentifier) {
+        tryTranslate(trueIdentifier, stream, namespaceSoFar, indent);
+    } else {
+        tryTranslate(identifier, stream, namespaceSoFar, indent);
+    }
+
+    // Expression* array;
+    if (array) {
+        *stream << "[";
+        tryTranslate(array, stream, namespaceSoFar, indent);
+        *stream << "]";
+    }
+
+    if (optionalAssignment) {
+        *stream << " ";
+        *stream << "=";
+        *stream << " ";
+        *stream << "(";
+        tryTranslate(optionalAssignment, stream, namespaceSoFar, indent);
+        *stream << ")";
+    }
+
+    *stream << ";" << MACRO_EOL;
+
     //add wires,regs, always @ block, inside always @ block
     if(type==VLD::Type::reg) {
-        *stream << "wire "+ namespaceSoFar +"_clock; " << MACRO_EOL;
-        *stream << "wire "+ namespaceSoFar +"_reset; " << MACRO_EOL;
-        
-        *stream << "wire ";
-        tryTranslate(bus, stream, namespaceSoFar, indent);
-        *stream << " ";
-        *stream <<namespaceSoFar+"_data; " << MACRO_EOL;
-        
-        *stream << "reg ";
-        tryTranslate(bus, stream, namespaceSoFar, indent);
-        *stream << " ";
-        *stream << identifier->idString + "; " << MACRO_EOL;
+        namespaceSoFar = namespaceSoFar +  "_" + std::to_string((identifier->idString).length()) + identifier->idString;
 
         *stream << MACRO_EOL;
+        *stream << MACRO_EOL;
 
+        *stream << " // Declaration stub for " << namespaceSoFar << MACRO_EOL;
         *indent += 1;
         *stream << "always @ (posedge " + namespaceSoFar +"_clock or posedge " + namespaceSoFar +"_reset) begin " << MACRO_EOL;
             *indent += 1;
@@ -173,23 +186,19 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
             *indent -= 1;
             *stream << "end " << MACRO_EOL;
         *indent -= 1;
-        *stream << "end " << MACRO_EOL;
+        *stream << "end ";
 
+        *stream << MACRO_EOL;
         *stream << MACRO_EOL;
 
         tryTranslate(right, stream, namespaceSoFar, indent);
     }else if(type==VLD::Type::latch){
-        *stream << "wire "+ namespaceSoFar+"_condition; " << MACRO_EOL;
-        
-        *stream << "wire ";
-        tryTranslate(bus, stream, namespaceSoFar, indent);
-        *stream <<namespaceSoFar+"_data; " << MACRO_EOL;
+        namespaceSoFar = namespaceSoFar +  "_" + std::to_string((identifier->idString).length()) + identifier->idString;
 
-        *stream << "reg ";
-        tryTranslate(bus, stream, namespaceSoFar, indent);
-        *stream << " ";
-        *stream <<identifier->idString+ "; " << MACRO_EOL;
+        *stream << MACRO_EOL;
+        *stream << MACRO_EOL;
 
+        *stream << " // Declaration stub for " << namespaceSoFar << MACRO_EOL;
         *indent += 1;
         *stream << "always @ (" + namespaceSoFar +"_condition) begin " << MACRO_EOL;
         *indent += 1;
@@ -206,37 +215,15 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
             *indent -= 1;
             *stream << "end " << MACRO_EOL;
         *indent -= 1;
-        *stream << "end " << MACRO_EOL;
+        *stream << "end ";
+
+        *stream << MACRO_EOL;
+        *stream << MACRO_EOL;
         
         tryTranslate(right, stream, namespaceSoFar, indent);
-    }else{
-        tryTranslate(bus, stream, namespaceSoFar, indent);
-        *stream << " ";
-        tryTranslate(identifier, stream, namespaceSoFar, indent);
+    } 
 
-        // Expression* array;
-        if (array) {
-            *stream << "[";
-            tryTranslate(array, stream, namespaceSoFar, indent);
-            *stream << "]";
-        }
-
-        if (optionalAssignment) {
-            *stream << " ";
-            *stream << "=";
-            *stream << " ";
-            *stream << "(";
-            tryTranslate(optionalAssignment, stream, namespaceSoFar, indent);
-            *stream << ")";
-        }
-
-        *stream << "; " << MACRO_EOL;
-
-        tryTranslate(right, stream, namespaceSoFar, indent);
-    }
-    
-
-    
+    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void InstanceDeclaration::MACRO_TRANS_SIG_IMP {

@@ -128,7 +128,12 @@ namespace Phi {
         };
 
         struct Statement;
+        struct DeclarationListItem;
         struct TopLevelDeclaration: public Declaration {
+            // For elaborative use
+            Declaration* preambles = nullptr;
+            Statement* addenda = nullptr;
+
             enum class Type {
                 module = 0,
                 interface = 1
@@ -140,8 +145,6 @@ namespace Phi {
             Expression* inheritance;
             Statement* contents;
 
-            Statement* addenda = nullptr;
-
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
 
@@ -149,6 +152,9 @@ namespace Phi {
             
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
+
+            DeclarationListItem* propertyDeclaration(std::string container, std::string property, Range* bus); 
+            void propertyAssignment(std::string container, std::string property, std::string rightHandSide);
         };
 
         // Templating
@@ -156,7 +162,6 @@ namespace Phi {
             Expression* assignment;
 
             TemplateDeclaration(Identifier* identifier, Expression* assignment): Declaration(identifier), assignment(assignment) {}
-            // TO-DO: Parameterization support
         };
 
         // Statements
@@ -234,7 +239,6 @@ namespace Phi {
         };
 
         // Subdeclarations
-        struct DeclarationListItem;
         struct VariableLengthDeclaration: public Node {
             enum class Type {
                 var = 0,
@@ -257,8 +261,14 @@ namespace Phi {
         };
 
         struct DeclarationListItem: public Declaration {
+            // CHECK IF THIS EXISTS FIRST: IF IT DOES, THEN TRANSLATE *THIS* INSTEAD OF IDENTIFIER
+            // THIS HAS BEEN A HACKY PSA
+            // For elaborative use
+            LHExpression* trueIdentifier = nullptr;
+            
+            Range* bus = nullptr;
+
             VariableLengthDeclaration::Type type;
-            Range* bus;
             Expression* array;
             Expression* optionalAssignment;
 

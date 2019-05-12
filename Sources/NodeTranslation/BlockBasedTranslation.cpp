@@ -23,8 +23,7 @@ void If::MACRO_TRANS_SIG_IMP {
     //think of it as if{} else, not if{}else{}
     //translate iff inside comb block
     if(Statement::inComb){
-        if((expression!=NULL) )
-        {
+        if (expression) {
             *stream << "if ( ";
             tryTranslate(expression, stream, namespaceSoFar, indent);
             *stream << " ) ";
@@ -34,13 +33,14 @@ void If::MACRO_TRANS_SIG_IMP {
         *stream << MACRO_EOL;
         tryTranslate(contents, stream, namespaceSoFar, indent);
         *indent -= 1;
-        *stream << "end " << MACRO_EOL;
+        *stream << "end ";
 
-        if (elseBlock!=NULL) {
+        if (elseBlock) {
             *stream << "else ";
             tryTranslate(elseBlock, stream, namespaceSoFar, indent);
         }
     }
+    
 
     tryTranslate(right, stream, namespaceSoFar, indent);
 }
@@ -102,8 +102,6 @@ void Switch::MACRO_TRANS_SIG_IMP {
     tryTranslate(list, stream, namespaceSoFar, indent);
     *indent -= 1;
     *stream << "endcase";
-    *stream << MACRO_EOL;
-    
 
     tryTranslate(right, stream, namespaceSoFar, indent);
 }
@@ -115,12 +113,17 @@ void Combinational::MACRO_TRANS_SIG_IMP {
     //         Statement* contents;
     // }
 
+    *stream << MACRO_EOL;
+    *stream << MACRO_EOL;
+
     *indent += 1;
     *stream << "always @* begin " << MACRO_EOL;
         tryTranslate(contents, stream, namespaceSoFar, indent);
     *indent -= 1;
-    *stream << "end " << MACRO_EOL;
+    *stream << "end ";
 
+    *stream << MACRO_EOL;
+    *stream << MACRO_EOL;
     
     tryTranslate(right, stream, namespaceSoFar, indent);
 }

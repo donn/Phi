@@ -66,8 +66,8 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
         } else if (dliAttache->type == VLD::Type::latch) {
             if ((container = std::dynamic_pointer_cast<Container>(driven))){
                 context->addError(nullopt, "driving.latchNoReset");
+                goto exit;
             }
-            goto exit;
         }
     }
 

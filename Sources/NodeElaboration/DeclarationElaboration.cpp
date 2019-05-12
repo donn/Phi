@@ -6,6 +6,7 @@ void Port::MACRO_ELAB_SIG_IMP {
         "@clock",
         "@reset",
         "@enable",
+        "@condition",
         0
     };
     static const char* acceptableAnnotationsOutput[] = {
@@ -81,6 +82,43 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
 }
 
+DeclarationListItem* TopLevelDeclaration::propertyDeclaration(std::string container, std::string property, Range* range) {
+    // Unsafe allocations
+    auto containerID = new Identifier(container.c_str());
+    IdentifierExpression* containerNode = new IdentifierExpression(containerID);
+    IdentifierExpression* propertyNode = new IdentifierExpression(new Identifier(property.c_str()));
+    PropertyAccess* left = new PropertyAccess(containerNode, propertyNode);
+    DeclarationListItem* dli = new DeclarationListItem(containerID, nullptr, nullptr);
+    dli->trueIdentifier = left;
+    dli->bus = range;
+    dli->type = VariableLengthDeclaration::Type::wire;
+
+    auto placement = &preambles;
+    while (*placement != nullptr) {
+        placement = (Declaration**)&(*placement)->right;
+    }
+
+    *placement = dli;
+
+    return dli;
+}
+
+void TopLevelDeclaration::propertyAssignment(std::string container, std::string property, std::string rightHandSide) {
+    // Unsafe allocations
+    IdentifierExpression* containerNode = new IdentifierExpression(new Identifier(container.c_str()));
+    IdentifierExpression* propertyNode = new IdentifierExpression(new Identifier(property.c_str()));
+    PropertyAccess* left = new PropertyAccess(containerNode, propertyNode);
+    IdentifierExpression* right = new IdentifierExpression(new Identifier(rightHandSide.c_str()));
+    NondeclarativeAssignment* nda = new NondeclarativeAssignment(left, right);
+
+    auto placement = &addenda;
+    while (*placement != nullptr) {
+        placement = (Statement**)&(*placement)->right;
+    }
+
+    *placement = nda;
+}
+
 void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
     tryElaborate(bus, context);
     // PII
@@ -92,13 +130,24 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
 
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     using VLD = VariableLengthDeclaration;
+    // Declaration Block because goto is going to happen
     DeclarationListItem* rightDLI;
+
+    // I adamantly refuse to consider * part of the variable and not the type. To h*ck with society
+    DeclarationListItem* clockDLI;
+    DeclarationListItem* resetDLI;
+    DeclarationListItem* conditionDLI;
+    DeclarationListItem* dataDLI;
+    DeclarationListItem* enableDLI;
+    TopLevelDeclaration* tld;
+
     std::shared_ptr<Symbol> pointer;
-    std::shared_ptr<Driven> pointerAsDriven, clockDriven, resetDriven, enableDriven, resetValueDriven;
+    std::shared_ptr<Driven> pointerAsDriven, clockDriven, resetDriven, resetValueDriven, conditionDriven, dataDriven, enableDriven;
     std::shared_ptr<Container> pointerAsContainer;
     std::shared_ptr<SymbolArray> pointerAsArray;
     std::shared_ptr<SymbolSpace> declarativeModule, comb;
-    std::map<std::string, Node*>::iterator clockAnnotation, resetAnnotation, enableAnnotation;
+
+    std::map<std::string, Node*>::iterator clockAnnotation, resetAnnotation, conditionAnnotation, enableAnnotation;
 
     AccessWidth size = 1;
     AccessWidth width = 1;
@@ -112,8 +161,13 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     LHExpression::lhDrivenProcess(array, context->table);
 
     declarativeModule = context->table->findNearest(SymbolSpace::Type::module);
+    tld = static_cast<TopLevelDeclaration*>(declarativeModule->declarator);
+
+    assert(declarativeModule);
 
     if (array) {
+        context->addError(nullopt, "phi.arraysUnsupported");
+
         if (optionalAssignment) {
             throw "array.inlineInitialization";
         }
@@ -171,59 +225,31 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
         } 
         switch (type) {
         case VLD::Type::reg:
-        case VLD::Type::latch:
-            pointerAsContainer = std::make_shared<Container>(identifier->idString, this, from.value(), to.value(), msbFirst);
-            pointerAsContainer->space["data"] = std::make_shared<Driven>("data", this, from.value(), to.value(), msbFirst);
-            // TO-DO: Figure out enable
-            if (type == VLD::Type::reg) {
-                assert(declarativeModule);
-                clockDriven = std::make_shared<Driven>("clock", this);
+        case VLD::Type::latch:     
+            pointerAsContainer = std::make_shared<Container>(identifier->idString, this, from.value(), to.value(), msbFirst);   
+            if (type == VLD::Type::reg) {                
+                // Register properties
+                clockDLI = tld->propertyDeclaration(identifier->idString, "clock", nullptr);
+                clockDriven = std::make_shared<Driven>("clock", clockDLI);
                 pointerAsContainer->space["clock"] = clockDriven;
                 clockAnnotation = declarativeModule->annotations.find("@clock");
                 context->checks.push_back(Context::DriveCheck(clockDriven, nullopt, nullopt, [=]() {
                     if (clockAnnotation != declarativeModule->annotations.end()) {
                         auto port = static_cast<Port*>(clockAnnotation->second);
-
-                        // Unsafe allocations
-                        IdentifierExpression* registerName = new IdentifierExpression(identifier);
-                        IdentifierExpression* access = new IdentifierExpression(new Identifier("clock"));
-                        PropertyAccess* left = new PropertyAccess(registerName, access);
-                        IdentifierExpression* right = new IdentifierExpression(port->identifier);
-                        NondeclarativeAssignment* nda = new NondeclarativeAssignment(left, right);
-
-                        auto tld = static_cast<TopLevelDeclaration*>(declarativeModule->declarator);
-                        auto placement = &tld->addenda;
-                        if (*placement != nullptr) {
-                            placement = (Statement**)&(*placement)->right;
-                        }
-
-                        *placement = nda;
+                        tld->propertyAssignment(identifier->idString, "clock", port->identifier->idString);
                     } else {
                         context->addError(nullopt, "register.clockUndriven");
                     }
                 }));
 
-                resetDriven = std::make_shared<Driven>("reset", this);
+                resetDLI = tld->propertyDeclaration(identifier->idString, "reset", nullptr);
+                resetDriven = std::make_shared<Driven>("reset", resetDLI);
                 pointerAsContainer->space["reset"] = resetDriven;
                 resetAnnotation = declarativeModule->annotations.find("@reset");
-                context->checks.push_back(Context::DriveCheck(clockDriven, nullopt, nullopt, [=]() {
+                context->checks.push_back(Context::DriveCheck(resetDriven, nullopt, nullopt, [=]() {
                     if (resetAnnotation != declarativeModule->annotations.end()) {
                         auto port = static_cast<Port*>(resetAnnotation->second);
-
-                        // Unsafe allocations
-                        IdentifierExpression* registerName = new IdentifierExpression(identifier);
-                        IdentifierExpression* access = new IdentifierExpression(new Identifier("reset"));
-                        PropertyAccess* left = new PropertyAccess(registerName, access);
-                        IdentifierExpression* right = new IdentifierExpression(port->identifier);
-                        NondeclarativeAssignment* nda = new NondeclarativeAssignment(left, right);
-
-                        auto tld = static_cast<TopLevelDeclaration*>(declarativeModule->declarator);
-                        auto placement = &tld->addenda;
-                        if (*placement != nullptr) {
-                            placement = (Statement**)&(*placement)->right;
-                        }
-
-                        *placement = nda;
+                        tld->propertyAssignment(identifier->idString, "reset", port->identifier->idString);
                     } else {
                         context->addError(nullopt, "register.resetUndriven");
                     }
@@ -238,33 +264,41 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
                     context->addError(nullopt, "register.resetValueUndriven");
                 }));
             } else {
-                pointerAsContainer->space["condition"] = std::make_shared<Driven>("condition", this);
+                // Latch properties
+                conditionDLI = tld->propertyDeclaration(identifier->idString, "condition", nullptr);
+                conditionDriven = std::make_shared<Driven>("condition", conditionDLI);
+                pointerAsContainer->space["condition"] = conditionDriven;
+                conditionAnnotation = declarativeModule->annotations.find("@condition");
+                context->checks.push_back(Context::DriveCheck(conditionDriven, nullopt, nullopt, [=]() {
+                    if (conditionAnnotation != declarativeModule->annotations.end()) {
+                        auto port = static_cast<Port*>(conditionAnnotation->second);
+                        tld->propertyAssignment(identifier->idString, "condition", port->identifier->idString);
+                    } else {
+                        context->addError(nullopt, "latch.conditionUndriven");
+                    }
+                }));
+
                 if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
                     context->addError(nullopt, "driving.latchNoReset");
                 }
             }
 
+            // Common properties
+            dataDLI = tld->propertyDeclaration(identifier->idString, "data", bus);
+            dataDriven = std::make_shared<Driven>("data", dataDLI, from.value(), to.value(), msbFirst);
+            pointerAsContainer->space["data"] = dataDriven;
+            context->checks.push_back(Context::DriveCheck(dataDriven, nullopt, nullopt, [=](){
+                context->addError(nullopt, "register.dataUndriven");
+            }));
+
+            enableDLI = tld->propertyDeclaration(identifier->idString, "enable", nullptr);
             enableDriven = std::make_shared<Driven>("enable", this);
             pointerAsContainer->space["enable"] = enableDriven;
             enableAnnotation = declarativeModule->annotations.find("@enable");
             context->checks.push_back(Context::DriveCheck(enableDriven, nullopt, nullopt, [=]() {
                 if (enableAnnotation != declarativeModule->annotations.end()) {
                     auto port = static_cast<Port*>(enableAnnotation->second);
-
-                    // Unsafe allocations
-                    IdentifierExpression* registerName = new IdentifierExpression(identifier);
-                    IdentifierExpression* access = new IdentifierExpression(new Identifier("enable"));
-                    PropertyAccess* left = new PropertyAccess(registerName, access);
-                    IdentifierExpression* right = new IdentifierExpression(port->identifier);
-                    NondeclarativeAssignment* nda = new NondeclarativeAssignment(left, right);
-
-                    auto tld = static_cast<TopLevelDeclaration*>(declarativeModule->declarator);
-                    auto placement = &tld->addenda;
-                    if (*placement != nullptr) {
-                        placement = (Statement**)&(*placement)->right;
-                    }
-
-                    *placement = nda;
+                    tld->propertyAssignment(identifier->idString, "enable", port->identifier->idString);
                     this->hasEnable = true;
                 }
             }));
