@@ -1,4 +1,4 @@
-module a(
+module aa1(
 a: Input,
 b: Input,
 c: Output[1..0]
@@ -11,10 +11,10 @@ c: Output[1..0]
 module aa2(
 a: Input,
 b: Input,
-c: Output
+c: Output[1..0]
 )
 {
-    a ss;
+    aa1 ss;
     ss (a:a, b:b , c:c);
 }
 

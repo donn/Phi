@@ -17,6 +17,7 @@ module register_file(
   }
 
   //at the posedge of clock or posedge of reset , and if RegWrite is enabled
+  // This is not allowed in Phi: Translate to multiplexed enables
   reg[write_address].data = write_data;
 
 

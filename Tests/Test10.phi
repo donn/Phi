@@ -1,0 +1,19 @@
+module Adder(
+    a: Input[31..0],
+    b: Input[31..0],
+    c: Output[31..0]
+) {
+    c = a &+ b
+}
+
+module Counter(
+    clock: @clock Input,
+    reset: @reset Input,
+    output: Output[31..0]
+) {
+    Register[31..0] counter = 32b0
+
+    Adder a(a: counter, b: 32d1, c: counter.data)
+
+    output = counter
+}
