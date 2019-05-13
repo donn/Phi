@@ -99,7 +99,7 @@ namespace Phi {
             };
             Polarity polarity;
             Range* bus;
-
+            
             optional<std::string> annotation;
 
             MACRO_DEBUGLABEL_SIG_HDR
@@ -285,6 +285,9 @@ namespace Phi {
 
         struct ExpressionIDPair;
         struct InstanceDeclaration: public Declaration {
+            // For elaborative use
+            std::shared_ptr<SymbolSpace> symSpace = nullptr;
+
             LHExpression* module;
             ExpressionIDPair* parameters;
 
@@ -295,6 +298,8 @@ namespace Phi {
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
+
+            void elaboratePorts(Context* context);
         };
 
         struct ExpressionIDPair: public Declaration {
@@ -323,6 +328,8 @@ namespace Phi {
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
+
+            static void drivingAssignment(Context* context, LHExpression* lhs, Expression* expression, bool* skipTranslation, bool* inComb);
         };
         
         struct NondeclarativePorts: public Nondeclarative {

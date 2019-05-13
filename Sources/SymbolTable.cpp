@@ -405,7 +405,7 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* acces
                     flag = false;
                     continue;
                 }
-                auto& id = *j->id;
+                auto& id = j->id;
                 auto next = pointerAsSpace->space.find(id);
                 
                 if (next == pointerAsSpace->space.end()) {

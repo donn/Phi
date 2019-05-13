@@ -171,6 +171,7 @@ populated_port_declaration_list:
     }
     | identifier ':' optional_annotation port_polarity optional_bus_declaration {
         $$ = new Port(static_cast<Identifier*>($1), $4, static_cast<Range*>($5), $3);
+        $$->right = nullptr;
     }
     ;
 port_polarity:
@@ -186,6 +187,7 @@ port_polarity:
 template_declaration:
     { $$ = epsilon; }
     | '<' template_declaration_list '>' {
+        context->addError(nullopt, "phi.parametersUnsupported"); // UNSUPPORTED
         $$ = $2;
     }
     ;

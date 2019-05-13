@@ -1,9 +1,8 @@
 #include "Node.h"
 using namespace Phi::Node;
 
-void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
+void NondeclarativeAssignment::drivingAssignment(Context* context, LHExpression* lhs, Expression* expression, bool* skipTranslation, bool* inComb) {
     using VLD = VariableLengthDeclaration;
-    // Declaration block because I'm using goto here
     std::vector<SymbolTable::Access> accesses;
     
     optional< std::shared_ptr<Symbol> > symbolOptional;
@@ -21,16 +20,12 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
 
     bool elevate = false;
 
-    // Elaborate left hand side
-    tryElaborate(lhs, context);
-
     // Find and get symbol
     accesses = lhs->accessList(&from, &to);
     symbolOptional = context->table->find(&accesses, &from, &to);
 
     if (!symbolOptional.has_value()) {
-        context->addError(nullopt, "symbol.dne");
-        goto exit;
+        throw "symbol.dne";
     }
 
     symbol = symbolOptional.value();
@@ -42,39 +37,33 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     driven = std::dynamic_pointer_cast<Driven>(symbol);
 
     if (!driven) {
-        context->addError(nullopt, "driving.notDrivable");
-        goto exit;
+        throw "driving.notDrivable";
     }
 
     // Elaborate on right hand side
-    tryElaborate(expression, context);
-    LHExpression::lhDrivenProcess(expression, context->table);
 
     if (dliAttache) {
         if (dliAttache->type == VLD::Type::var) {
-            skipTranslation = true;
+            *skipTranslation = true;
             if (expression->type != Expression::Type::compileTime) {
-                context->addError(nullopt, "driving.hardwareDominance");
-                goto exit;
+                throw "driving.hardwareDominance";
             }
         } else if (dliAttache->type == VLD::Type::reg) {
             if ((container = std::dynamic_pointer_cast<Container>(driven))){
-                skipTranslation = true;
+                *skipTranslation = true;
                 driven = std::dynamic_pointer_cast<Driven>(container->space["_0R"]);
                 elevate = true;
             }
         } else if (dliAttache->type == VLD::Type::latch) {
             if ((container = std::dynamic_pointer_cast<Container>(driven))){
-                context->addError(nullopt, "driving.latchNoReset");
-                goto exit;
+                throw "driving.latchNoReset";
             }
         }
     }
 
     if (portAttache) {
         if (portAttache->polarity == Port::Polarity::input) {
-            context->addError(nullopt, "driving.inputWire");
-            goto exit;
+            throw "driving.inputWire";
         }
     }
     
@@ -88,12 +77,11 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     width = driven->msbFirst ? from.value() - to.value() + 1 : to.value() - from.value() + 1;
 
     if (width != expression->numBits) {
-        context->addError(nullopt, "driving.widthMismatch");
+        throw "driving.widthMismatch";
     }
 
     if (!driven->drive(expression, from, to, true)) {
-        context->addError(nullopt, "assignment.alreadyDriven");
-        goto exit;
+        throw "assignment.alreadyDriven";
     } 
 
     if ((comb = context->table->findNearest(SymbolSpace::Type::comb))) {
@@ -104,7 +92,7 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
         if (portAttache) {
             portAttache->polarity = Port::Polarity::output_reg;
         }
-        inComb = true;
+        *inComb = true;
         combDeclarator->conclusionTriggers.push_back([=](){
             //Unsafe allocation
             auto exp = Expression::abstract(Expression::Type::runTime, width);
@@ -119,8 +107,13 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     if (elevate) {
         dliAttache->optionalAssignment = expression;
     }
+}
 
-exit:
+void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
+    tryElaborate(lhs, context);
+    tryElaborate(expression, context);
+    LHExpression::lhDrivenProcess(expression, context->table);
+    drivingAssignment(context, lhs, expression, &skipTranslation, &inComb);
     tryElaborate(right, context);
 }
 
@@ -137,27 +130,25 @@ void NondeclarativePorts::MACRO_ELAB_SIG_IMP {
     accesses = lhs->accessList(&trash, &trash);
     symbolOptional = context->table->find(&accesses, &trash, &trash);
     if (!symbolOptional.has_value()) {
-        context->addError(nullopt, "symbol.dne");
-        goto exit;
+        throw "symbol.dne";
     }
     symbol = symbolOptional.value();
 
     declarator = dynamic_cast<InstanceDeclaration*>(symbol->declarator);
 
     if (!declarator) {
-        context->addError(nullopt, "driving.notAnInstance");
-        goto exit;
+        throw "driving.notAnInstance";
     }
 
     if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
-        context->addError(nullopt, "comb.declarationNotAllowed");
+        throw "comb.declarationNotAllowed";
     } else {
         tryElaborate(ports, context);
     }
 
     
     declarator->ports = ports;
+    declarator->elaboratePorts(context);
 
-exit:
     tryElaborate(right, context);
 }

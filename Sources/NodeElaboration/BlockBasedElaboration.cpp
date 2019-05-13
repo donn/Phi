@@ -45,6 +45,7 @@ void If::MACRO_ELAB_SIG_IMP {
 }
 
 void ForLoop::MACRO_ELAB_SIG_IMP {
+    context->addError(nullopt, "phi.forLoopUnsupported"); // UNSUPPORTED
     range->elaborate(context);
     if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
         context->addError(nullopt, "comb.forLoopNotAllowed");

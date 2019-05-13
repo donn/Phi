@@ -166,7 +166,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     assert(declarativeModule);
 
     if (array) {
-        context->addError(nullopt, "phi.arraysUnsupported");
+        context->addError(nullopt, "phi.arraysUnsupported"); // UNSUPPORTED
 
         if (optionalAssignment) {
             throw "array.inlineInitialization";
@@ -292,7 +292,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             }));
 
             enableDLI = tld->propertyDeclaration(identifier->idString, "enable", nullptr);
-            enableDriven = std::make_shared<Driven>("enable", this);
+            enableDriven = std::make_shared<Driven>("enable", enableDLI);
             pointerAsContainer->space["enable"] = enableDriven;
             enableAnnotation = declarativeModule->annotations.find("@enable");
             context->checks.push_back(Context::DriveCheck(enableDriven, nullopt, nullopt, [=]() {
@@ -350,36 +350,117 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
         }
     }
     tryElaborate(module, context);
+    tryElaborate(parameters, context);
 
     std::optional<AccessWidth> trash;
-
-    auto accesses = module->accessList(&from, &to);
-    auto symbolOptional = context->table->find(&accesses, &from, &to);
+    auto accesses = module->accessList(&trash, &trash);
+    auto symbolOptional = context->table->find(&accesses, &trash, &trash);
 
     if (symbolOptional.has_value()) {
         auto symbol = symbolOptional.value();
-        if (auto symSpace = std::dynamic_pointer_cast<SymbolSpace>(symbol) && symSpace->type == SymbolSpace::Type::module) {
-            if (context->table->findNearest(SymbolSpace::Type::module) != symSpace) {
-                if (!context->table->findNearest(SymbolSpace::Type::comb)) {
-                    context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, this));
+        if ((symSpace = std::dynamic_pointer_cast<SymbolSpace>(symbol))) {
+            if (symSpace->type == SymbolSpace::Type::module) {
+                if (context->table->findNearest(SymbolSpace::Type::module) != symSpace) {
+                    if (!context->table->findNearest(SymbolSpace::Type::comb)) {
+                        context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, this));
 
-                    tryElaborate(parameters, context);
-                    tryElaborate(ports, context);
+                        if (ports) {
+                            elaboratePorts(context);
+                        }
 
+                    } else {
+                        symSpace = nullptr;
+                        context->addError(nullopt, "comb.declarationNotAllowed");
+                    }
                 } else {
-                    context->addError(nullopt, "comb.declarationNotAllowed");
+                    symSpace = nullptr;
+                    context->addError(nullopt, "module.recursion");
                 }
             } else {
-                context->addError(nullopt, "module.recursion");
+                symSpace = nullptr;
+                context->addError(nullopt, "symbol.notAModule");
             }
         } else {
-            context->addError(nullopt, "symbol.notAModule");
+            symSpace = nullptr;
+            context->addError(nullopt, "symbol.notAModuleOrSpace");
         }
     } else {
         context->addError(nullopt, "symbol.dne");
     }
+    // I profusely apologize for what you just saw.
     
     tryElaborate(right, context);
+}
+
+void InstanceDeclaration::elaboratePorts(Context* context) {
+    if (!symSpace) { return; }
+    tryElaborate(ports, context);
+
+    // port checking
+    std::map<std::string, std::pair<Port*, bool> > inputs, outputs;
+    for (auto& element: symSpace->space) {
+        if (auto port = dynamic_cast<Port*>(element.second->declarator)) {
+            if (port->polarity == Port::Polarity::input) {
+                inputs[port->identifier->idString] = std::pair(port, false);
+            } else {
+                outputs[port->identifier->idString] = std::pair(port, false);
+            }
+        }
+    }
+
+    //PII
+    auto seeker = ports;
+    while (seeker) {
+        auto name = seeker->identifier->idString;
+        auto relevantExpr = seeker->expression;
+        auto inputIterator = inputs.find(name);
+        auto outputIterator = outputs.find(name);
+        #define MACRO_PORT_WIDTH [&]() {\
+            if (relevantPort->bus) {\
+                AccessWidth from, to;\
+                relevantPort->bus->getValues(&from, &to);\
+                return (from < to) ? to - from + 1 : from - to + 1;\
+            }\
+            return 1;\
+        }()
+        if (inputIterator != inputs.end()) {
+            // Process as input
+            if (inputIterator->second.second) {
+                context->addError(nullopt, "module.portAlreadyDriven");
+            } else {
+                auto relevantPort = inputIterator->second.first;
+                auto width = MACRO_PORT_WIDTH;
+                LHExpression::lhDrivenProcess(relevantExpr, context->table);
+                if (width != relevantExpr->numBits) {
+                    context->addError(nullopt, "driving.widthMismatch");
+                } else {
+                    outputIterator->second.second = true;
+                }
+            }
+        } else if (outputIterator != outputs.end()) {
+            if (outputIterator->second.second) {
+                context->addError(nullopt, "module.portAlreadyDriven");
+            } else {
+                if (auto lhs = dynamic_cast<LHExpression*>(relevantExpr)) {
+                    auto relevantPort = outputIterator->second.first;
+                    LHExpression::lhDrivenProcess(relevantExpr, context->table);
+                    auto width = MACRO_PORT_WIDTH;
+                    bool trash = false;
+                    try {
+                        NondeclarativeAssignment::drivingAssignment(context, lhs, Expression::abstract(Expression::Type::runTime, width), &trash, &trash);
+                    } catch (const char* e) {
+                        context->addError(nullopt, e);
+                    }
+                    
+                } else { 
+                    context->addError(nullopt, "module.outputConnectedToRHE");
+                }
+            }
+        } else {
+            context->addError(nullopt, "module.portNotFound");
+        }
+        seeker = static_cast<ExpressionIDPair*>(seeker->right);
+    }
 }
 
 void ExpressionIDPair::MACRO_ELAB_SIG_IMP {
