@@ -395,9 +395,9 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
 void InstanceDeclaration::elaboratePorts(Context* context) {
     if (!symSpace) { return; }
     tryElaborate(ports, context);
-
+    typedef std::map<std::string, std::pair<Port*, bool> > ListType;
     // port checking
-    std::map<std::string, std::pair<Port*, bool> > inputs, outputs;
+    ListType inputs, outputs;
     for (auto& element: symSpace->space) {
         if (auto port = dynamic_cast<Port*>(element.second->declarator)) {
             if (port->polarity == Port::Polarity::input) {
@@ -434,7 +434,7 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
                 if (width != relevantExpr->numBits) {
                     context->addError(nullopt, "driving.widthMismatch");
                 } else {
-                    outputIterator->second.second = true;
+                    inputIterator->second.second = true;
                 }
             }
         } else if (outputIterator != outputs.end()) {
@@ -448,6 +448,7 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
                     bool trash = false;
                     try {
                         NondeclarativeAssignment::drivingAssignment(context, lhs, Expression::abstract(Expression::Type::runTime, width), &trash, &trash);
+                        outputIterator->second.second = true;
                     } catch (const char* e) {
                         context->addError(nullopt, e);
                     }

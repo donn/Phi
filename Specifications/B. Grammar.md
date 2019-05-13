@@ -236,3 +236,6 @@
 * *expression* **:** *expression*
 * **default** **:** *expression*
 * ε
+
+*identifier*:
+* *identifier-token*

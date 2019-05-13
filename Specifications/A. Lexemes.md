@@ -7,7 +7,7 @@ These cannot be separated by spaces.
 *tokens*:
 * *keyword*
 * *annotation*
-* *identifier*
+* *identifier-token*
 * *string*
 * *numeric*
 * *punctuator*
@@ -30,7 +30,7 @@ These cannot be separated by spaces.
 *annotation*:
 * *@* *starter* *endsequence*
 
-*identifier*:
+*identifier-token*:
 * *starter* *endsequence*
 * **\`** *starter* *endsequence* **\`**
 
