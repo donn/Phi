@@ -57,12 +57,20 @@
 * *optional-annotation* *nondeclarative-statement* *optional-semicolon*
 * *optional-annotation* *block-based*
 
+*optional-annotation*:
+* *annotation*
+* ε
+
+## Blocks
+*special-number*:
+* *fixed-width-special*
+* **(** *fixed-width-special* **)**
+
 *block-based*:
 * *if*
 * **for** *identifer* **in** *range* *block*
 * **namespace** *identifier* *block*
-* **switch** *expression* **{** *labeled-statement-list* **}**
-* **switch** *fixed-width-special* **{** *labeled-statement-list* **}**
+* **switch** *expression* **{** *labeled-statement-list* **}**=
 * **comb** *block*
 
 *if*:
@@ -75,6 +83,7 @@
 
 *labeled-statement-list*:
 * **case** *expression* **:** *statement_list* *labeled_statement_list*
+* **case** *special-number* **:** *statement_list* *labeled_statement_list*
 * **default** *expression* **:** *statement_list*
 * ε
 
@@ -187,8 +196,9 @@
 * **|** *expression*
 * **~** *expression*
 * **{** *concatenation* **}**
-* **$** *expression* **(** *procedural-call* **)**
+* **$** *lhexpression* **(** *procedural-call* **)**
 * **(** *expression* **)**
+* *mux*
 * *fixed-width-numeric*
 * *numeric*
 * *lhexpression*

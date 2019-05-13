@@ -1,7 +1,7 @@
 module Adder(
-    a: Input[31..0],
-    b: Input[31..0],
-    c: Output[31..0]
+    a: Input[15..0],
+    b: Input[15..0],
+    c: Output[15..0]
 ) {
     c = a &+ b
 }
@@ -9,11 +9,11 @@ module Adder(
 module Counter(
     clock: @clock Input,
     reset: @reset Input,
-    output: Output[31..0]
+    output: Output[15..0]
 ) {
-    Register[31..0] counter = 32b0
+    Register[15..0] counter = 16d0
 
-    Adder a(a: counter, b: 32d1, c: counter.data)
+    Adder a(a: counter, b: 16d1, c: counter.data)
 
     output = counter
 }
