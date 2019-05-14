@@ -435,6 +435,7 @@ namespace Phi {
 
         
         struct Literal: public Expression {
+            std::string interpretableSaved;
             Literal(const char* interpretable, bool widthIncluded = true);
 
             // No elaboration needed.

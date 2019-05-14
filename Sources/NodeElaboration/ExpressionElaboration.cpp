@@ -50,9 +50,9 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
     type = Type::compileTime;
 
     if (!widthIncluded) {
-        auto ref = llvm::StringRef(interpretable);
         numBits = 32;
-        value = llvm::APInt(32, ref, 10);
+        interpretableSaved = interpretablePtr; 
+        value = llvm::APInt(32, interpretableSaved.c_str(), 10);
     } else {
         auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9]+)");
         
@@ -88,8 +88,9 @@ Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
             default:
                 throw "FATAL";
         }
-        auto ref = llvm::StringRef(match[3]);
-        value = llvm::APInt(prospectiveWidth, ref, radix);
+        interpretableSaved = match[3];
+
+        value = llvm::APInt(prospectiveWidth, interpretableSaved.c_str(), radix);
     }
 }
 
