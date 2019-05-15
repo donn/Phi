@@ -1,0 +1,6 @@
+module ZeroDetector(
+    input: Input[31..0],
+    output: Output
+) {
+    output = |input;
+}

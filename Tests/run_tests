@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+
+files = Dir["Test*.phi"]
+
+for file in files
+    puts "Testing #{file}..."
+    system("../phic #{file}")
+    if $? != 0
+        puts "Regression in #{file}..."
+    else
+        system("iverilog -g2005-sv #{file}.sv")
+    end
+end
