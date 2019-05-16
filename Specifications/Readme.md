@@ -1,1 +1,1 @@
-## Specification up to date as of Phi v0.0.4.
+## Specification up to date as of Phi v0.0.6.
