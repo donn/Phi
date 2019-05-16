@@ -41,7 +41,7 @@ parser = OptionParser.new do |opts|
 
     opts.on("-h", "--help", "Show this message and exit.") do
         puts opts
-        exit $?.exitstatus
+        exit 0
     end
 
     opts.on("-v", "--verbose", "Turn on verbose operation mode.") do
@@ -152,7 +152,7 @@ elsif argument.end_with?(".sv") || argument.end_with?(".v")
         # Try to pretty print Icarus Verilog errors
         vvp_output = "#{temp_directory}/#{argument}.vvp"
         Dir.createAllDirs(file: vvp_output)
-        verilogc_invocation = "'#{verilogc}' -o '#{vvp_output}' '#{tb_output}'"
+        verilogc_invocation = "'#{verilogc}' -D_phi -o '#{vvp_output}' '#{tb_output}'"
         puts verilogc_invocation if verbose
         verilogc_out, verilogc_err, verilogc_status = Open3.capture3(verilogc_invocation)
         if verilogc_status != BSDExits[:OK]

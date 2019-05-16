@@ -22,13 +22,6 @@ All running dependencies, plus:
 * Git
 * Make
 * GNU Bison
-
-## Usage
-### All: After Cloning
-Run `git submodule update --init --recursive`.
-
-We use open source libraries for various functions, and they're all imported using git submodules.
-
 ### macOS
 Install Xcode from the App Store.
 
@@ -61,6 +54,24 @@ Using apt...
 ```sh
     sudo apt-get install build-essential git bison llvm
 ```
+
+# Build Instructions
+Run `git submodule update --init --recursive`.
+
+We use open source libraries for various functions, and they're all imported using git submodules.
+
+You can then invoke either `make` or `make release`. The former produces a debug binary, which is slower but packs more features. It is more suitable for doing dev work on the actual compiler. If you intend on using the Phi compiler itself, we recommend `make release`.
+
+# Usage
+There are two invocation options here: `./phic` and `./phi`.
+
+`./phic` is the actual compiler for Phi. It's a plain binary. You can write `./phi --help` for more information, but the short story is, to invoke it write `./phi <phi file name>`. If there are no errors returned, it creates a file with the same name as the filename given with ".sv" appended.
+
+The former is a ruby script with certain capabilities including the ability to load .sv files and simulate them instantly: bypassing the .out file as a middle step. It also processes a special extension to SystemVerilog, ``` `phi ```. Tick phi allows you to include Phi files from SystemVerilog files, where the script will automatically invoke the Phi compiler on them.
+
+To invoke it, simply write `./phi <.phi or .sv file>`. In case of a phi file, it acts like the compiler itself, but some options (especially the debug only ones) are not available.
+
+Both executables comply with BSD-style system exits, and you can write `./phi(c) --help` for more info.
 
 # License
 Phi is available under the Apache 2.0 license, available at the root of this project as 'License'.

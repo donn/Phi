@@ -1,0 +1,67 @@
+module EdgeDetector(
+    clk: @clock Input,
+    reset: @reset Input,
+    go: Input,
+    actuallyGo: Output
+) {
+    Register status = 1b0
+    status.data = go
+    actuallyGo = go & ~status
+}
+
+module SuccessiveApproximationControl(clk: @clock Input,
+    reset: @reset Input,
+    go : Input,
+    cmp: Input,
+    valid: Output,
+    result: Output[15..0],
+    value: Output[15..0],
+    sample: Output
+) {
+
+    Register[15..0] sar = 16d0
+    Register[15..0] position = 16d0
+    Register[7..0] waiting = 8d0
+
+    Register running = 1d0
+    Register doSample = 1b0
+    Register isValid = 1d0
+
+    value = sar
+    result = sar
+    sample = doSample
+    valid = isValid
+
+    Wire actuallyGo
+    Wire[15..0] positionShifted
+
+    EdgeDetector goDetector(clk: clk, reset: reset, go: go, actuallyGo: actuallyGo)
+
+    comb {
+        running.data = running
+        doSample.data = doSample
+        isValid.data = isValid
+        sar.data = sar
+        waiting.data = waiting
+        position.data = position
+
+        if actuallyGo & ~running {
+            running.data = 1b1
+            doSample.data = 1b1
+            isValid.data = 1b0
+            sar.data = 16x8000
+            waiting.data = 8d0
+            position.data = sar.data
+        } else if running & waiting {
+            waiting.data = waiting &- 1
+        } else if running & (position != 16b0) {
+            doSample.data = 0
+            sar.data = mux cmp (1b1: sar ^ position, 1b0: sar)
+            position.data = {1b0, position[15..1]}
+            sar.data = sar.data | position.data
+        } else if running {
+            isValid.data = 1b1
+            running.data = 1b0
+        }
+    }
+}
