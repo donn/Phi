@@ -1,6 +1,3 @@
-#undef stdout
-#undef stderr
-
 #include "Context.h"
 #include "BSDExits.h"
 #include "SymbolTable.h"
@@ -24,16 +21,26 @@ std::string versionString() {
     }
     return std::string(Phi::GIT_TAG) + dev + " (" + Phi::GIT_VER_STRING + ")";
 }
+
+#ifdef _WIN32
+    #include <iostream>
+#endif
+
 int main(int argc, char* argv[]) {
-    auto stdout = std::ofstream("/dev/stdout");
-    auto stderr = std::ofstream("/dev/stderr");
-    
+#ifdef _WIN32
+    auto& stdoutStream = std::cout;
+    auto& stderrStream = std::cerr;
+#else
+    auto stdoutStream = std::ostream("/dev/stdout");
+    auto stderrStream = std::ostream("/dev/stderr");
+#endif
+
     // CLI Option parsing
     SSCO::Options getOpt({
-        {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(stdout); exit(0); }},
+        {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(stdoutStream); exit(0); }},
         {"version", 'V', "Show the current version of Phi.", false, [&](){   
-            stdout << "Phi Compiler version " << versionString() << std::endl;
-            stdout << "All rights reserved. Licensed under the Apache License 2.0." << std::endl;
+            stdoutStream << "Phi Compiler version " << versionString() << std::endl;
+            stdoutStream << "All rights reserved. Licensed under the Apache License 2.0." << std::endl;
             exit(0);
         }},
         {"outFile", 'o', "Output file.", true, std::nullopt},
@@ -48,7 +55,7 @@ int main(int argc, char* argv[]) {
     auto opts = getOpt.process(argc, argv);
 
     if (!opts.has_value()) {
-        getOpt.printHelp(stdout);
+        getOpt.printHelp(stdoutStream);
         return EX_USAGE;
     }
 
@@ -57,8 +64,8 @@ int main(int argc, char* argv[]) {
 
     // Read input file
     if (arguments.size() < 1) {
-        stdout << "No files provided." << std::endl;
-        getOpt.printHelp(stdout);
+        stdoutStream << "No files provided." << std::endl;
+        getOpt.printHelp(stdoutStream);
         return EX_USAGE;
     }
 
@@ -79,7 +86,7 @@ int main(int argc, char* argv[]) {
 
     context.setFile(filename);
     if (context.error()) {
-        context.prettyPrintErrors(&stderr);
+        context.prettyPrintErrors(&stderrStream);
         return EX_NOINPUT;
     }
 
@@ -92,7 +99,7 @@ int main(int argc, char* argv[]) {
     parser.parse();
 
     if (context.error()) {
-        context.prettyPrintErrors(&stderr);
+        context.prettyPrintErrors(&stderrStream);
         if (options.find("ignoreErrors") == options.end()) {
             return EX_DATAERR;
         }
@@ -113,7 +120,7 @@ int main(int argc, char* argv[]) {
     context.elaborate(&table);
     context.driveChecks();
     if (context.error()) {
-        context.prettyPrintErrors(&stderr);
+        context.prettyPrintErrors(&stderrStream);
         if (options.find("ignoreErrors") == options.end()) {
             return EX_DATAERR;
         }

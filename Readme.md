@@ -9,8 +9,8 @@ It's basically a mix of Swift/C++'s syntax with Verilog's semantics.
 
 # Dependencies
 ## Running
-* LLVM 
-* Ruby 2.3+ (optional, for main script)
+* LLVM 8.0
+* Ruby 2.3+
 
 ## Build
 All running dependencies, plus:
@@ -22,6 +22,7 @@ All running dependencies, plus:
 * Git
 * Make
 * GNU Bison
+
 ### macOS
 Install Xcode from the App Store.
 
@@ -52,8 +53,24 @@ If you have Clang and you want to use it, you can export and set the `CC` and `C
 Using apt...
 
 ```sh
-    sudo apt-get install build-essential git bison llvm
+    sudo apt-get install git build-essential bison llvm ruby-dev
 ```
+
+### Windows with MSYS2
+**Please note that Windows is not working at the moment pending an issue with RE-flex.**
+First, get [MSYS2-x86_64](https://www.msys2.org/) if you haven't already.
+
+```sh
+pacman -S git make mingw-w64-x86_64-gcc bison mingw-w64-x86_64-llvm ruby
+```
+
+You can also use Clang if you're into that:
+
+```sh
+pacman -S mingw-w64-x86_64-clang
+```
+
+We might be interested in supporting Visual Studio and other alternative solutions in the future, but at the moment, this solution is the one that works.
 
 # Build Instructions
 Run `git submodule update --init --recursive`.
@@ -62,7 +79,7 @@ We use open source libraries for various functions, and they're all imported usi
 
 You can then invoke either `make` or `make release`. The former produces a debug binary, which is slower but packs more features. It is more suitable for doing dev work on the actual compiler. If you intend on using the Phi compiler itself, we recommend `make release`.
 
-# Usage
+# Usage Instructions
 There are two invocation options here: `./phic` and `./phi`.
 
 `./phic` is the actual compiler for Phi. It's a plain binary. You can write `./phi --help` for more information, but the short story is, to invoke it write `./phi <phi file name>`. If there are no errors returned, it creates a file with the same name as the filename given with ".sv" appended.
