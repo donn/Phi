@@ -31,8 +31,8 @@ int main(int argc, char* argv[]) {
     auto& stdoutStream = std::cout;
     auto& stderrStream = std::cerr;
 #else
-    auto stdoutStream = std::ostream("/dev/stdout");
-    auto stderrStream = std::ostream("/dev/stderr");
+    auto stdoutStream = std::ofstream("/dev/stdout");
+    auto stderrStream = std::ofstream("/dev/stderr");
 #endif
 
     // CLI Option parsing
