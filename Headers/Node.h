@@ -266,12 +266,12 @@ namespace Phi {
         };
 
         struct DeclarationListItem: public Declaration {
-            // CHECK IF THIS EXISTS FIRST: IF IT DOES, THEN TRANSLATE *std::shared_ptr<THIS> INSTEAD OF IDENTIFIER
+            // CHECK IF THIS EXISTS FIRST: IF IT DOES, THEN TRANSLATE *THIS* INSTEAD OF IDENTIFIER
             // THIS HAS BEEN A HACKY PSA
             // For elaborative use
             std::shared_ptr<LHExpression> trueIdentifier = nullptr;
             
-            std::shared_ptr<Range> bus = nullptr;
+            std::weak_ptr<Range> bus = nullptr;
 
             VariableLengthDeclaration::Type type;
             std::shared_ptr<Expression> array;
@@ -291,7 +291,7 @@ namespace Phi {
         struct ExpressionIDPair;
         struct InstanceDeclaration: public Declaration {
             // For elaborative use
-            std::shared_ptr<SymbolSpace> symSpace = nullptr;
+            std::weak_ptr<SymbolSpace> symSpace = nullptr;
 
             std::shared_ptr<LHExpression> module;
             std::shared_ptr<ExpressionIDPair> parameters;
