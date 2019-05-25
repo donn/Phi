@@ -3,7 +3,7 @@
 #include <regex>
 using namespace Phi::Node;
 
-Identifier::Identifier(const char* identifier) {
+Identifier::Identifier(std::string identifier) {
     idString = std::regex_replace(identifier, std::regex("_"), "__");
 }
 

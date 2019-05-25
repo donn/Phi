@@ -96,6 +96,7 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
         combDeclarator->conclusionTriggers.push_back([=](){
             //Unsafe allocation
             auto exp = Expression::abstract(Expression::Type::runTime, width);
+            driven->drive(exp, from, to);
             // if (!driven->drive(exp, from, to)) { // If we accidentally created another unneeded one for this comb block, just deallocate
             //     delete exp;
             // }

@@ -129,13 +129,13 @@ optional_semicolon:
 
 declaration:
     KEYWORD_MODULE identifier template_declaration '(' port_declaration_list ')' inheritance block optional_semicolon {
-        $$ = std::make_shared<TopLevelDeclaration>(std::static_pointer_cast<Identifier>($2), TopLevelDeclaration::Type::module, std::static_pointer_cast<Port>($5), $7, std::static_pointer_cast<Statement>($8));
+        $$ = std::make_shared<TopLevelDeclaration>(std::static_pointer_cast<Identifier>($2), TopLevelDeclaration::Type::module, std::static_pointer_cast<Port>($5), std::static_pointer_cast<LHExpression>($7), std::static_pointer_cast<Statement>($8));
     }
     | KEYWORD_MODULE error '}' {
         $$ = std::make_shared<ErrorNode>();
     }
     | KEYWORD_INTERFACE identifier template_declaration '(' port_declaration_list ')' inheritance optional_semicolon {
-        $$ = std::make_shared<TopLevelDeclaration>(std::static_pointer_cast<Identifier>($2), TopLevelDeclaration::Type::interface, std::static_pointer_cast<Port>($5), $7);
+        $$ = std::make_shared<TopLevelDeclaration>(std::static_pointer_cast<Identifier>($2), TopLevelDeclaration::Type::interface, std::static_pointer_cast<Port>($5), std::static_pointer_cast<LHExpression>($7));
     }
     ;
 
@@ -148,21 +148,38 @@ port_declaration_list:
     ;
 populated_port_declaration_list:
     identifier ':' optional_annotation port_polarity optional_bus_declaration ',' populated_port_declaration_list {
-        auto node = std::make_shared<Port>(std::static_pointer_cast<Identifier>($1), $4, std::static_pointer_cast<Range>($5), $3);
+        auto cast = std::static_pointer_cast<Token>($3);
+        optional<std::string> annotation;
+        if (cast) {
+            annotation = cast->text;
+        }
+
+        auto polarityCast = std::static_pointer_cast<Token>($4);
+        auto polarity = polarityCast->text[0] == 'O';
+
+        auto node = std::make_shared<Port>(std::static_pointer_cast<Identifier>($1), polarity, std::static_pointer_cast<Range>($5), annotation);
         node->right = $7;
         $$ = node;
     }
     | identifier ':' optional_annotation port_polarity optional_bus_declaration {
-        $$ = std::make_shared<Port>(std::static_pointer_cast<Identifier>($1), $4, std::static_pointer_cast<Range>($5), $3);
-        $$->right = nullptr;
+        auto cast = std::static_pointer_cast<Token>($3);
+        optional<std::string> annotation;
+        if (cast) {
+            annotation = cast->text;
+        }
+
+        auto polarityCast = std::static_pointer_cast<Token>($4);
+        auto polarity = polarityCast->text[0] == 'O';
+
+        $$ = std::make_shared<Port>(std::static_pointer_cast<Identifier>($1), polarity, std::static_pointer_cast<Range>($5), annotation);
     }
     ;
 port_polarity:
     KEYWORD_INPUT {
-        $$ = false;
+        $$ = std::make_shared<Token>("I");
     }
     | KEYWORD_OUTPUT {
-        $$ = true;
+        $$ = std::make_shared<Token>("O");
     }
     ;
 
@@ -176,12 +193,12 @@ template_declaration:
     ;
 template_declaration_list:
     identifier optional_template_assignment template_declaration_list {
-        auto node = std::make_shared<TemplateDeclaration>(std::static_pointer_cast<Identifier>($1), $2);
+        auto node = std::make_shared<TemplateDeclaration>(std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($2));
         node->right = $3;
         $$ = node;
     }
     | identifier optional_template_assignment {
-        $$ = std::make_shared<TemplateDeclaration>(std::static_pointer_cast<Identifier>($1), $2);
+        $$ = std::make_shared<TemplateDeclaration>(std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($2));
     }
     ;
 optional_template_assignment:
@@ -214,21 +231,24 @@ statement:
     optional_annotation subdeclaration optional_semicolon {
         auto node = std::static_pointer_cast<Statement>($2);
         if ($1) {
-            node->annotation = $1;
+            auto cast = std::static_pointer_cast<Token>($1);
+            node->annotation = cast->text;
         }
         $$ = node;
     }
     | optional_annotation nondeclarative_statement optional_semicolon {
         auto node = std::static_pointer_cast<Statement>($2);
         if ($1) {
-            node->annotation = $1;
+                auto cast = std::static_pointer_cast<Token>($1);
+            node->annotation = cast->text;
         }
         $$ = node;
     }
     | optional_annotation block_based {
         auto node = std::static_pointer_cast<Statement>($2);
         if ($1) {
-            node->annotation = $1;
+            auto cast = std::static_pointer_cast<Token>($1);
+            node->annotation = cast->text;
         }
         $$ = node;
     }
@@ -244,10 +264,12 @@ optional_annotation:
 /* Blocks */
 special_number:
     FW_SPECIAL {
-        $$ = std::make_shared<SpecialNumber>($1);
+        auto cast = std::static_pointer_cast<Token>($1);
+        $$ = std::make_shared<SpecialNumber>(cast->text);
     }
     | '(' FW_SPECIAL ')' {
-        $$ = std::make_shared<SpecialNumber>($2);
+        auto cast = std::static_pointer_cast<Token>($2);
+        $$ = std::make_shared<SpecialNumber>(cast->text);
     }
     ;
 block_based:
@@ -261,7 +283,7 @@ block_based:
         $$ = std::make_shared<Namespace>(std::static_pointer_cast<Statement>($3), std::static_pointer_cast<Identifier>($2));
     }
     | KEYWORD_SWITCH expression '{' labeled_statement_list '}' {
-        $$ = std::make_shared<Switch>($2, std::static_pointer_cast<LabeledStatementList>($4));
+        $$ = std::make_shared<Switch>(std::static_pointer_cast<Expression>($2), std::static_pointer_cast<LabeledStatementList>($4));
     }
     | KEYWORD_COMB block {
         $$ = std::make_shared<Combinational>(std::static_pointer_cast<Statement>($2));
@@ -272,7 +294,7 @@ block_based:
     ;
 if:
     KEYWORD_IF expression block else {
-        $$ = std::make_shared<If>(std::static_pointer_cast<Statement>($3), $2, std::static_pointer_cast<If>($4));
+        $$ = std::make_shared<If>(std::static_pointer_cast<Statement>($3), std::static_pointer_cast<Expression>($2), std::static_pointer_cast<If>($4));
     }
     ;
 
@@ -321,25 +343,42 @@ statement_list:
 /* Subdeclarations */
 subdeclaration:
     dynamic_width optional_bus_declaration declaration_list {
-        $$ = std::make_shared<VariableLengthDeclaration>($1, std::static_pointer_cast<Range>($2), std::static_pointer_cast<DeclarationListItem>($3));
+        using VLDT = VariableLengthDeclaration::Type;
+        auto cast = std::static_pointer_cast<Token>($1);
+        VLDT type;
+        switch (cast->text[0]) {
+            case 'W':
+                type = VLDT::wire;
+                break;
+            case 'R':
+                type = VLDT::reg;
+                break;
+            case 'L':
+                type = VLDT::latch;
+                break;
+            case 'V':
+            default:
+                type = VLDT::var;
+        }
+        $$ = std::make_shared<VariableLengthDeclaration>(type, std::static_pointer_cast<Range>($2), std::static_pointer_cast<DeclarationListItem>($3));
     }
     | lhexpression optional_template identifier optional_array_declaration optional_ports {
-        $$ = std::make_shared<InstanceDeclaration>(std::static_pointer_cast<Identifier>($3), $1, std::static_pointer_cast<ExpressionIDPair>($2), $4, std::static_pointer_cast<ExpressionIDPair>($5));
+        $$ = std::make_shared<InstanceDeclaration>(std::static_pointer_cast<Identifier>($3), std::static_pointer_cast<LHExpression>($1), std::static_pointer_cast<ExpressionIDPair>($2), std::static_pointer_cast<Expression>($4), std::static_pointer_cast<ExpressionIDPair>($5));
     }
     ;
 
 dynamic_width:
     KEYWORD_SW_VAR {
-        $$ = VariableLengthDeclaration::Type::var;
+        $$ = std::make_shared<Token>("V");
     }
     | KEYWORD_WIRE {
-        $$ = VariableLengthDeclaration::Type::wire;
+        $$ = std::make_shared<Token>("W");
     }
     | KEYWORD_REGISTER {
-        $$ = VariableLengthDeclaration::Type::reg;
+        $$ = std::make_shared<Token>("R");
     }
     | KEYWORD_LATCH {
-        $$ = VariableLengthDeclaration::Type::latch;
+        $$ = std::make_shared<Token>("L");
     }
     ;
 optional_bus_declaration:
@@ -358,12 +397,12 @@ optional_array_declaration:
     
 declaration_list:
     identifier optional_array_declaration optional_assignment ',' declaration_list {
-        auto node = std::make_shared<DeclarationListItem>(std::static_pointer_cast<Identifier>($1), $2, $3);
+        auto node = std::make_shared<DeclarationListItem>(std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($2), std::static_pointer_cast<Expression>($3));
         node->right = $5;
         $$ = node;
     }
     | identifier optional_array_declaration optional_assignment {
-        $$ = std::make_shared<DeclarationListItem>(std::static_pointer_cast<Identifier>($1), $2, $3);
+        $$ = std::make_shared<DeclarationListItem>(std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($2), std::static_pointer_cast<Expression>($3));
     }
     ;
 optional_assignment:
@@ -382,12 +421,12 @@ optional_template:
 template_list:
     { $$ = epsilon; }
     | identifier ':' '(' expression ')' ',' template_list {
-        auto node = std::make_shared<ExpressionIDPair>(std::static_pointer_cast<Identifier>($1), $4);
+        auto node = std::make_shared<ExpressionIDPair>(std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($4));
         node->right = $7;
         $$ = node;
     }
     | identifier ':' '(' expression ')' {
-        $$ = std::make_shared<ExpressionIDPair>(std::static_pointer_cast<Identifier>($1), $4);
+        $$ = std::make_shared<ExpressionIDPair>(std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($4));
     }
     ;
 
@@ -409,12 +448,12 @@ ports:
 
 port_list:
     identifier ':' expression ',' port_list {
-        auto node = std::make_shared<ExpressionIDPair>(std::static_pointer_cast<Identifier>($1), $3);
+        auto node = std::make_shared<ExpressionIDPair>(std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($3));
         node->right = $5;
         $$ = node;
     }
     | identifier ':' expression {
-        $$ = std::make_shared<ExpressionIDPair>(std::static_pointer_cast<Identifier>($1), $3);
+        $$ = std::make_shared<ExpressionIDPair>(std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($3));
     }
     ;
 
@@ -422,13 +461,13 @@ port_list:
     
 nondeclarative_statement:
     lhexpression '=' expression {
-        $$ = std::make_shared<NondeclarativeAssignment>($1, $3);
+        $$ = std::make_shared<NondeclarativeAssignment>(std::static_pointer_cast<LHExpression>($1), std::static_pointer_cast<Expression>($3));
     }
     | '{' lhconcatenation '}' '=' expression {
-        $$ = std::make_shared<NondeclarativeAssignment>($2, $5); 
+        $$ = std::make_shared<NondeclarativeAssignment>(std::static_pointer_cast<LHExpression>($2), std::static_pointer_cast<Expression>($5)); 
     }
     | lhexpression ports {
-        $$ = std::make_shared<NondeclarativePorts>($1, std::static_pointer_cast<ExpressionIDPair>($2));
+        $$ = std::make_shared<NondeclarativePorts>(std::static_pointer_cast<LHExpression>($1), std::static_pointer_cast<ExpressionIDPair>($2));
     }
     ;
 
@@ -438,19 +477,19 @@ lhexpression:
         $$ = std::make_shared<IdentifierExpression>(std::static_pointer_cast<Identifier>($1));
     } 
     | lhexpression '.' lhexpression {
-        $$ = std::make_shared<PropertyAccess>($1, $3);
+        $$ = std::make_shared<PropertyAccess>(std::static_pointer_cast<LHExpression>($1), std::static_pointer_cast<LHExpression>($3));
     }
     | lhexpression '[' range ']' {
-        $$ = std::make_shared<RangeAccess>($1, std::static_pointer_cast<Range>($3));
+        $$ = std::make_shared<RangeAccess>(std::static_pointer_cast<LHExpression>($1), std::static_pointer_cast<Range>($3));
     }
     | lhexpression '[' expression ']' {
-        $$ = std::make_shared<ArrayAccess>($1, $3);
+        $$ = std::make_shared<ArrayAccess>(std::static_pointer_cast<LHExpression>($1), std::static_pointer_cast<Expression>($3));
     }
     ;
 
 lhconcatenation:
     lhexpression ',' lhconcatenation {
-        $$ = std::make_shared<LHConcatenation>($1, $3);
+        $$ = std::make_shared<LHConcatenation>(std::static_pointer_cast<LHExpression>($1), std::static_pointer_cast<LHExpression>($3));
     }
     | lhexpression {
         $$ = $1;
@@ -459,85 +498,85 @@ lhconcatenation:
 
 expression:
     expression OP_EQ expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::equal, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::equal, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_NEQ expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::notEqual, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::notEqual, std::static_pointer_cast<Expression>($3));
     }
     | expression '>' expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::greaterThan, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::greaterThan, std::static_pointer_cast<Expression>($3));
     }
     | expression '<' expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::lessThan, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::lessThan, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_GTE expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::greaterThanOrEqual, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::greaterThanOrEqual, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_LTE expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::lessThanOrEqual, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::lessThanOrEqual, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_UNSIGNED_LT expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::unsignedLessThan, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::unsignedLessThan, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_UNSIGNED_GT  expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::unsignedGreaterThan, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::unsignedGreaterThan, std::static_pointer_cast<Expression>($3));
     } 
     | expression OP_UNSIGNED_LTE expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::unsignedLessThanOrEqual, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::unsignedLessThanOrEqual, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_UNSIGNED_GTE expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::unsignedGreaterThanOrEqual, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::unsignedGreaterThanOrEqual, std::static_pointer_cast<Expression>($3));
     }
     | expression '+' expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::plus, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::plus, std::static_pointer_cast<Expression>($3));
     }
     | expression '-' expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::minus, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::minus, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_UNSIGNED_ADD expression{
-        $$ = std::make_shared<Binary>($1, Binary::Operation::unsignedPlus, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::unsignedPlus, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_UNSIGNED_SUB expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::unsignedMinus, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::unsignedMinus, std::static_pointer_cast<Expression>($3));
     }
     | expression '|' expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::bitwiseOr, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::bitwiseOr, std::static_pointer_cast<Expression>($3));
     }
     | expression '&' expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::bitwiseAnd, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::bitwiseAnd, std::static_pointer_cast<Expression>($3));
     }
     | expression '^' expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::bitwiseXor, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::bitwiseXor, std::static_pointer_cast<Expression>($3));
     }
     | expression '*' expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::mul, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::mul, std::static_pointer_cast<Expression>($3));
     }
     | expression '/' expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::div, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::div, std::static_pointer_cast<Expression>($3));
     }
     | expression '%' expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::modulo, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::modulo, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_SLL expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::shiftLeftLogical, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::shiftLeftLogical, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_SRL expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::shiftRightLogical, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::shiftRightLogical, std::static_pointer_cast<Expression>($3));
     }
     | expression OP_SRA expression {
-        $$ = std::make_shared<Binary>($1, Binary::Operation::shiftRightArithmetic, $3);
+        $$ = std::make_shared<Binary>(std::static_pointer_cast<Expression>($1), Binary::Operation::shiftRightArithmetic, std::static_pointer_cast<Expression>($3));
     }
     | '-' expression %prec UNARY {
-        $$ = std::make_shared<Unary>(Unary::Operation::negate, $2);
+        $$ = std::make_shared<Unary>(Unary::Operation::negate, std::static_pointer_cast<Expression>($2));
     }
     | '&' expression %prec UNARY {
-        $$ = std::make_shared<Unary>(Unary::Operation::allAnd, $2);
+        $$ = std::make_shared<Unary>(Unary::Operation::allAnd, std::static_pointer_cast<Expression>($2));
     }
     | '|' expression %prec UNARY {
-        $$ = std::make_shared<Unary>(Unary::Operation::allOr, $2);
+        $$ = std::make_shared<Unary>(Unary::Operation::allOr, std::static_pointer_cast<Expression>($2));
     }
     | '~' expression %prec UNARY {
-        $$ = std::make_shared<Unary>(Unary::Operation::bitwiseNot, $2);
+        $$ = std::make_shared<Unary>(Unary::Operation::bitwiseNot, std::static_pointer_cast<Expression>($2));
     }
     | '{' concatenation '}' {
         $$ = $2;
@@ -546,16 +585,18 @@ expression:
         $$ = $2;
     }
     | '$' lhexpression '(' procedural_call ')' {
-        $$ = std::make_shared<ProceduralCall>($2, (Node::Argument*)$4);
+        $$ = std::make_shared<ProceduralCall>(std::static_pointer_cast<LHExpression>($2), std::static_pointer_cast<Phi::Node::Argument>($4));
     }
     | mux {
         $$ = $1;
     }
     | FW_NUMERIC {
-        $$ = std::make_shared<Literal>($1, true);
+        auto cast = std::static_pointer_cast<Token>($1);
+        $$ = std::make_shared<Literal>(cast->text, true);
     }
     | NUMERIC  {
-        $$ = std::make_shared<Literal>($1, false);
+        auto cast = std::static_pointer_cast<Token>($1);
+        $$ = std::make_shared<Literal>(cast->text, false);
     }
     | lhexpression {
         $$ = $1;
@@ -564,13 +605,13 @@ expression:
 
 range:
     expression OP_RANGE expression {
-        $$ = std::make_shared<Range>($1, $3);
+        $$ = std::make_shared<Range>(std::static_pointer_cast<Expression>($1), std::static_pointer_cast<Expression>($3));
     }
     ;
 
 concatenation:
     concatenatable ',' concatenation {
-        $$ = std::make_shared<Concatenation>($1, $3);
+        $$ = std::make_shared<Concatenation>(std::static_pointer_cast<Expression>($1), std::static_pointer_cast<Expression>($3));
     }
     | concatenatable {
         $$ = $1;
@@ -581,16 +622,16 @@ concatenatable:
         $$ = $1;
     }
     | expression LEFT_REPEAT_CAT concatenation '}' '}' {
-        $$ = std::make_shared<RepeatConcatenation>($1, $3);
+        $$ = std::make_shared<RepeatConcatenation>(std::static_pointer_cast<Expression>($1), std::static_pointer_cast<Expression>($3));
     }
     ;
 
 mux:
     KEYWORD_MUX expression mux_block {
-        $$ = std::make_shared<Multiplexer>($2, std::static_pointer_cast<ExpressionPair>($3));
+        $$ = std::make_shared<Multiplexer>(std::static_pointer_cast<Expression>($2), std::static_pointer_cast<ExpressionPair>($3));
     }
     | KEYWORD_MUX special_number mux_block {
-        $$ = std::make_shared<Multiplexer>($2, std::static_pointer_cast<ExpressionPair>($3));
+        $$ = std::make_shared<Multiplexer>(std::static_pointer_cast<Expression>($2), std::static_pointer_cast<ExpressionPair>($3));
     }
     ;
 
@@ -602,20 +643,22 @@ procedural_call:
     ;
 procedural_call_list:
     expression ',' procedural_call_list {
-        auto node = std::make_shared<ExpressionArgument>($1);
+        auto node = std::make_shared<ExpressionArgument>(std::static_pointer_cast<Expression>($1));
         node->right = $3;
         $$ = node;
     }
     | STRING ',' procedural_call_list {
-        auto node = std::make_shared<StringArgument>($1);
+        auto cast = std::static_pointer_cast<Token>($1);
+        auto node = std::make_shared<StringArgument>(cast->text);
         node->right = $3;
         $$ = node;
     }
     | expression {
-        $$ = std::make_shared<ExpressionArgument>($1);
+        $$ = std::make_shared<ExpressionArgument>(std::static_pointer_cast<Expression>($1));
     }
     | STRING {
-        $$ = std::make_shared<StringArgument>($1);
+        auto cast = std::static_pointer_cast<Token>($1);
+        $$ = std::make_shared<StringArgument>(cast->text);
     }
     ;
 
@@ -627,29 +670,30 @@ mux_block:
 labeled_expression_list:
     { $$ = epsilon; }
     | expression ':' expression ',' labeled_expression_list {
-        auto node = std::make_shared<ExpressionPair>($1, nullptr, $3);
+        auto node = std::make_shared<ExpressionPair>(std::static_pointer_cast<Expression>($1), nullptr, std::static_pointer_cast<Expression>($3));
         node->right = $5;
         $$ = node;
     }
     | special_number ':' expression ',' labeled_expression_list {
-        auto node = std::make_shared<ExpressionPair>(nullptr, std::static_pointer_cast<SpecialNumber>($1), $3);
+        auto node = std::make_shared<ExpressionPair>(nullptr, std::static_pointer_cast<SpecialNumber>($1), std::static_pointer_cast<Expression>($3));
         node->right = $5;
         $$ = node;
     }
     | expression ':' expression {
-        $$ = std::make_shared<ExpressionPair>($1, nullptr, $3);
+        $$ = std::make_shared<ExpressionPair>(std::static_pointer_cast<Expression>($1), nullptr, std::static_pointer_cast<Expression>($3));
     }
     | special_number ':' expression {
-        $$ = std::make_shared<ExpressionPair>(nullptr, std::static_pointer_cast<SpecialNumber>($1), $3);
+        $$ = std::make_shared<ExpressionPair>(nullptr, std::static_pointer_cast<SpecialNumber>($1), std::static_pointer_cast<Expression>($3));
     }
     | KEYWORD_DEFAULT ':' expression {
-        $$ = std::make_shared<ExpressionPair>(nullptr, nullptr, $3);
+        $$ = std::make_shared<ExpressionPair>(nullptr, nullptr, std::static_pointer_cast<Expression>($3));
     }
     ;
 
 identifier:
     IDENTIFIER {
-        $$ = std::make_shared<Identifier>($1);
+        auto cast = std::static_pointer_cast<Token>($1);
+        $$ = std::make_shared<Identifier>(cast->text);
     }
     ;
 

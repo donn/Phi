@@ -44,6 +44,9 @@
 namespace Phi {
     class Context;
 
+    // This namespace contains all AST nodes
+    // Some of them are Abstract: i.e. there are no actual objects of that type.
+    // None of these are allowed for stack allocation.
     namespace Node {
         struct Node: public std::enable_shared_from_this<Node> {
             std::shared_ptr<Node> left = nullptr;
@@ -67,13 +70,19 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR
         };
 
+        struct Token: public Node {
+            std::string text;
+
+            Token(const char* text): text(text) {}
+        };
+
         // Molecular
         struct Identifier: public Node {
             std::string idString;
 
             MACRO_DEBUGLABEL_SIG_HDR
 
-            Identifier(const char* identifier);
+            Identifier(std::string identifier);
 
             // No elaboration needed.
             MACRO_TRANS_SIG_HDR
@@ -105,11 +114,7 @@ namespace Phi {
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
 
-            Port(std::shared_ptr<Identifier> identifier, bool polarity, std::shared_ptr<Range> bus, const char* annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus) {
-                if (annotation) {
-                    this->annotation = std::string(annotation);
-                }
-            }
+            Port(std::shared_ptr<Identifier> identifier, bool polarity, std::shared_ptr<Range> bus, std::optional<std::string> annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus), annotation(annotation) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -142,13 +147,13 @@ namespace Phi {
 
             Type type;
             std::shared_ptr<Port> ports;
-            std::shared_ptr<Expression> inheritance;
+            std::shared_ptr<LHExpression> inheritance;
             std::shared_ptr<Statement> contents;
 
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
 
-            TopLevelDeclaration(std::shared_ptr<Identifier> identifier, Type type, std::shared_ptr<Port> ports, std::shared_ptr<Expression> inheritance, std::shared_ptr<Statement> contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
+            TopLevelDeclaration(std::shared_ptr<Identifier> identifier, Type type, std::shared_ptr<Port> ports, std::shared_ptr<LHExpression> inheritance, std::shared_ptr<Statement> contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -436,7 +441,7 @@ namespace Phi {
         
         struct Literal: public Expression {
             std::string interpretableSaved;
-            Literal(const char* interpretable, bool widthIncluded = true);
+            Literal(std::string interpretable, bool widthIncluded = true);
 
             // No elaboration needed.
             MACRO_TRANS_SIG_HDR
@@ -447,7 +452,7 @@ namespace Phi {
             uint8 radix;
             std::string number;
             
-            SpecialNumber(const char* interpretable);
+            SpecialNumber(std::string interpretable);
 
             MACRO_TRANS_SIG_HDR
         };
@@ -530,7 +535,7 @@ namespace Phi {
 
         struct StringArgument: public Argument {
             std::string argument;
-            StringArgument(const char* argument): argument(argument) {
+            StringArgument(std::string argument): argument(argument) {
                 this->argument.erase(0, 1);
                 this->argument.erase(this->argument.length() - 1, 1);
             }

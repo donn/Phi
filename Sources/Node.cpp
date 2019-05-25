@@ -11,7 +11,7 @@ void Node::MACRO_TRANS_SIG_IMP {
     tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
-void tryElaborate(std::shared_ptr<Node> node, MACRO_ELAB_PARAMS) {
+void Phi::Node::tryElaborate(std::shared_ptr<Phi::Node::Node> node, MACRO_ELAB_PARAMS) {
     if (node) {
         try {
             node->elaborate(context);  
@@ -21,7 +21,7 @@ void tryElaborate(std::shared_ptr<Node> node, MACRO_ELAB_PARAMS) {
     }
 }
 
-void tryTranslate(std::shared_ptr<Node> node, MACRO_TRANS_PARAMS) {
+void Phi::Node::tryTranslate(std::shared_ptr<Phi::Node::Node> node, MACRO_TRANS_PARAMS) {
     if (node) {
         auto asExpr = std::dynamic_pointer_cast<Expression>(node);
         if (asExpr && asExpr->type == Expression::Type::compileTime) {

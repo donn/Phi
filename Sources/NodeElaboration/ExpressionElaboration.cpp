@@ -6,8 +6,8 @@
 using namespace Phi::Node;
 
 // Numbers
-SpecialNumber::SpecialNumber(const char* interpretablePtr) {
-    auto interpretable = std::string(interpretablePtr);
+SpecialNumber::SpecialNumber(std::string interpretableSent) {
+    auto interpretable = interpretableSent;
     auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9?]+)");
 
     auto match = std::smatch();
@@ -45,13 +45,13 @@ SpecialNumber::SpecialNumber(const char* interpretablePtr) {
     number = match[3];
 }
 
-Literal::Literal(const char* interpretablePtr, bool widthIncluded) {
-    auto interpretable = std::string(interpretablePtr);
+Literal::Literal(std::string interpretableSent, bool widthIncluded) {
+    auto interpretable = interpretableSent;
     type = Type::compileTime;
 
     if (!widthIncluded) {
         numBits = 32;
-        interpretableSaved = interpretablePtr; 
+        interpretableSaved = interpretable; 
         value = llvm::APInt(32, interpretableSaved.c_str(), 10);
     } else {
         auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9]+)");

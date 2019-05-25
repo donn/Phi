@@ -25,7 +25,7 @@ namespace Phi {
 
         std::list<std::string> files;
         std::vector<std::string> currentFileLines;
-        Node::Node* head = nullptr;
+        std::shared_ptr<Node::Node> head = nullptr;
     public:
         struct DriveCheck {
             std::shared_ptr<Driven> target;
