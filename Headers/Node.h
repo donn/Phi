@@ -45,12 +45,12 @@ namespace Phi {
     class Context;
 
     namespace Node {
-        struct Node {
-            Node* left = nullptr;
-            Node* right = nullptr;
+        struct Node: public std::enable_shared_from_this<Node> {
+            std::shared_ptr<Node> left = nullptr;
+            std::shared_ptr<Node> right = nullptr;
 
             Node() {}
-            Node(Node* right): right(right) {}
+            Node(std::shared_ptr<Node> right): right(right) {}
             virtual ~Node() {}
 
             MACRO_DEBUGLABEL_SIG_HDR
@@ -60,8 +60,8 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR
         };
 
-        void tryElaborate(Node* node, MACRO_ELAB_PARAMS);
-        void tryTranslate(Node* node, MACRO_TRANS_PARAMS);
+        void tryElaborate(std::shared_ptr<Node> node, MACRO_ELAB_PARAMS);
+        void tryTranslate(std::shared_ptr<Node> node, MACRO_TRANS_PARAMS);
 
         struct ErrorNode: public Node {
             MACRO_TRANS_SIG_HDR
@@ -86,9 +86,9 @@ namespace Phi {
 
         // Declarations
         struct Declaration: public Node { // Abstract
-            Identifier* identifier;
+            std::shared_ptr<Identifier> identifier;
 
-            Declaration(Identifier* identifier): identifier(identifier) {}
+            Declaration(std::shared_ptr<Identifier> identifier): identifier(identifier) {}
         };
 
         struct Port: public Declaration {
@@ -98,14 +98,14 @@ namespace Phi {
                 output_reg
             };
             Polarity polarity;
-            Range* bus;
+            std::shared_ptr<Range> bus;
             
             optional<std::string> annotation;
 
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
 
-            Port(Identifier* identifier, bool polarity, Range* bus, const char* annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus) {
+            Port(std::shared_ptr<Identifier> identifier, bool polarity, std::shared_ptr<Range> bus, const char* annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus) {
                 if (annotation) {
                     this->annotation = std::string(annotation);
                 }
@@ -116,12 +116,12 @@ namespace Phi {
         };
 
         struct TopLevelNamespace: public Declaration {
-            Node* contents;
+            std::shared_ptr<Node> contents;
 
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
 
-            TopLevelNamespace(Identifier* identifier, Node* contents): Declaration(identifier), contents(contents) {}
+            TopLevelNamespace(std::shared_ptr<Identifier> identifier, std::shared_ptr<Node> contents): Declaration(identifier), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -131,8 +131,8 @@ namespace Phi {
         struct DeclarationListItem;
         struct TopLevelDeclaration: public Declaration {
             // For elaborative use
-            Declaration* preambles = nullptr;
-            Statement* addenda = nullptr;
+            std::shared_ptr<Declaration> preambles = nullptr;
+            std::shared_ptr<Statement> addenda = nullptr;
 
             enum class Type {
                 module = 0,
@@ -141,27 +141,27 @@ namespace Phi {
             constexpr static SymbolSpace::Type declTypeMap[] = {SymbolSpace::Type::module, SymbolSpace::Type::other};
 
             Type type;
-            Port* ports;
-            Expression* inheritance;
-            Statement* contents;
+            std::shared_ptr<Port> ports;
+            std::shared_ptr<Expression> inheritance;
+            std::shared_ptr<Statement> contents;
 
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
 
-            TopLevelDeclaration(Identifier* identifier, Type type, Port* ports, Expression* inheritance, Statement* contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
+            TopLevelDeclaration(std::shared_ptr<Identifier> identifier, Type type, std::shared_ptr<Port> ports, std::shared_ptr<Expression> inheritance, std::shared_ptr<Statement> contents = nullptr): Declaration(identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
 
-            DeclarationListItem* propertyDeclaration(std::string container, std::string property, Range* bus); 
+            std::shared_ptr<DeclarationListItem> propertyDeclaration(std::string container, std::string property, std::shared_ptr<Range> bus); 
             void propertyAssignment(std::string container, std::string property, std::string rightHandSide);
         };
 
         // Templating
         struct TemplateDeclaration: public Declaration {
-            Expression* assignment;
+            std::shared_ptr<Expression> assignment;
 
-            TemplateDeclaration(Identifier* identifier, Expression* assignment): Declaration(identifier), assignment(assignment) {}
+            TemplateDeclaration(std::shared_ptr<Identifier> identifier, std::shared_ptr<Expression> assignment): Declaration(identifier), assignment(assignment) {}
         };
 
         // Statements
@@ -172,32 +172,32 @@ namespace Phi {
 
         // Block-Based Statements
         struct BlockBased: public Statement { // Abstract
-            Statement* contents;
-            BlockBased(Statement* contents): contents(contents) {}
+            std::shared_ptr<Statement> contents;
+            BlockBased(std::shared_ptr<Statement> contents): contents(contents) {}
         };
 
         struct If: public BlockBased {
-            Expression* expression;
-            If* elseBlock;
+            std::shared_ptr<Expression> expression;
+            std::shared_ptr<If> elseBlock;
 
-            If(Statement* contents, Expression* expression, If* elseBlock): BlockBased(contents), expression(expression), elseBlock(elseBlock) {}
+            If(std::shared_ptr<Statement> contents, std::shared_ptr<Expression> expression, std::shared_ptr<If> elseBlock): BlockBased(contents), expression(expression), elseBlock(elseBlock) {}
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
         };
 
         struct ForLoop: public BlockBased {
-            Range* range;
-            Identifier* identifier;
+            std::shared_ptr<Range> range;
+            std::shared_ptr<Identifier> identifier;
 
-            ForLoop(Statement* contents, Range* range, Identifier* identifier): BlockBased(contents), range(range), identifier(identifier) {}
+            ForLoop(std::shared_ptr<Statement> contents, std::shared_ptr<Range> range, std::shared_ptr<Identifier> identifier): BlockBased(contents), range(range), identifier(identifier) {}
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
         };
 
         struct Namespace: public BlockBased {
-            Identifier* identifier;
+            std::shared_ptr<Identifier> identifier;
 
-            Namespace(Statement* contents, Identifier* identifier): BlockBased(contents), identifier(identifier) {}
+            Namespace(std::shared_ptr<Statement> contents, std::shared_ptr<Identifier> identifier): BlockBased(contents), identifier(identifier) {}
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
 
@@ -207,10 +207,10 @@ namespace Phi {
         struct SpecialNumber;
 
         struct Switch: public BlockBased {
-            Expression* expression;
-            LabeledStatementList* list;
+            std::shared_ptr<Expression> expression;
+            std::shared_ptr<LabeledStatementList> list;
 
-            Switch(Expression* expression, LabeledStatementList* list): BlockBased(nullptr), expression(expression), list(list) {}
+            Switch(std::shared_ptr<Expression> expression, std::shared_ptr<LabeledStatementList> list): BlockBased(nullptr), expression(expression), list(list) {}
             
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -218,12 +218,12 @@ namespace Phi {
 
         struct LabeledStatementList: public Node {
             bool isDefault; // Is this the default case in a switch statement?
-            Expression* label;
-            SpecialNumber* specialNumber;
+            std::shared_ptr<Expression> label;
+            std::shared_ptr<SpecialNumber> specialNumber;
 
-            Statement* statements;
+            std::shared_ptr<Statement> statements;
 
-            LabeledStatementList(bool isDefault, Expression* label, SpecialNumber* specialNumber, Statement* statements): isDefault(isDefault), label(label), specialNumber(specialNumber), statements(statements) {}
+            LabeledStatementList(bool isDefault, std::shared_ptr<Expression> label, std::shared_ptr<SpecialNumber> specialNumber, std::shared_ptr<Statement> statements): isDefault(isDefault), label(label), specialNumber(specialNumber), statements(statements) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -232,7 +232,7 @@ namespace Phi {
         struct Combinational: public BlockBased {
             std::vector< std::function<void()> > conclusionTriggers;
             
-            Combinational(Statement* contents): BlockBased(contents) {}
+            Combinational(std::shared_ptr<Statement> contents): BlockBased(contents) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -248,35 +248,35 @@ namespace Phi {
                 undefined
             };
             Type type = Type::undefined;
-            Range* bus;
-            DeclarationListItem* declarationList;
+            std::shared_ptr<Range> bus;
+            std::shared_ptr<DeclarationListItem> declarationList;
 
             MACRO_GRAPHPRINT_SIG_HDR
             MACRO_DEBUGLABEL_SIG_HDR
 
-            VariableLengthDeclaration(Type type, Range* bus, DeclarationListItem* declarationList): type(type), bus(bus), declarationList(declarationList) {}
+            VariableLengthDeclaration(Type type, std::shared_ptr<Range> bus, std::shared_ptr<DeclarationListItem> declarationList): type(type), bus(bus), declarationList(declarationList) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
         };
 
         struct DeclarationListItem: public Declaration {
-            // CHECK IF THIS EXISTS FIRST: IF IT DOES, THEN TRANSLATE *THIS* INSTEAD OF IDENTIFIER
+            // CHECK IF THIS EXISTS FIRST: IF IT DOES, THEN TRANSLATE *std::shared_ptr<THIS> INSTEAD OF IDENTIFIER
             // THIS HAS BEEN A HACKY PSA
             // For elaborative use
-            LHExpression* trueIdentifier = nullptr;
+            std::shared_ptr<LHExpression> trueIdentifier = nullptr;
             
-            Range* bus = nullptr;
+            std::shared_ptr<Range> bus = nullptr;
 
             VariableLengthDeclaration::Type type;
-            Expression* array;
-            Expression* optionalAssignment;
+            std::shared_ptr<Expression> array;
+            std::shared_ptr<Expression> optionalAssignment;
 
             bool hasEnable = false;
 
             MACRO_DEBUGLABEL_SIG_HDR
 
-            DeclarationListItem(Identifier* identifier, Expression* array, Expression* optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
+            DeclarationListItem(std::shared_ptr<Identifier> identifier, std::shared_ptr<Expression> array, std::shared_ptr<Expression> optionalAssignment): Declaration(identifier), array(array), optionalAssignment(optionalAssignment) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -288,13 +288,13 @@ namespace Phi {
             // For elaborative use
             std::shared_ptr<SymbolSpace> symSpace = nullptr;
 
-            LHExpression* module;
-            ExpressionIDPair* parameters;
+            std::shared_ptr<LHExpression> module;
+            std::shared_ptr<ExpressionIDPair> parameters;
 
-            Expression* array;
-            ExpressionIDPair* ports;
+            std::shared_ptr<Expression> array;
+            std::shared_ptr<ExpressionIDPair> ports;
 
-            InstanceDeclaration(Identifier* identifier, LHExpression* module, ExpressionIDPair* parameters, Expression* array, ExpressionIDPair* ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
+            InstanceDeclaration(std::shared_ptr<Identifier> identifier, std::shared_ptr<LHExpression> module, std::shared_ptr<ExpressionIDPair> parameters, std::shared_ptr<Expression> array, std::shared_ptr<ExpressionIDPair> ports): Declaration(identifier), module(module), parameters(parameters), array(array), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -303,9 +303,9 @@ namespace Phi {
         };
 
         struct ExpressionIDPair: public Declaration {
-            Expression* expression;
+            std::shared_ptr<Expression> expression;
 
-            ExpressionIDPair(Identifier* identifier, Expression* expression): Declaration(identifier), expression(expression) {}
+            ExpressionIDPair(std::shared_ptr<Identifier> identifier, std::shared_ptr<Expression> expression): Declaration(identifier), expression(expression) {}
             
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -313,29 +313,29 @@ namespace Phi {
 
         // Nondeclarative Statements
         struct Nondeclarative: public Statement { // Abstract
-            LHExpression* lhs;
+            std::shared_ptr<LHExpression> lhs;
 
-            Nondeclarative(LHExpression* lhs): lhs(lhs) {}
+            Nondeclarative(std::shared_ptr<LHExpression> lhs): lhs(lhs) {}
         };
 
         struct NondeclarativeAssignment: public Nondeclarative {
-            Expression* expression;
+            std::shared_ptr<Expression> expression;
             bool skipTranslation = false;
 
             MACRO_GRAPHPRINT_SIG_HDR
 
-            NondeclarativeAssignment(LHExpression* lhs, Expression* expression): Nondeclarative(lhs), expression(expression) {}
+            NondeclarativeAssignment(std::shared_ptr<LHExpression> lhs, std::shared_ptr<Expression> expression): Nondeclarative(lhs), expression(expression) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
 
-            static void drivingAssignment(Context* context, LHExpression* lhs, Expression* expression, bool* skipTranslation, bool* inComb);
+            static void drivingAssignment(Context* context, std::shared_ptr<LHExpression> lhs, std::shared_ptr<Expression> expression, bool* skipTranslation, bool* inComb);
         };
         
         struct NondeclarativePorts: public Nondeclarative {
-            ExpressionIDPair* ports;
+            std::shared_ptr<ExpressionIDPair> ports;
 
-            NondeclarativePorts(LHExpression* lhs, ExpressionIDPair* ports): Nondeclarative(lhs), ports(ports) {}
+            NondeclarativePorts(std::shared_ptr<LHExpression> lhs, std::shared_ptr<ExpressionIDPair> ports): Nondeclarative(lhs), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR
             // No translation needed.
@@ -355,8 +355,8 @@ namespace Phi {
             AccessWidth numBits = 0;
             optional<llvm::APInt> value = nullopt; // Value iff compileTime
  
-            static Expression* abstract(Type type, AccessWidth numBits = 0, optional<llvm::APInt> value = nullopt) {
-                auto abstractExpression = new Expression();
+            static std::shared_ptr<Expression> abstract(Type type, AccessWidth numBits = 0, optional<llvm::APInt> value = nullopt) {
+                auto abstractExpression = std::make_shared<Expression>();
                 abstractExpression->type = type; abstractExpression->numBits = numBits; abstractExpression->value = value;
                 return abstractExpression;
             }
@@ -364,10 +364,10 @@ namespace Phi {
 
         // Range
         struct Range: public Node {
-            Expression* from;
-            Expression* to;
+            std::shared_ptr<Expression> from;
+            std::shared_ptr<Expression> to;
 
-            Range(Expression* from, Expression* to): from(from), to(to) {}
+            Range(std::shared_ptr<Expression> from, std::shared_ptr<Expression> to): from(from), to(to) {}
             
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -378,25 +378,25 @@ namespace Phi {
         // Left Hand Expressions
         struct LHExpression: public Expression { // Abstract
             std::vector<SymbolTable::Access> accessList(optional<AccessWidth>* from, optional<AccessWidth>* to);
-            static void lhDrivenProcess(Node* suspect, Phi::SymbolTable* table);
+            static void lhDrivenProcess(std::shared_ptr<Node> suspect, Phi::SymbolTable* table);
 
             MACRO_ELAB_SIG_HDR
         };
 
         
         struct IdentifierExpression: public LHExpression {
-            Identifier* identifier;
+            std::shared_ptr<Identifier> identifier;
 
             MACRO_GRAPHPRINT_SIG_HDR
 
-            IdentifierExpression(Identifier* identifier): identifier(identifier) {}
+            IdentifierExpression(std::shared_ptr<Identifier> identifier): identifier(identifier) {}
 
             // No elaboration needed.
             MACRO_TRANS_SIG_HDR
         };
 
         struct PropertyAccess: public LHExpression {
-            PropertyAccess(LHExpression* object, LHExpression* property) {
+            PropertyAccess(std::shared_ptr<LHExpression> object, std::shared_ptr<LHExpression> property) {
                 this->left = object; this->right = property;
             }
 
@@ -407,7 +407,7 @@ namespace Phi {
         struct ArrayAccess: public LHExpression {
             bool index = true; // If false, translation should treat this as a namespace array access
 
-            ArrayAccess(LHExpression* object, Expression* width) {
+            ArrayAccess(std::shared_ptr<LHExpression> object, std::shared_ptr<Expression> width) {
                 this->left = object; this->right = width;
             }
 
@@ -416,8 +416,8 @@ namespace Phi {
         };
         
         struct RangeAccess: public LHExpression {
-            RangeAccess(LHExpression* object, Range* range) {
-                this->left = object; this->right = (Node*)range;
+            RangeAccess(std::shared_ptr<LHExpression> object, std::shared_ptr<Range> range) {
+                this->left = object; this->right = (std::shared_ptr<Node>)range;
             }
 
             // Inherits elaboration.
@@ -425,7 +425,7 @@ namespace Phi {
         };
 
         struct LHConcatenation: public LHExpression {
-            LHConcatenation(LHExpression* of, LHExpression* with) {
+            LHConcatenation(std::shared_ptr<LHExpression> of, std::shared_ptr<LHExpression> with) {
                 this->left = of; this->right = with;
             }
 
@@ -460,7 +460,7 @@ namespace Phi {
                 allOr
             };
             Operation operation;
-            Unary(Operation operation, Expression* right): operation(operation) { this->right = right; }
+            Unary(Operation operation, std::shared_ptr<Expression> right): operation(operation) { this->right = right; }
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -498,7 +498,7 @@ namespace Phi {
             };
             Operation operation;
 
-            Binary(Expression* left,  Operation operation, Expression* right): operation(operation) {
+            Binary(std::shared_ptr<Expression> left,  Operation operation, std::shared_ptr<Expression> right): operation(operation) {
                 this->left = left; this->right = right;
             }
 
@@ -508,7 +508,7 @@ namespace Phi {
 
         // Concatenation
         struct RepeatConcatenation: public Expression {
-            RepeatConcatenation(Expression* repeatCount, Expression* repeatable) {
+            RepeatConcatenation(std::shared_ptr<Expression> repeatCount, std::shared_ptr<Expression> repeatable) {
                 this->left = repeatCount; this->right = repeatable;
             }
             
@@ -517,7 +517,7 @@ namespace Phi {
         };
 
         struct Concatenation: public Expression {
-            Concatenation(Expression* of, Expression* with) {
+            Concatenation(std::shared_ptr<Expression> of, std::shared_ptr<Expression> with) {
                 this->left = of; this->right = with;
             }
             
@@ -537,14 +537,14 @@ namespace Phi {
         };
         
         struct ExpressionArgument: public Argument {
-            Expression* argument;
-            ExpressionArgument(Expression* argument): argument(argument) {}
+            std::shared_ptr<Expression> argument;
+            ExpressionArgument(std::shared_ptr<Expression> argument): argument(argument) {}
 
             MACRO_ELAB_SIG_HDR
         };
 
         struct ProceduralCall: public Expression {
-            ProceduralCall(LHExpression* function, Argument* argument) {
+            ProceduralCall(std::shared_ptr<LHExpression> function, std::shared_ptr<Argument> argument) {
                 this->left = function; this->right = argument;
             }
 
@@ -554,21 +554,21 @@ namespace Phi {
         // Multiplexer
         struct ExpressionPair: public Node {
             // If both of the following are nullptr, it's default
-            Expression* label;
-            SpecialNumber* specialNumber;
+            std::shared_ptr<Expression> label;
+            std::shared_ptr<SpecialNumber> specialNumber;
 
-            Expression* result;
+            std::shared_ptr<Expression> result;
             
-            ExpressionPair(Expression* label, SpecialNumber* specialNumber, Expression* result): label(label), specialNumber(specialNumber), result(result) {}
+            ExpressionPair(std::shared_ptr<Expression> label, std::shared_ptr<SpecialNumber> specialNumber, std::shared_ptr<Expression> result): label(label), specialNumber(specialNumber), result(result) {}
             MACRO_ELAB_SIG_HDR
             // Translation not needed due to PII by Multiplexer
         };
 
         struct Multiplexer: public Expression {
-            // Node* selection could either be specialNumber or expression!!
+            // std::shared_ptr<Node> selection could either be specialNumber or expression!!
             bool inComb = false;
 
-            Multiplexer(Node* selection, ExpressionPair* options) {
+            Multiplexer(std::shared_ptr<Node> selection, std::shared_ptr<ExpressionPair> options) {
                 this->left = selection; this->right = options;
             }
 

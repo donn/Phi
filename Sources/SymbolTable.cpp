@@ -297,7 +297,7 @@ void SymbolTable::stepInto(std::string space) {
     stack.push_back(std::dynamic_pointer_cast<SymbolSpace>(object.second));
 }
 
-void SymbolTable::stepIntoAndCreate(std::string space, Node::Node* declarator, SymbolSpace::Type type) {
+void SymbolTable::stepIntoAndCreate(std::string space, std::shared_ptr<Node::Node> declarator, SymbolSpace::Type type) {
     if (tableTop->space.find(space) != tableTop->space.end()) {
         throw "symbol.redefinition";
     }
@@ -365,7 +365,7 @@ optional<DriveRange> Driven::checkRangeCoverage(AccessWidth unit) {
 
 
 
-bool Driven::drive(Node::Expression* expression, optional<AccessWidth> fromOptional, optional<AccessWidth> toOptional, bool dry) {
+bool Driven::drive(std::shared_ptr<Node::Expression> expression, optional<AccessWidth> fromOptional, optional<AccessWidth> toOptional, bool dry) {
     AccessWidth from = fromOptional.has_value() ? fromOptional.value() : this->from;
     AccessWidth to = toOptional.has_value() ? toOptional.value() : this->to;
     
@@ -458,7 +458,7 @@ void SymbolTable::stepOut() {
     stack.pop_back();
 }
 
-void SymbolTable::stepIntoComb(Node::Node* attached) {
+void SymbolTable::stepIntoComb(std::shared_ptr<Node::Node> attached) {
     tableTop->space["_comb"] = std::make_shared<SymbolSpace>("_comb", attached, SymbolSpace::Type::comb);
     stepInto("_comb");
 }

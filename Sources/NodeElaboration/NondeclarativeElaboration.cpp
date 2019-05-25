@@ -1,7 +1,7 @@
 #include "Node.h"
 using namespace Phi::Node;
 
-void NondeclarativeAssignment::drivingAssignment(Context* context, LHExpression* lhs, Expression* expression, bool* skipTranslation, bool* inComb) {
+void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_ptr<LHExpression> lhs, std::shared_ptr<Expression> expression, bool* skipTranslation, bool* inComb) {
     using VLD = VariableLengthDeclaration;
     std::vector<SymbolTable::Access> accesses;
     
@@ -11,9 +11,9 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, LHExpression*
     std::shared_ptr<Driven> driven;
     std::shared_ptr<Container> container = nullptr;
 
-    Combinational* combDeclarator;
-    DeclarationListItem* dliAttache;
-    Port* portAttache;
+    std::shared_ptr<Combinational> combDeclarator;
+    std::shared_ptr<DeclarationListItem> dliAttache;
+    std::shared_ptr<Port> portAttache;
 
     optional<AccessWidth> from = nullopt, to = nullopt;
     AccessWidth width;
@@ -31,8 +31,8 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, LHExpression*
     symbol = symbolOptional.value();
 
     // Perform checks on lhs
-    dliAttache = dynamic_cast<DeclarationListItem*>(symbol->declarator);
-    portAttache = dynamic_cast<Port*>(symbol->declarator);
+    dliAttache = std::dynamic_pointer_cast<DeclarationListItem>(symbol->declarator);
+    portAttache = std::dynamic_pointer_cast<Port>(symbol->declarator);
 
     driven = std::dynamic_pointer_cast<Driven>(symbol);
 
@@ -85,7 +85,7 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, LHExpression*
     } 
 
     if ((comb = context->table->findNearest(SymbolSpace::Type::comb))) {
-        combDeclarator = static_cast<Combinational*>(comb->declarator);
+        combDeclarator = std::static_pointer_cast<Combinational>(comb->declarator);
         if (dliAttache) {
             dliAttache->type = VLD::Type::wire_reg;
         }
@@ -96,9 +96,9 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, LHExpression*
         combDeclarator->conclusionTriggers.push_back([=](){
             //Unsafe allocation
             auto exp = Expression::abstract(Expression::Type::runTime, width);
-            if (!driven->drive(exp, from, to)) { // If we accidentally created another unneeded one for this comb block, just deallocate
-                delete exp;
-            }
+            // if (!driven->drive(exp, from, to)) { // If we accidentally created another unneeded one for this comb block, just deallocate
+            //     delete exp;
+            // }
         });
     } else {
         driven->drive(expression, from, to);
@@ -124,7 +124,7 @@ void NondeclarativePorts::MACRO_ELAB_SIG_IMP {
     optional< std::shared_ptr<Symbol> > symbolOptional;
     std::shared_ptr<Symbol> symbol;
 
-    InstanceDeclaration* declarator;
+    std::shared_ptr<InstanceDeclaration> declarator;
 
     tryElaborate(lhs, context);
     accesses = lhs->accessList(&trash, &trash);
@@ -134,7 +134,7 @@ void NondeclarativePorts::MACRO_ELAB_SIG_IMP {
     }
     symbol = symbolOptional.value();
 
-    declarator = dynamic_cast<InstanceDeclaration*>(symbol->declarator);
+    declarator = std::dynamic_pointer_cast<InstanceDeclaration>(symbol->declarator);
 
     if (!declarator) {
         throw "driving.notAnInstance";

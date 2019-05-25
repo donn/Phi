@@ -51,7 +51,7 @@ void ArrayAccess::MACRO_TRANS_SIG_IMP {
 
     if(index==false){
         //array -> treat this as a namespace
-        auto width = static_cast<Expression*>(right);
+        auto width = std::static_pointer_cast<Expression>(right);
         auto value = width->value.value();
         namespaceSoFar = namespaceSoFar + "_0A" + std::to_string(value.getLimitedValue());
         tryTranslate(right, stream, namespaceSoFar, indent); 

@@ -166,8 +166,8 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
     */
    
     // PII
-    ExpressionPair* cur = (ExpressionPair*)right;
-    Expression* selection = (Expression*)left;
+    auto cur = std::static_pointer_cast<ExpressionPair>(right);
+    auto selection = std::static_pointer_cast<Expression>(left);
     while (cur != NULL) {
         if (cur->right) {
             *stream << "(";
@@ -235,7 +235,7 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
             *stream << ": ";
         }
         
-        cur = (ExpressionPair*)cur->right;
+        cur = std::static_pointer_cast<ExpressionPair>(cur->right);
     }
 }
 

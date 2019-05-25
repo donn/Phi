@@ -30,7 +30,7 @@ void Port::MACRO_ELAB_SIG_IMP {
         from = to = 0;
     }
 
-    auto pointer = std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst);
+    auto pointer = std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
 
     // Add check if output
     if (polarity == Polarity::output) {
@@ -60,7 +60,7 @@ void Port::MACRO_ELAB_SIG_IMP {
             if (target != module->annotations.end()) {
                 context->addError(nullopt, "port.repeatedAnnotation");
             } else {
-                module->annotations[annotationUnwrapped] = this;
+                module->annotations[annotationUnwrapped] = shared_from_this();
             }
         }
     }
@@ -68,34 +68,34 @@ void Port::MACRO_ELAB_SIG_IMP {
 }
 
 void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
-    context->table->stepIntoAndCreate(identifier->idString, this);
+    context->table->stepIntoAndCreate(identifier->idString, shared_from_this());
     tryElaborate(contents, context);
     context->table->stepOut();
     tryElaborate(right, context);
 }
 
 void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
-    context->table->stepIntoAndCreate(identifier->idString, this, declTypeMap[(int)type]);
+    context->table->stepIntoAndCreate(identifier->idString, shared_from_this(), declTypeMap[(int)type]);
     tryElaborate(ports, context);
     tryElaborate(contents, context);
     context->table->stepOut();
     tryElaborate(right, context);
 }
 
-DeclarationListItem* TopLevelDeclaration::propertyDeclaration(std::string container, std::string property, Range* range) {
+std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(std::string container, std::string property, std::shared_ptr<Range> range) {
     // Unsafe allocations
-    auto containerID = new Identifier(container.c_str());
-    IdentifierExpression* containerNode = new IdentifierExpression(containerID);
-    IdentifierExpression* propertyNode = new IdentifierExpression(new Identifier(property.c_str()));
-    PropertyAccess* left = new PropertyAccess(containerNode, propertyNode);
-    DeclarationListItem* dli = new DeclarationListItem(containerID, nullptr, nullptr);
+    auto containerID = std::make_shared<Identifier>(container.c_str());
+    auto containerNode = std::make_shared<IdentifierExpression>(containerID);
+    auto propertyNode = std::make_shared<IdentifierExpression>(std::make_shared<Identifier>(property.c_str()));
+    auto left = std::make_shared<PropertyAccess>(containerNode, propertyNode);
+    auto dli = std::make_shared<DeclarationListItem>(containerID, nullptr, nullptr);
     dli->trueIdentifier = left;
     dli->bus = range;
     dli->type = VariableLengthDeclaration::Type::wire;
 
     auto placement = &preambles;
     while (*placement != nullptr) {
-        placement = (Declaration**)&(*placement)->right;
+        placement = (std::shared_ptr<Declaration>*)&(*placement)->right;
     }
 
     *placement = dli;
@@ -105,15 +105,15 @@ DeclarationListItem* TopLevelDeclaration::propertyDeclaration(std::string contai
 
 void TopLevelDeclaration::propertyAssignment(std::string container, std::string property, std::string rightHandSide) {
     // Unsafe allocations
-    IdentifierExpression* containerNode = new IdentifierExpression(new Identifier(container.c_str()));
-    IdentifierExpression* propertyNode = new IdentifierExpression(new Identifier(property.c_str()));
-    PropertyAccess* left = new PropertyAccess(containerNode, propertyNode);
-    IdentifierExpression* right = new IdentifierExpression(new Identifier(rightHandSide.c_str()));
-    NondeclarativeAssignment* nda = new NondeclarativeAssignment(left, right);
+    auto containerNode = std::make_shared<IdentifierExpression>(std::make_shared<Identifier>(container.c_str()));
+    auto propertyNode = std::make_shared<IdentifierExpression>(std::make_shared<Identifier>(property.c_str()));
+    auto left = std::make_shared<PropertyAccess>(containerNode, propertyNode);
+    auto right = std::make_shared<IdentifierExpression>(std::make_shared<Identifier>(rightHandSide.c_str()));
+    auto nda = std::make_shared<NondeclarativeAssignment>(left, right);
 
     auto placement = &addenda;
     while (*placement != nullptr) {
-        placement = (Statement**)&(*placement)->right;
+        placement = (std::shared_ptr<Statement>*)&(*placement)->right;
     }
 
     *placement = nda;
@@ -131,15 +131,15 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     using VLD = VariableLengthDeclaration;
     // Declaration Block because goto is going to happen
-    DeclarationListItem* rightDLI;
+    std::shared_ptr<DeclarationListItem> rightDLI;
 
     // I adamantly refuse to consider * part of the variable and not the type. To h*ck with society
-    DeclarationListItem* clockDLI;
-    DeclarationListItem* resetDLI;
-    DeclarationListItem* conditionDLI;
-    DeclarationListItem* dataDLI;
-    DeclarationListItem* enableDLI;
-    TopLevelDeclaration* tld;
+    std::shared_ptr<DeclarationListItem> clockDLI;
+    std::shared_ptr<DeclarationListItem> resetDLI;
+    std::shared_ptr<DeclarationListItem> conditionDLI;
+    std::shared_ptr<DeclarationListItem> dataDLI;
+    std::shared_ptr<DeclarationListItem> enableDLI;
+    std::shared_ptr<TopLevelDeclaration> tld;
 
     std::shared_ptr<Symbol> pointer;
     std::shared_ptr<Driven> pointerAsDriven, clockDriven, resetDriven, resetValueDriven, conditionDriven, dataDriven, enableDriven;
@@ -147,7 +147,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     std::shared_ptr<SymbolArray> pointerAsArray;
     std::shared_ptr<SymbolSpace> declarativeModule, comb;
 
-    std::map<std::string, Node*>::iterator clockAnnotation, resetAnnotation, conditionAnnotation, enableAnnotation;
+    std::map<std::string, std::shared_ptr<Node>>::iterator clockAnnotation, resetAnnotation, conditionAnnotation, enableAnnotation;
 
     AccessWidth size = 1;
     AccessWidth width = 1;
@@ -161,7 +161,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     LHExpression::lhDrivenProcess(array, context->table);
 
     declarativeModule = context->table->findNearest(SymbolSpace::Type::module);
-    tld = static_cast<TopLevelDeclaration*>(declarativeModule->declarator);
+    tld = std::static_pointer_cast<TopLevelDeclaration>(declarativeModule->declarator);
 
     assert(declarativeModule);
 
@@ -226,7 +226,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
         switch (type) {
         case VLD::Type::reg:
         case VLD::Type::latch:     
-            pointerAsContainer = std::make_shared<Container>(identifier->idString, this, from.value(), to.value(), msbFirst);   
+            pointerAsContainer = std::make_shared<Container>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);   
             if (type == VLD::Type::reg) {                
                 // Register properties
                 clockDLI = tld->propertyDeclaration(identifier->idString, "clock", nullptr);
@@ -235,7 +235,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
                 clockAnnotation = declarativeModule->annotations.find("@clock");
                 context->checks.push_back(Context::DriveCheck(clockDriven, nullopt, nullopt, [=]() {
                     if (clockAnnotation != declarativeModule->annotations.end()) {
-                        auto port = static_cast<Port*>(clockAnnotation->second);
+                        auto port = std::static_pointer_cast<Port>(clockAnnotation->second);
                         tld->propertyAssignment(identifier->idString, "clock", port->identifier->idString);
                     } else {
                         context->addError(nullopt, "register.clockUndriven");
@@ -248,14 +248,14 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
                 resetAnnotation = declarativeModule->annotations.find("@reset");
                 context->checks.push_back(Context::DriveCheck(resetDriven, nullopt, nullopt, [=]() {
                     if (resetAnnotation != declarativeModule->annotations.end()) {
-                        auto port = static_cast<Port*>(resetAnnotation->second);
+                        auto port = std::static_pointer_cast<Port>(resetAnnotation->second);
                         tld->propertyAssignment(identifier->idString, "reset", port->identifier->idString);
                     } else {
                         context->addError(nullopt, "register.resetUndriven");
                     }
                 }));
 
-                auto resetValueDriven = std::make_shared<Driven>("_0R", this, from.value(), to.value(), msbFirst);
+                auto resetValueDriven = std::make_shared<Driven>("_0R", shared_from_this(), from.value(), to.value(), msbFirst);
                 if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
                     resetValueDriven->drive(optionalAssignment);
                 }
@@ -271,7 +271,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
                 conditionAnnotation = declarativeModule->annotations.find("@condition");
                 context->checks.push_back(Context::DriveCheck(conditionDriven, nullopt, nullopt, [=]() {
                     if (conditionAnnotation != declarativeModule->annotations.end()) {
-                        auto port = static_cast<Port*>(conditionAnnotation->second);
+                        auto port = std::static_pointer_cast<Port>(conditionAnnotation->second);
                         tld->propertyAssignment(identifier->idString, "condition", port->identifier->idString);
                     } else {
                         context->addError(nullopt, "latch.conditionUndriven");
@@ -297,7 +297,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             enableAnnotation = declarativeModule->annotations.find("@enable");
             context->checks.push_back(Context::DriveCheck(enableDriven, nullopt, nullopt, [=]() {
                 if (enableAnnotation != declarativeModule->annotations.end()) {
-                    auto port = static_cast<Port*>(enableAnnotation->second);
+                    auto port = std::static_pointer_cast<Port>(enableAnnotation->second);
                     tld->propertyAssignment(identifier->idString, "enable", port->identifier->idString);
                     this->hasEnable = true;
                 }
@@ -307,16 +307,16 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             pointer = pointerAsDriven;
             break;
         default:
-            pointerAsDriven = std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst);
+            pointerAsDriven = std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
             if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
                 pointerAsDriven->drive(optionalAssignment);
             }
             pointer = pointerAsDriven;
         }
     } else {
-        pointerAsArray = std::make_shared<SymbolArray>(identifier->idString, this, size);
+        pointerAsArray = std::make_shared<SymbolArray>(identifier->idString, shared_from_this(), size);
         for (AccessWidth i = 0; i < size; i += 1) {
-            pointerAsArray->array.push_back(std::make_shared<Driven>(identifier->idString, this, from.value(), to.value(), msbFirst));
+            pointerAsArray->array.push_back(std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst));
         }
         pointer = pointerAsArray;
     }
@@ -330,7 +330,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 exit:
     //PII
     if (right) {
-        rightDLI = (DeclarationListItem*)right;
+        rightDLI = std::static_pointer_cast<DeclarationListItem>(right);
         rightDLI->type = type;
         rightDLI->bus = bus;
         tryElaborate(right, context);
@@ -362,7 +362,7 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
             if (symSpace->type == SymbolSpace::Type::module) {
                 if (context->table->findNearest(SymbolSpace::Type::module) != symSpace) {
                     if (!context->table->findNearest(SymbolSpace::Type::comb)) {
-                        context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, this));
+                        context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, shared_from_this()));
 
                         if (ports) {
                             elaboratePorts(context);
@@ -395,11 +395,11 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
 void InstanceDeclaration::elaboratePorts(Context* context) {
     if (!symSpace) { return; }
     tryElaborate(ports, context);
-    typedef std::map<std::string, std::pair<Port*, bool> > ListType;
+    typedef std::map<std::string, std::pair<std::shared_ptr<Port>, bool> > ListType;
     // port checking
     ListType inputs, outputs;
     for (auto& element: symSpace->space) {
-        if (auto port = dynamic_cast<Port*>(element.second->declarator)) {
+        if (auto port = std::dynamic_pointer_cast<Port>(element.second->declarator)) {
             if (port->polarity == Port::Polarity::input) {
                 inputs[port->identifier->idString] = std::pair(port, false);
             } else {
@@ -441,7 +441,7 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
             if (outputIterator->second.second) {
                 context->addError(nullopt, "module.portAlreadyDriven");
             } else {
-                if (auto lhs = dynamic_cast<LHExpression*>(relevantExpr)) {
+                if (auto lhs = std::dynamic_pointer_cast<LHExpression>(relevantExpr)) {
                     auto relevantPort = outputIterator->second.first;
                     LHExpression::lhDrivenProcess(relevantExpr, context->table);
                     auto width = MACRO_PORT_WIDTH;
@@ -460,7 +460,7 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
         } else {
             context->addError(nullopt, "module.portNotFound");
         }
-        seeker = static_cast<ExpressionIDPair*>(seeker->right);
+        seeker = std::static_pointer_cast<ExpressionIDPair>(seeker->right);
     }
 }
 

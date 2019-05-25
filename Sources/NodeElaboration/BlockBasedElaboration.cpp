@@ -59,7 +59,7 @@ void Combinational::MACRO_ELAB_SIG_IMP {
     if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
         context->addError(nullopt, "comb.nestingNotAllowed");
     } else {
-        context->table->stepIntoComb(this);
+        context->table->stepIntoComb(shared_from_this());
         tryElaborate(contents, context);
         context->table->stepOut();
         for (auto& fn: conclusionTriggers) {
@@ -73,7 +73,7 @@ void Namespace::MACRO_ELAB_SIG_IMP {
     if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
         context->addError(nullopt, "comb.declarationNotAllowed");
     } else {
-        context->table->stepIntoAndCreate(identifier->idString, this);
+        context->table->stepIntoAndCreate(identifier->idString, shared_from_this());
         tryElaborate(contents, context);
         context->table->stepOut();
     }
@@ -100,7 +100,7 @@ void LabeledStatementList::MACRO_ELAB_SIG_IMP {
 
     // PII
     if (right) {
-        auto rightLSL = static_cast<LabeledStatementList*>(right);
+        auto rightLSL = std::static_pointer_cast<LabeledStatementList>(right);
         if (rightLSL->label || rightLSL->specialNumber) { // We don't need to check the current node because if it has a right, it must not be default
             auto numBitsHere = specialNumber ? specialNumber->numBits : label->numBits;
             auto numBitsThere = rightLSL->specialNumber ?

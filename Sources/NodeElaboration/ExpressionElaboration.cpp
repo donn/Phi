@@ -98,8 +98,8 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWi
     using PSA = Phi::SymbolTable::Access;
     std::vector<PSA> vector;
 
-    std::stack< std::pair<Node*, Node*> > lhStack; // pair<child, parent>
-    lhStack.push(std::pair(this, nullptr));
+    std::stack< std::pair< std::shared_ptr<Node> , std::shared_ptr<Node> > > lhStack; // pair<child, parent>
+    lhStack.push(std::pair(shared_from_this(), nullptr));
 
     while (!lhStack.empty()) {
         auto topWithParent = lhStack.top();
@@ -113,9 +113,9 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWi
             continue;
         }
         assert(!top->left && !top->right);
-        if (auto pointer = dynamic_cast<IdentifierExpression*>(top)) {
+        if (auto pointer = std::dynamic_pointer_cast<IdentifierExpression>(top)) {
             vector.push_back(PSA::ID(&pointer->identifier->idString));
-        } else if (auto pointer = dynamic_cast<Expression*>(top)) {
+        } else if (auto pointer = std::dynamic_pointer_cast<Expression>(top)) {
             if (pointer->type == Type::error) {
                 throw "access.errorValue";
             }
@@ -126,9 +126,9 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWi
             if (value > maxAccessWidth) {
                 throw "access.maxWidthExceeded";
             }
-            auto parentAsArrayAccess = static_cast<ArrayAccess*>(parent);
+            auto parentAsArrayAccess = std::static_pointer_cast<ArrayAccess>(parent);
             vector.push_back(PSA::Index(value, &parentAsArrayAccess->index));
-        } else if (auto pointer = dynamic_cast<Range*>(top)) {
+        } else if (auto pointer = std::dynamic_pointer_cast<Range>(top)) {
             // Elaborating on a range should have checked this by now
             AccessWidth fromValue, toValue;
             pointer->getValues(&fromValue, &toValue);
@@ -154,25 +154,25 @@ void LHExpression::MACRO_ELAB_SIG_IMP {
 
 
 // This is a second process for LHExpressions that are about to be USED AS EXPRESSIONS
-void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
-    auto potential = dynamic_cast<LHExpression*>(suspect);
+void LHExpression::lhDrivenProcess(std::shared_ptr<Node> suspect, Phi::SymbolTable* table) {
+    auto potential = std::dynamic_pointer_cast<LHExpression>(suspect);
     if (!potential) { return; }
 
-    std::vector<LHExpression*> expressions;
+    std::vector< std::shared_ptr<LHExpression> > expressions;
 
     AccessWidth widthSum = 0;
     Type totalType = Type::compileTime;
 
-    if (auto concatenation = dynamic_cast<LHConcatenation*>(potential)) {
+    if (auto concatenation = std::dynamic_pointer_cast<LHConcatenation>(potential)) {
         // Same algorithm as above, but implemented slightly differently
-        std::stack<LHExpression*> lhStack;
+        std::stack< std::shared_ptr<LHExpression> > lhStack;
         lhStack.push(concatenation);
         while (!lhStack.empty()) {
             auto top = lhStack.top();
             lhStack.pop();
             if (top->left && top->right) {
-                lhStack.push(static_cast<LHExpression*>(top->right));
-                lhStack.push(static_cast<LHExpression*>(top->left));
+                lhStack.push(std::static_pointer_cast<LHExpression>(top->right));
+                lhStack.push(std::static_pointer_cast<LHExpression>(top->left));
                 continue;
             }
             expressions.push_back(top);
@@ -213,11 +213,11 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
         lh->numBits = driven->msbFirst ? (fromUnwrapped - toUnwrapped + 1) : (toUnwrapped - fromUnwrapped + 1);
 
         // Check if RunTime
-        if (dynamic_cast<Port*>(driven->declarator)) {
+        if (std::dynamic_pointer_cast<Port>(driven->declarator)) {
             lh->type = Expression::Type::runTime;
             return;
         }
-        if (auto dli = dynamic_cast<DeclarationListItem*>(driven->declarator)) {
+        if (auto dli = std::dynamic_pointer_cast<DeclarationListItem>(driven->declarator)) {
             if (dli->type != VariableLengthDeclaration::Type::var) {
                 lh->type = Expression::Type::runTime;
                 return;
@@ -317,7 +317,7 @@ void LHExpression::lhDrivenProcess(Node* suspect, Phi::SymbolTable* table) {
 void Unary::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
     LHExpression::lhDrivenProcess(right, context->table);
-    auto rightExpr = static_cast<Expression*>(right);
+    auto rightExpr = std::static_pointer_cast<Expression>(right);
 
     // Abort if error
     if (rightExpr->type == Expression::Type::error) {
@@ -358,8 +358,8 @@ void Binary::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
     LHExpression::lhDrivenProcess(left, context->table);
     LHExpression::lhDrivenProcess(right, context->table);
-    auto leftExpr = static_cast<Expression*>(left);
-    auto rightExpr = static_cast<Expression*>(right);
+    auto leftExpr = std::static_pointer_cast<Expression>(left);
+    auto rightExpr = std::static_pointer_cast<Expression>(right);
 
     // Abort if error
     if (leftExpr->type == Expression::Type::error || rightExpr->type == Expression::Type::error) {
@@ -504,8 +504,8 @@ void Concatenation::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
     LHExpression::lhDrivenProcess(right, context->table);
     
-    auto leftExpr = static_cast<Expression*>(left);
-    auto rightExpr = static_cast<Expression*>(right);
+    auto leftExpr = std::static_pointer_cast<Expression>(left);
+    auto rightExpr = std::static_pointer_cast<Expression>(right);
 
     type = std::max(leftExpr->type, rightExpr->type);
 
@@ -521,8 +521,8 @@ void RepeatConcatenation::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
     LHExpression::lhDrivenProcess(right, context->table);
     
-    auto leftExpr = static_cast<Expression*>(left);
-    auto rightExpr = static_cast<Expression*>(right);
+    auto leftExpr = std::static_pointer_cast<Expression>(left);
+    auto rightExpr = std::static_pointer_cast<Expression>(right);
     type = rightExpr->type;
     
     if (leftExpr->type == Type::runTime) {
@@ -549,7 +549,7 @@ void Multiplexer::MACRO_ELAB_SIG_IMP {
     // Limitation: Cannot verify integrity
 
     // PII
-    auto rightEP = static_cast<ExpressionPair*>(right);
+    auto rightEP = std::static_pointer_cast<ExpressionPair>(right);
     numBits = rightEP->result->numBits;
 }
 
@@ -564,7 +564,7 @@ void ExpressionPair::MACRO_ELAB_SIG_IMP {
 
     // PII
     if (right) {
-        auto rightEP = static_cast<ExpressionPair*>(right);
+        auto rightEP = std::static_pointer_cast<ExpressionPair>(right);
         if (rightEP->result->numBits != result->numBits) {
             throw "expr.widthMismatch";
         }
@@ -588,7 +588,7 @@ void ExpressionArgument::MACRO_ELAB_SIG_IMP {
 void ProceduralCall::MACRO_ELAB_SIG_IMP {
     tryElaborate(left, context);
     optional<AccessWidth> trash;
-    auto function = static_cast<LHExpression*>(left);
+    auto function = std::static_pointer_cast<LHExpression>(left);
     auto accessList = function->accessList(&trash, &trash);
     auto symbolOptional = context->table->find(&accessList, &trash, &trash);
     if (!symbolOptional.has_value()) {
@@ -600,12 +600,12 @@ void ProceduralCall::MACRO_ELAB_SIG_IMP {
 
     //PII
     std::vector<Phi::Argument> args;
-    auto head = static_cast<Argument*>(right);
+    auto head = std::static_pointer_cast<Argument>(right);
     while (head) {
-        if (auto stringArgument = dynamic_cast<StringArgument*>(head)) {
+        if (auto stringArgument = std::dynamic_pointer_cast<StringArgument>(head)) {
             args.push_back({Phi::Argument::Type::string, stringArgument->argument, nullopt});
         } else {
-            auto expressionArgument = static_cast<ExpressionArgument*>(head);
+            auto expressionArgument = std::static_pointer_cast<ExpressionArgument>(head);
             auto expression = expressionArgument->argument;
             if (expression->type == Type::runTime) {
                 throw "arg.hardwareExpression";
@@ -616,7 +616,7 @@ void ProceduralCall::MACRO_ELAB_SIG_IMP {
             
             args.push_back({Phi::Argument::Type::expression, nullopt, std::pair(expression->value.value(), expression->numBits)});
         }
-        head = static_cast<Argument*>(head->right);
+        head = std::static_pointer_cast<Argument>(head->right);
     }
     
     auto result = symbol->call(&args);

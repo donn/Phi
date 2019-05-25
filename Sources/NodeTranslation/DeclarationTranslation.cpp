@@ -61,7 +61,7 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
         while (pointer) {
             tryTranslate(pointer->identifier, stream, namespaceSoFar, indent);
             *stream << ", " << MACRO_EOL;
-            pointer = (Port*)pointer->right;
+            pointer = std::static_pointer_cast<Port>(pointer->right);
         }
         *indent -= 1;
         *stream << ")";

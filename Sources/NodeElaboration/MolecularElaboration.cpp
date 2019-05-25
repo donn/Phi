@@ -13,8 +13,8 @@ void Range::MACRO_ELAB_SIG_IMP {
     LHExpression::lhDrivenProcess(from, context->table);
     LHExpression::lhDrivenProcess(to, context->table);
 
-    auto from = static_cast<Expression*>(this->from);
-    auto to = static_cast<Expression*>(this->to);
+    auto from = std::static_pointer_cast<Expression>(this->from);
+    auto to = std::static_pointer_cast<Expression>(this->to);
     
     if (from->type == Expression::Type::runTime || to->type == Expression::Type::runTime) {
         throw "range.runTimeValue";
@@ -32,8 +32,8 @@ void Range::MACRO_ELAB_SIG_IMP {
 }
 
 void Range::getValues(AccessWidth* fromRef, AccessWidth* toRef) {
-    auto from = static_cast<Expression*>(this->from);
-    auto to = static_cast<Expression*>(this->to);
+    auto from = std::static_pointer_cast<Expression>(this->from);
+    auto to = std::static_pointer_cast<Expression>(this->to);
 
     assert(!(from->type == Expression::Type::runTime || to->type == Expression::Type::runTime));
     if (from->type == Expression::Type::error || to->type == Expression::Type::error) {

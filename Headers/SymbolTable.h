@@ -19,9 +19,9 @@ namespace Phi {
 
     struct Symbol {
         std::string id;
-        Node::Node* declarator;
+        std::shared_ptr<Node::Node> declarator;
 
-        Symbol(std::string id, Node::Node* declarator): id(id), declarator(declarator) {}
+        Symbol(std::string id, std::shared_ptr<Node::Node> declarator): id(id), declarator(declarator) {}
         virtual ~Symbol() = default;
     };
 
@@ -53,13 +53,13 @@ namespace Phi {
     };
 
     struct DriveRange {
-        Node::Expression* expression;
+        std::shared_ptr<Node::Expression> expression;
 
         // Relative to expression being driven
         AccessWidth from;
         AccessWidth to;
 
-        DriveRange(Node::Expression* expression, AccessWidth from, AccessWidth to): expression(expression), from(from), to(to) {}
+        DriveRange(std::shared_ptr<Node::Expression> expression, AccessWidth from, AccessWidth to): expression(expression), from(from), to(to) {}
 
         bool operator<(const DriveRange& rhs) const {
             if (to > from) {
@@ -78,11 +78,11 @@ namespace Phi {
 
         bool msbFirst; // e.g. true: [31..0], false: [0..31]
 
-        Driven(std::string id, Node::Node* declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): Symbol(id, declarator), from(from), to(to), msbFirst(msbFirst) {}
+        Driven(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): Symbol(id, declarator), from(from), to(to), msbFirst(msbFirst) {}
 
         std::vector<DriveRange> checkRangeCoverage(AccessWidth from, AccessWidth to);
         optional<DriveRange> checkRangeCoverage(AccessWidth unit);
-        bool drive(Node::Expression* expression, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt, bool dry = false);
+        bool drive(std::shared_ptr<Node::Expression> expression, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt, bool dry = false);
     };
 
     struct SymbolSpace: public Symbol {
@@ -94,22 +94,22 @@ namespace Phi {
 
         Type type;
         std::map< std::string, std::shared_ptr<Symbol> > space;
-        std::map< std::string, Node::Node* > annotations;
+        std::map< std::string, std::shared_ptr<Node::Node> > annotations;
 
-        SymbolSpace(std::string id, Node::Node* declarator, Type type = Type::other): Symbol(id, declarator), type(type) {}
+        SymbolSpace(std::string id, std::shared_ptr<Node::Node> declarator, Type type = Type::other): Symbol(id, declarator), type(type) {}
 #if YYDEBUG
         int represent(std::ostream* stream, int* node);
 #endif
     };
 
     struct Container: public SymbolSpace, public Driven {
-        Container(std::string id, Node::Node* declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): SymbolSpace(id, declarator), Driven(id, declarator, from, to, msbFirst) {} 
+        Container(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): SymbolSpace(id, declarator), Driven(id, declarator, from, to, msbFirst) {} 
     };
 
     struct SymbolArray: public Symbol {
         std::vector <std::shared_ptr<Symbol> > array;
 
-        SymbolArray(std::string id, Node::Node* declarator, AccessWidth size = 1): Symbol(id, declarator) {}
+        SymbolArray(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth size = 1): Symbol(id, declarator) {}
 #if YYDEBUG
         //int represent(std::ostream* stream, int* node);
 #endif
@@ -141,8 +141,8 @@ namespace Phi {
         void add(std::string id, std::shared_ptr<Symbol> symbol);
         optional< std::shared_ptr<Symbol> > find(std::vector<Access>* accesses, optional<AccessWidth>* from, optional<AccessWidth>* to);
         void stepInto(std::string id);
-        void stepIntoComb(Node::Node* attached);
-        void stepIntoAndCreate(std::string id, Node::Node* declarator, SymbolSpace::Type type = SymbolSpace::Type::other);
+        void stepIntoComb(std::shared_ptr<Node::Node> attached);
+        void stepIntoAndCreate(std::string id, std::shared_ptr<Node::Node> declarator, SymbolSpace::Type type = SymbolSpace::Type::other);
         void stepOut();
         
         std::shared_ptr<SymbolSpace> findNearest(SymbolSpace::Type type);
