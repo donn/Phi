@@ -195,6 +195,9 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             break;
         }
     }
+
+    from = to = 0;
+
     if (bus.has_value()) {
         busShared = bus.value().lock();
         tryElaborate(busShared, context);
@@ -209,8 +212,6 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 
             width = (msbFirst ? (from.value() - to.value()) : (from.value() + to.value())) + 1;
         }
-    } else {
-        from = to = 0;
     }
 
     tryElaborate(optionalAssignment, context);
