@@ -271,7 +271,7 @@ namespace Phi {
             // For elaborative use
             std::shared_ptr<LHExpression> trueIdentifier = nullptr;
             
-            std::weak_ptr<Range> bus = nullptr;
+            optional< std::weak_ptr<Range> > bus;
 
             VariableLengthDeclaration::Type type;
             std::shared_ptr<Expression> array;
@@ -291,7 +291,7 @@ namespace Phi {
         struct ExpressionIDPair;
         struct InstanceDeclaration: public Declaration {
             // For elaborative use
-            std::weak_ptr<SymbolSpace> symSpace = nullptr;
+            std::optional< std::weak_ptr<SymbolSpace> > symSpace;
 
             std::shared_ptr<LHExpression> module;
             std::shared_ptr<ExpressionIDPair> parameters;

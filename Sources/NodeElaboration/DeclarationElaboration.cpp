@@ -146,6 +146,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     std::shared_ptr<Container> pointerAsContainer;
     std::shared_ptr<SymbolArray> pointerAsArray;
     std::shared_ptr<SymbolSpace> declarativeModule, comb;
+    std::shared_ptr<Range> busShared = nullptr;
 
     std::map<std::string, std::shared_ptr<Node>>::iterator clockAnnotation, resetAnnotation, conditionAnnotation, enableAnnotation;
 
@@ -194,17 +195,20 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             break;
         }
     }
-    tryElaborate(bus, context);
-    if (bus) {
-        if (bus->from->type == Expression::Type::error) {
-            goto exit;
+    if (bus.has_value()) {
+        busShared = bus.value().lock();
+        tryElaborate(busShared, context);
+        if (busShared) {
+            if (busShared->from->type == Expression::Type::error) {
+                goto exit;
+            }
+            from = busShared->from->value.value().getLimitedValue();
+            to = busShared->to->value.value().getLimitedValue();
+
+            msbFirst = from > to;
+
+            width = (msbFirst ? (from.value() - to.value()) : (from.value() + to.value())) + 1;
         }
-        from = bus->from->value.value().getLimitedValue();
-        to = bus->to->value.value().getLimitedValue();
-
-        msbFirst = from > to;
-
-        width = (msbFirst ? (from.value() - to.value()) : (from.value() + to.value())) + 1;
     } else {
         from = to = 0;
     }
@@ -284,7 +288,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             }
 
             // Common properties
-            dataDLI = tld->propertyDeclaration(identifier->idString, "data", bus);
+            dataDLI = tld->propertyDeclaration(identifier->idString, "data", busShared);
             dataDriven = std::make_shared<Driven>("data", dataDLI, from.value(), to.value(), msbFirst);
             pointerAsContainer->space["data"] = dataDriven;
             context->checks.push_back(Context::DriveCheck(dataDriven, nullopt, nullopt, [=](){
@@ -358,30 +362,32 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
 
     if (symbolOptional.has_value()) {
         auto symbol = symbolOptional.value();
-        if ((symSpace = std::dynamic_pointer_cast<SymbolSpace>(symbol))) {
+        if (auto symSpace = std::dynamic_pointer_cast<SymbolSpace>(symbol)) {
             if (symSpace->type == SymbolSpace::Type::module) {
                 if (context->table->findNearest(SymbolSpace::Type::module) != symSpace) {
                     if (!context->table->findNearest(SymbolSpace::Type::comb)) {
                         context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, shared_from_this()));
+
+                        this->symSpace = symSpace;
 
                         if (ports) {
                             elaboratePorts(context);
                         }
 
                     } else {
-                        symSpace = nullptr;
+                        this->symSpace = nullopt;
                         context->addError(nullopt, "comb.declarationNotAllowed");
                     }
                 } else {
-                    symSpace = nullptr;
+                    this->symSpace = nullopt;
                     context->addError(nullopt, "module.recursion");
                 }
             } else {
-                symSpace = nullptr;
+                this->symSpace = nullopt;
                 context->addError(nullopt, "symbol.notAModule");
             }
         } else {
-            symSpace = nullptr;
+            this->symSpace = nullopt;
             context->addError(nullopt, "symbol.notAModuleOrSpace");
         }
     } else {
@@ -398,7 +404,9 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
     typedef std::map<std::string, std::pair<std::shared_ptr<Port>, bool> > ListType;
     // port checking
     ListType inputs, outputs;
-    for (auto& element: symSpace->space) {
+    assert(symSpace.has_value());
+    auto symSpaceShared = symSpace.value().lock();
+    for (auto& element: symSpaceShared->space) {
         if (auto port = std::dynamic_pointer_cast<Port>(element.second->declarator)) {
             if (port->polarity == Port::Polarity::input) {
                 inputs[port->identifier->idString] = std::pair(port, false);

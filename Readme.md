@@ -56,6 +56,12 @@ Using apt...
     sudo apt-get install git build-essential bison llvm ruby-dev
 ```
 
+If you're into clang...
+
+```sh
+    sudo apt-get install clang lldb
+```
+
 ### Windows with MSYS2
 **Please note that Windows is not working at the moment pending an issue with RE-flex.**
 First, get [MSYS2-x86_64](https://www.msys2.org/) if you haven't already.
@@ -67,7 +73,7 @@ pacman -S git make mingw-w64-x86_64-gcc bison mingw-w64-x86_64-llvm ruby
 You can also use Clang if you're into that:
 
 ```sh
-pacman -S mingw-w64-x86_64-clang
+pacman -S mingw-w64-x86_64-clang lldb
 ```
 
 We might be interested in supporting Visual Studio and other alternative solutions in the future, but at the moment, this solution is the one that works.

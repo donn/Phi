@@ -127,8 +127,9 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
             return;
     };
 
-
-    tryTranslate(bus, stream, namespaceSoFar, indent);
+    if (bus.has_value()) {
+        tryTranslate(bus.value().lock(), stream, namespaceSoFar, indent);
+    }
 
     if (trueIdentifier) {
         tryTranslate(trueIdentifier, stream, namespaceSoFar, indent);
