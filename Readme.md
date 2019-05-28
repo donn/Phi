@@ -1,4 +1,4 @@
-# <image src="Assets/Logo/400.png" height="200px"/>
+# Φ Phi
 Phi is a hardware description language that aims to succeed Verilog using concepts from modern programming languages.
 
 It is our goal to design a well-defined language with:
@@ -7,12 +7,14 @@ It is our goal to design a well-defined language with:
 
 It's basically a mix of Swift/C++'s syntax with Verilog's semantics.
 
+Phi supports Linux, macOS, and Windows with MSYS2.
+
 # Dependencies
 ## Running
 * LLVM 8.0
 * Ruby 2.3+
 
-## Build
+## Building
 All running dependencies, plus:
 
 * A POSIX environment
@@ -63,20 +65,19 @@ If you're into clang...
 ```
 
 ### Windows with MSYS2
-**Please note that Windows is not working at the moment pending an issue with RE-flex.**
 First, get [MSYS2-x86_64](https://www.msys2.org/) if you haven't already.
 
 ```sh
 pacman -S git make mingw-w64-x86_64-gcc bison mingw-w64-x86_64-llvm ruby
 ```
 
-You can also use Clang if you're into that:
+You can also use Clang and lldb if you're into that:
 
 ```sh
 pacman -S mingw-w64-x86_64-clang lldb
 ```
 
-We might be interested in supporting Visual Studio and other alternative solutions in the future, but at the moment, this solution is the one that works.
+We are interested in supporting Visual Studio in the future.
 
 # Build Instructions
 Run `git submodule update --init --recursive`.
@@ -96,7 +97,7 @@ To invoke it, simply write `./phi <.phi or .sv file>`. In case of a phi file, it
 
 Both executables comply with BSD-style system exits, and you can write `./phi(c) --help` for more info.
 
-# License
+# ⚖️ License
 Phi is available under the Apache 2.0 license, available at the root of this project as 'License'.
 
 Please try to keep any copyleft code out of the final binary, and that includes LGPL libraries.
