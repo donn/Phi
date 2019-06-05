@@ -493,9 +493,7 @@ void Binary::MACRO_ELAB_SIG_IMP {
         
         type = Expression::Type::compileTime;
     }
-    if (rightExpr->type == Expression::Type::runTime) {
-        type = Expression::Type::runTime;
-    }
+    type = std::max(leftExpr->type, rightExpr->type);
 }
 
 void Concatenation::MACRO_ELAB_SIG_IMP {

@@ -355,7 +355,7 @@ module SuccessiveApproximationControl(clk: @clock Input,
         } else if running & waiting {
             waiting.data = waiting &- 1
         } else if running & (position != 16b0) {
-            doSample.data = 0
+            doSample.data = 1b0
             position.data = {1b0, position[15..1]}
             sar.data = mux cmp (1b1: sar ^ position, 1b0: sar) | position.data
         } else if running {

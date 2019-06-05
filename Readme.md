@@ -36,15 +36,17 @@ For the other dependencies, we recommend [Homebrew](https://brew.sh). Install it
 
 This will take some time, llvm is big.
 
-You will need to add bison to PATH, as brew won't. Do this however you want: a recommended setup is to add this to `~/.bash_profile` (or your shell's equivalent):
+You will need to add bison to PATH, as brew won't. Do this however you want: a suggestion is to add this to your shell's profile:
 ```sh
 export BISON="/usr/local/opt/bison/bin/bison"
 ```
 
-You will also need to expose LLVM Config to the compiler, as brew *also* won't. Again, the recommended setup is to add `~/.bash_profile` (or your shell's equivalent):
+You will also need to expose LLVM Config to the compiler, as brew *also* won't. Again, it is suggested to add this to your shell's profile:
 ```sh
 export LLVM_CONFIG="/usr/local/opt/llvm/bin/llvm-config"
 ```
+
+(For the default shells, that's `~/.bash_profile` on Mojave and below, and `~/.zprofile` on Catalina and above.)
 
 ### GNU/Linux
 Install git, gcc, make and bison using your package manager.
