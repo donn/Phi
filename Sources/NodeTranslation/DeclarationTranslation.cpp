@@ -38,7 +38,7 @@ void Port::MACRO_TRANS_SIG_IMP {
 
 void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
     //adjust namespaceSoFar
-    namespaceSoFar = namespaceSoFar + "_" + std::to_string((identifier->idString).length()) + identifier->idString;
+    namespaceSoFar = namespaceSoFar + "." + std::to_string((identifier->idString).length()) + identifier->idString;
     tryTranslate(contents, stream, namespaceSoFar, indent);
 
     tryTranslate(right, stream, namespaceSoFar, indent);
@@ -157,18 +157,18 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
 
     //add wires,regs, always @ block, inside always @ block
     if(type==VLD::Type::reg) {
-        namespaceSoFar = namespaceSoFar +  "_" + std::to_string((identifier->idString).length()) + identifier->idString;
+        namespaceSoFar = namespaceSoFar + identifier->idString + ".";
 
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
 
         *stream << " // Declaration stub for " << namespaceSoFar << MACRO_EOL;
         *indent += 1;
-        *stream << "always @ (posedge " + namespaceSoFar +"_clock or posedge " + namespaceSoFar +"_reset) begin " << MACRO_EOL;
+        *stream << "always @ (posedge \\" + namespaceSoFar +"clock  or posedge \\" + namespaceSoFar +"reset ) begin " << MACRO_EOL;
             *indent += 1;
-            *stream << "if("+namespaceSoFar+"_reset) begin" << MACRO_EOL;
+            *stream << "if (\\" + namespaceSoFar + "reset ) begin" << MACRO_EOL;
                 *stream << MACRO_EOL;
-                *stream << identifier->idString + "<= ";
+                *stream << "\\" << identifier->idString + " <= ";
                 tryTranslate(optionalAssignment, stream, namespaceSoFar, indent);
                 *stream << "; " << MACRO_EOL;
             *indent -= 1;
@@ -177,9 +177,9 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
             *stream << "else begin" << MACRO_EOL;
                 if (hasEnable) {
                     *indent += 1;
-                    *stream << "if (" << namespaceSoFar+"_enable" << ") begin" << MACRO_EOL;
+                    *stream << "if (\\" << namespaceSoFar + "enable " << ") begin" << MACRO_EOL;
                 }
-                *stream << identifier->idString + "<=" + namespaceSoFar+ "_data; " << MACRO_EOL;
+                *stream << "\\" << identifier->idString + " <= \\" + namespaceSoFar+ "data ; " << MACRO_EOL;
                 if (hasEnable) {
                     *indent -= 1;
                     *stream << "end" << MACRO_EOL;
@@ -193,22 +193,22 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         *stream << MACRO_EOL;
 
         tryTranslate(right, stream, namespaceSoFar, indent);
-    }else if(type==VLD::Type::latch){
-        namespaceSoFar = namespaceSoFar +  "_" + std::to_string((identifier->idString).length()) + identifier->idString;
+    } else if(type==VLD::Type::latch) {
+        namespaceSoFar = namespaceSoFar + identifier->idString + ".";
 
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
 
         *stream << " // Declaration stub for " << namespaceSoFar << MACRO_EOL;
         *indent += 1;
-        *stream << "always @ (" + namespaceSoFar +"_condition) begin " << MACRO_EOL;
+        *stream << "always @ (\\" + namespaceSoFar +"condition ) begin " << MACRO_EOL;
         *indent += 1;
-            *stream << "if("+namespaceSoFar+"_condition) begin" << MACRO_EOL;  
+            *stream << "if (\\" + namespaceSoFar + "condition ) begin" << MACRO_EOL;  
                 if (hasEnable) {
                     *indent += 1;
-                    *stream << "if (" << namespaceSoFar+"_enable" << ") begin" << MACRO_EOL;
+                    *stream << "if (\\" << namespaceSoFar + "enable" << ") begin" << MACRO_EOL;
                 }
-                *stream << identifier->idString + "<=" + namespaceSoFar+ "_data; " << MACRO_EOL;
+                *stream << "\\" << identifier->idString + " <= \\" + namespaceSoFar+ "data ; " << MACRO_EOL;
                 if (hasEnable) {
                     *indent -= 1;
                     *stream << "end" << MACRO_EOL;
