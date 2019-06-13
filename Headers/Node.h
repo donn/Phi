@@ -100,13 +100,8 @@ namespace Phi {
             Declaration(std::shared_ptr<Identifier> identifier): identifier(identifier) {}
         };
 
-        struct Port: public Declaration {
-            enum class Polarity {
-                input = 0,
-                output,
-                output_reg
-            };
-            Polarity polarity;
+        struct Port: public Declaration, public PortObject {
+            PortObject::Polarity polarity;
             std::shared_ptr<Range> bus;
             
             optional<std::string> annotation;
@@ -114,10 +109,14 @@ namespace Phi {
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
 
-            Port(std::shared_ptr<Identifier> identifier, bool polarity, std::shared_ptr<Range> bus, std::optional<std::string> annotation): Declaration(identifier), polarity(polarity ? Polarity::output : Polarity::input), bus(bus), annotation(annotation) {}
+            Port(std::shared_ptr<Identifier> identifier, bool polarity, std::shared_ptr<Range> bus, std::optional<std::string> annotation): Declaration(identifier), polarity(polarity ? PortObject::Polarity::output : PortObject::Polarity::input), bus(bus), annotation(annotation) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
+
+            virtual Polarity getPolarity() { return polarity; }
+            virtual std::string getName();
+            virtual AccessWidth getWidth();
         };
 
         struct TopLevelNamespace: public Declaration {
@@ -291,7 +290,7 @@ namespace Phi {
         struct ExpressionIDPair;
         struct InstanceDeclaration: public Declaration {
             // For elaborative use
-            std::optional< std::weak_ptr<SymbolSpace> > symSpace;
+            std::optional< std::weak_ptr<Module> > symSpace;
 
             std::shared_ptr<LHExpression> module;
             std::shared_ptr<ExpressionIDPair> parameters;
@@ -377,7 +376,9 @@ namespace Phi {
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
 
-            void getValues(AccessWidth* from, AccessWidth* to); // CALL ONLY AFTER ELABORATION!!
+            // CALL ONLY AFTER ELABORATION!!
+            void getValues(AccessWidth* from, AccessWidth* to);
+            AccessWidth getWidth(); 
         };      
 
         // Left Hand Expressions

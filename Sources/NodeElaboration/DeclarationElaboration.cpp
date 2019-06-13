@@ -33,7 +33,7 @@ void Port::MACRO_ELAB_SIG_IMP {
     auto pointer = std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
 
     // Add check if output
-    if (polarity == Polarity::output) {
+    if (polarity ==PortObject::Polarity::output) {
         auto check = Context::DriveCheck(pointer, nullopt, nullopt, [=](){
             context->addError(nullopt, "output.undriven");
         });
@@ -46,7 +46,7 @@ void Port::MACRO_ELAB_SIG_IMP {
     if (annotation.has_value()) {
         auto annotationUnwrapped = annotation.value();
         // Check if annotation is valid
-        auto seeker = (polarity == Polarity::input) ? acceptableAnnotationsInput : acceptableAnnotationsOutput;
+        auto seeker = (polarity ==PortObject::Polarity::input) ? acceptableAnnotationsInput : acceptableAnnotationsOutput;
         while (*seeker && *seeker != annotationUnwrapped) {
             seeker++;
         }
@@ -75,9 +75,18 @@ void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
 }
 
 void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
-    context->table->stepIntoAndCreate(identifier->idString, shared_from_this(), declTypeMap[(int)type]);
+    auto deducedType = declTypeMap[(int)type];
+    context->table->stepIntoAndCreate(identifier->idString, shared_from_this(), deducedType);
     tryElaborate(ports, context);
     tryElaborate(contents, context);
+    if (deducedType == SymbolSpace::Type::module) {
+        auto space = std::static_pointer_cast<Module>(context->table->findNearest(SymbolSpace::Type::module));
+        for (auto& element: space->space) {
+            if (auto port = std::dynamic_pointer_cast<Port>(element.second->declarator)) {
+                space->ports.push_back(port);
+            }
+        }
+    }
     context->table->stepOut();
     tryElaborate(right, context);
 }
@@ -369,7 +378,7 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
                     if (!context->table->findNearest(SymbolSpace::Type::comb)) {
                         context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, shared_from_this()));
 
-                        this->symSpace = symSpace;
+                        this->symSpace = std::static_pointer_cast<Module>(symSpace);
 
                         if (ports) {
                             elaboratePorts(context);
@@ -402,18 +411,16 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
 void InstanceDeclaration::elaboratePorts(Context* context) {
     if (!symSpace) { return; }
     tryElaborate(ports, context);
-    typedef std::map<std::string, std::pair<std::shared_ptr<Port>, bool> > ListType;
+    typedef std::map<std::string, std::pair<std::shared_ptr<PortObject>, bool> > ListType;
     // port checking
     ListType inputs, outputs;
     assert(symSpace.has_value());
     auto symSpaceShared = symSpace.value().lock();
-    for (auto& element: symSpaceShared->space) {
-        if (auto port = std::dynamic_pointer_cast<Port>(element.second->declarator)) {
-            if (port->polarity == Port::Polarity::input) {
-                inputs[port->identifier->idString] = std::pair(port, false);
-            } else {
-                outputs[port->identifier->idString] = std::pair(port, false);
-            }
+    for (auto& port: symSpaceShared->ports) {
+        if (port->getPolarity() == PortObject::Polarity::input) {
+            inputs[port->getName()] = std::pair(port, false);
+        } else {
+            outputs[port->getName()] = std::pair(port, false);
         }
     }
 
@@ -424,21 +431,13 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
         auto relevantExpr = seeker->expression;
         auto inputIterator = inputs.find(name);
         auto outputIterator = outputs.find(name);
-        #define MACRO_PORT_WIDTH [&]() {\
-            if (relevantPort->bus) {\
-                AccessWidth from, to;\
-                relevantPort->bus->getValues(&from, &to);\
-                return (from < to) ? to - from + 1 : from - to + 1;\
-            }\
-            return 1;\
-        }()
         if (inputIterator != inputs.end()) {
             // Process as input
             if (inputIterator->second.second) {
                 context->addError(nullopt, "module.portAlreadyDriven");
             } else {
                 auto relevantPort = inputIterator->second.first;
-                auto width = MACRO_PORT_WIDTH;
+                auto width = relevantPort->getWidth();
                 LHExpression::lhDrivenProcess(relevantExpr, context->table);
                 if (width != relevantExpr->numBits) {
                     context->addError(nullopt, "driving.widthMismatch");
@@ -453,7 +452,7 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
                 if (auto lhs = std::dynamic_pointer_cast<LHExpression>(relevantExpr)) {
                     auto relevantPort = outputIterator->second.first;
                     LHExpression::lhDrivenProcess(relevantExpr, context->table);
-                    auto width = MACRO_PORT_WIDTH;
+                    auto width = relevantPort->getWidth();
                     bool trash = false;
                     try {
                         NondeclarativeAssignment::drivingAssignment(context, lhs, Expression::abstract(Expression::Type::runTime, width), &trash, &trash);

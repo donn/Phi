@@ -100,6 +100,28 @@ namespace Phi {
 #if YYDEBUG
         int represent(std::ostream* stream, int* node);
 #endif
+
+        virtual void moduleMetadata(void* array);
+    };
+
+    struct PortObject {
+        enum class Polarity {
+            input = 0,
+            output,
+            output_reg
+        };
+
+        virtual Polarity getPolarity() = 0;
+        virtual std::string getName() = 0;
+        virtual AccessWidth getWidth() = 0;
+    };
+
+    struct Module: public SymbolSpace {
+        Module(std::string id, std::shared_ptr<Node::Node> declarator): SymbolSpace(id, declarator, Type::module) {}
+
+        std::vector< std::shared_ptr<PortObject> > ports = {};
+
+        virtual void moduleMetadata(void* array);
     };
 
     struct Container: public SymbolSpace, public Driven {
@@ -146,6 +168,7 @@ namespace Phi {
         void stepOut();
         
         std::shared_ptr<SymbolSpace> findNearest(SymbolSpace::Type type);
+        std::string moduleMetadata();
 
 #if YYDEBUG
         void represent(std::ostream* stream);

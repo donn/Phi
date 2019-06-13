@@ -49,3 +49,9 @@ void Range::getValues(AccessWidth* fromRef, AccessWidth* toRef) {
     *fromRef = fromValue;
     *toRef = toValue;
 }
+
+AccessWidth Range::getWidth() {
+    AccessWidth from, to;
+    getValues(&from, &to);
+    return (from < to) ? to - from + 1 : from - to + 1;
+}

@@ -15,13 +15,13 @@ std::string Node::debugLabel() {
 std::string Port::debugLabel() {
     std::string polarityString;
     switch (polarity) {
-        case Port::Polarity::input:
+        case PortObject::Polarity::input:
             polarityString = "Input";
             break;
-        case Port::Polarity::output:
+        case PortObject::Polarity::output:
             polarityString = "Output";
             break;
-        case Port::Polarity::output_reg:
+        case PortObject::Polarity::output_reg:
             polarityString = "Output (Register in Verilog)";
             break;
         default:

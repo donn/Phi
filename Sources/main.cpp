@@ -43,6 +43,7 @@ int main(int argc, char* argv[]) {
             stdoutStream << "All rights reserved. Licensed under the Apache License 2.0." << std::endl;
             exit(0);
         }},
+        {"metadataJSON", std::nullopt, "Data to output JSON information about processed modules.", true, std::nullopt},
         {"outFile", 'o', "Output file.", true, std::nullopt},
         {"ignoreErrors", std::nullopt, "Attempt best translation despite errors.", false, std::nullopt},
 #if YYDEBUG
@@ -147,6 +148,15 @@ int main(int argc, char* argv[]) {
         table.represent(&output);
     }
 #endif
+
+    auto metadataJSONFile = options.find("metadataJSON");
+    if (metadataJSONFile != options.end()) {
+        std::ofstream output(metadataJSONFile->second);
+        if (output.fail()) {
+            return EX_CANTCREAT;
+        }
+        output << table.moduleMetadata();
+    }
 
     std::string outputFilename = arguments[0] + ".sv";
     if (options.find("outFile") != options.end()) {

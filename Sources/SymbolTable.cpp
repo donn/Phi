@@ -1,5 +1,6 @@
 #include "SymbolTable.h"
 #include "Node.h"
+#include "JSON.h"
 
 #include <fstream>
 #include <stack>
@@ -302,7 +303,11 @@ void SymbolTable::stepIntoAndCreate(std::string space, std::shared_ptr<Node::Nod
         throw "symbol.redefinition";
     }
 
-    tableTop->space[space] = std::make_shared<SymbolSpace>(space, declarator, type);
+    if (type == SymbolSpace::Type::module) {
+        tableTop->space[space] = std::make_shared<Module>(space, declarator);
+    } else {
+        tableTop->space[space] = std::make_shared<SymbolSpace>(space, declarator, type);
+    }
     stepInto(space);
 }
 
@@ -471,6 +476,46 @@ std::shared_ptr<SymbolSpace> SymbolTable::findNearest(SymbolSpace::Type type) {
     }
     return nullptr;
 } 
+
+void SymbolSpace::moduleMetadata(void* array) {
+    auto& json = *static_cast<nlohmann::json*>(array);
+    auto current = nlohmann::json::object();
+    current["name"] = id;
+    current["subs"] = nlohmann::json::array();
+    for (auto& element: space) {
+        if (auto sp = std::dynamic_pointer_cast<SymbolSpace>(element.second)) {
+            sp->moduleMetadata(&current["subs"]);
+        }
+    }
+    json.push_back(current);
+}
+
+void Module::moduleMetadata(void* array) {
+    auto& json = *static_cast<nlohmann::json*>(array);
+    auto current = nlohmann::json::object();
+    current["name"] = id;
+    current["ports"] = nlohmann::json::array();
+    for (auto& port: ports) {
+        auto object = nlohmann::json::object();
+        object["name"] = port->getName();
+        object["width"] = port->getWidth();
+        auto pol = port->getPolarity();
+        object["polarity"] = pol == PortObject::Polarity::input ? "input" : pol == PortObject::Polarity::output ? "output" : "other";
+        current["ports"].push_back(object);
+    }
+    json.push_back(current);
+}
+
+std::string SymbolTable::moduleMetadata() {
+    nlohmann::json json = nlohmann::json::array();
+    for (auto& element: head->space) {
+        if (auto sp = std::dynamic_pointer_cast<SymbolSpace>(element.second)) {
+            sp->moduleMetadata(&json);
+        }
+    }
+    return json.dump();
+}
+
 
 #if YYDEBUG
 void SymbolTable::represent(std::ostream* stream) {

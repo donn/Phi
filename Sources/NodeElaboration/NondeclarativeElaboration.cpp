@@ -62,7 +62,7 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
     }
 
     if (portAttache) {
-        if (portAttache->polarity == Port::Polarity::input) {
+        if (portAttache->polarity ==PortObject::Polarity::input) {
             throw "driving.inputWire";
         }
     }
@@ -90,7 +90,7 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
             dliAttache->type = VLD::Type::wire_reg;
         }
         if (portAttache) {
-            portAttache->polarity = Port::Polarity::output_reg;
+            portAttache->polarity =PortObject::Polarity::output_reg;
         }
         *inComb = true;
         combDeclarator->conclusionTriggers.push_back([=](){

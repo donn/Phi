@@ -11,13 +11,13 @@ void Port::MACRO_TRANS_SIG_IMP {
     // input [width-1 ..0] a;
 
     switch (polarity) {
-        case Port::Polarity::input:
+        case PortObject::Polarity::input:
             *stream << "input";
             break;
-        case Port::Polarity::output:
+        case PortObject::Polarity::output:
             *stream << "output";
             break;
-        case Port::Polarity::output_reg:
+        case PortObject::Polarity::output_reg:
             *stream << "output reg";
             break;
     }

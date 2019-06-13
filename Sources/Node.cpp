@@ -32,3 +32,14 @@ void Phi::Node::tryTranslate(std::shared_ptr<Phi::Node::Node> node, MACRO_TRANS_
         }
     }
 }
+
+std::string Port::getName() {
+    return identifier->idString;
+}
+
+AccessWidth Port::getWidth() {
+    if (bus) {
+        return bus->getWidth();
+    }
+    return 1;
+}
