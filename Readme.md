@@ -82,7 +82,7 @@ pacman -S mingw-w64-x86_64-clang lldb
 We are interested in supporting Visual Studio in the future.
 
 # Build Instructions
-Run `git submodule update --init --recursive`.
+Run `git submodule update --init --recursive --depth 1`.
 
 We use open source libraries for various functions, and they're all imported using git submodules.
 
