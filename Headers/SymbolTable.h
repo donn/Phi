@@ -101,7 +101,7 @@ namespace Phi {
         int represent(std::ostream* stream, int* node);
 #endif
 
-        virtual void moduleMetadata(void* array);
+        virtual void moduleMetadata(void* jsonObject);
     };
 
     struct PortObject {
@@ -121,7 +121,7 @@ namespace Phi {
 
         std::vector< std::shared_ptr<PortObject> > ports = {};
 
-        virtual void moduleMetadata(void* array);
+        virtual void moduleMetadata(void* jsonObject);
     };
 
     struct Container: public SymbolSpace, public Driven {

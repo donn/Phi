@@ -480,34 +480,31 @@ std::shared_ptr<SymbolSpace> SymbolTable::findNearest(SymbolSpace::Type type) {
 void SymbolSpace::moduleMetadata(void* array) {
     auto& json = *static_cast<nlohmann::json*>(array);
     auto current = nlohmann::json::object();
-    current["name"] = id;
-    current["subs"] = nlohmann::json::array();
+    current["subs"] = nlohmann::json::object();
     for (auto& element: space) {
         if (auto sp = std::dynamic_pointer_cast<SymbolSpace>(element.second)) {
             sp->moduleMetadata(&current["subs"]);
         }
     }
-    json.push_back(current);
+    json[id] = current;
 }
 
 void Module::moduleMetadata(void* array) {
     auto& json = *static_cast<nlohmann::json*>(array);
     auto current = nlohmann::json::object();
-    current["name"] = id;
-    current["ports"] = nlohmann::json::array();
+    current["ports"] = nlohmann::json::object();
     for (auto& port: ports) {
         auto object = nlohmann::json::object();
-        object["name"] = port->getName();
         object["width"] = port->getWidth();
         auto pol = port->getPolarity();
         object["polarity"] = pol == PortObject::Polarity::input ? "input" : pol == PortObject::Polarity::output ? "output" : "other";
-        current["ports"].push_back(object);
+        current["ports"][port->getName()] = object;
     }
-    json.push_back(current);
+    json[id] = current;
 }
 
 std::string SymbolTable::moduleMetadata() {
-    nlohmann::json json = nlohmann::json::array();
+    nlohmann::json json = nlohmann::json::object();
     for (auto& element: head->space) {
         if (auto sp = std::dynamic_pointer_cast<SymbolSpace>(element.second)) {
             sp->moduleMetadata(&json);
