@@ -1,8 +1,7 @@
 %language "C++"
 %locations
-%require "3.2"
 
-%define api.parser.class {Parser}
+%define parser_class_name {Parser}
 %define api.namespace {Phi}
 
 %define api.value.type {std::shared_ptr<Node::Node>}

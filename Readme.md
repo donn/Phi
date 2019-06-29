@@ -11,7 +11,7 @@ Phi supports Linux, macOS, and Windows with MSYS2.
 
 # Dependencies
 ## Running
-* LLVM 8.0
+* LLVM 6.0-8.0
 * Ruby 2.3+
 
 ## Building
@@ -22,11 +22,11 @@ All running dependencies, plus:
     * No GCC or Clang specific extensions are used. Any used by accident are a bug we are interested in fixing.
     * We still recommend Clang + LLDB for debugging.
 * Git
-* Make
-* GNU Bison
+* GNU Make 3.8.1+
+* GNU Bison 3.0.4+
 
 ### macOS
-Install Xcode from the App Store.
+Install Xcode 9.0 or higher from the App Store.
 
 For the other dependencies, we recommend [Homebrew](https://brew.sh). Install it using the command in the link provided, then invoke:
 
@@ -54,6 +54,8 @@ Install git, gcc, make and bison using your package manager.
 If you have Clang and you want to use it, you can export and set the `CC` and `CXX` environment variables to `clang` and `clang++` respectively.
 
 #### Debian-based OSes (incl. Ubuntu, elementary...)
+Phi has been tested and is working on Ubuntu 18.04, 19.04 and their derivatives.
+
 Using apt...
 
 ```sh
