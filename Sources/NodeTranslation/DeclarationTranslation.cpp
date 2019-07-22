@@ -157,19 +157,19 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
 
     //add wires,regs, always @ block, inside always @ block
     if(type==VLD::Type::reg) {
-        namespaceSoFar = namespaceSoFar + identifier->idString + ".";
+        auto nsfLocal = namespaceSoFar + identifier->idString + ".";
 
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
 
-        *stream << " // Declaration stub for " << namespaceSoFar << MACRO_EOL;
+        *stream << " // Declaration stub for " << nsfLocal << MACRO_EOL;
         *indent += 1;
-        *stream << "always @ (posedge \\" + namespaceSoFar +"clock  or posedge \\" + namespaceSoFar +"reset ) begin " << MACRO_EOL;
+        *stream << "always @ (posedge \\" + nsfLocal +"clock  or posedge \\" + nsfLocal +"reset ) begin " << MACRO_EOL;
             *indent += 1;
-            *stream << "if (\\" + namespaceSoFar + "reset ) begin" << MACRO_EOL;
+            *stream << "if (\\" + nsfLocal + "reset ) begin" << MACRO_EOL;
                 *stream << MACRO_EOL;
                 *stream << "\\" << identifier->idString + " <= ";
-                tryTranslate(optionalAssignment, stream, namespaceSoFar, indent);
+                tryTranslate(optionalAssignment, stream, nsfLocal, indent);
                 *stream << "; " << MACRO_EOL;
             *indent -= 1;
             *stream << "end " << MACRO_EOL;
@@ -177,9 +177,9 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
             *stream << "else begin" << MACRO_EOL;
                 if (hasEnable) {
                     *indent += 1;
-                    *stream << "if (\\" << namespaceSoFar + "enable " << ") begin" << MACRO_EOL;
+                    *stream << "if (\\" << nsfLocal + "enable " << ") begin" << MACRO_EOL;
                 }
-                *stream << "\\" << identifier->idString + " <= \\" + namespaceSoFar+ "data ; " << MACRO_EOL;
+                *stream << "\\" << identifier->idString + " <= \\" + nsfLocal+ "data ; " << MACRO_EOL;
                 if (hasEnable) {
                     *indent -= 1;
                     *stream << "end" << MACRO_EOL;
@@ -191,24 +191,22 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
 
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
-
-        tryTranslate(right, stream, namespaceSoFar, indent);
     } else if(type==VLD::Type::latch) {
-        namespaceSoFar = namespaceSoFar + identifier->idString + ".";
+        auto nsfLocal = namespaceSoFar + identifier->idString + ".";
 
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
 
-        *stream << " // Declaration stub for " << namespaceSoFar << MACRO_EOL;
+        *stream << " // Declaration stub for " << nsfLocal << MACRO_EOL;
         *indent += 1;
-        *stream << "always @ (\\" + namespaceSoFar +"condition ) begin " << MACRO_EOL;
+        *stream << "always @ (\\" + nsfLocal +"condition ) begin " << MACRO_EOL;
         *indent += 1;
-            *stream << "if (\\" + namespaceSoFar + "condition ) begin" << MACRO_EOL;  
+            *stream << "if (\\" + nsfLocal + "condition ) begin" << MACRO_EOL;  
                 if (hasEnable) {
                     *indent += 1;
-                    *stream << "if (\\" << namespaceSoFar + "enable" << ") begin" << MACRO_EOL;
+                    *stream << "if (\\" << nsfLocal + "enable" << ") begin" << MACRO_EOL;
                 }
-                *stream << "\\" << identifier->idString + " <= \\" + namespaceSoFar+ "data ; " << MACRO_EOL;
+                *stream << "\\" << identifier->idString + " <= \\" + nsfLocal+ "data ; " << MACRO_EOL;
                 if (hasEnable) {
                     *indent -= 1;
                     *stream << "end" << MACRO_EOL;
@@ -220,8 +218,6 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
 
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
-        
-        tryTranslate(right, stream, namespaceSoFar, indent);
     } 
 
     tryTranslate(right, stream, namespaceSoFar, indent);
