@@ -2,10 +2,6 @@
 ## Implementation
 ### Intermediate
 * Interfaces are not implemented
-* System procedural call implementation unfinished
-    * Error reporting is missing for the fromFile calls
-    * $Sys.abs implementation only works accurately up to 52-bits, does not support negative numbers
-* Implement & and | unary operators
 * Assigning to enable without annotation does not yet work
 
 ### Advanced

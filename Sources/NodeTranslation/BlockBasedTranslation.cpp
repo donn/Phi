@@ -22,7 +22,7 @@ void If::MACRO_TRANS_SIG_IMP {
 
     //think of it as if{} else, not if{}else{}
     //translate iff inside comb block
-    if(Statement::inComb){
+    if (Statement::inComb) {
         if (expression) {
             *stream << "if ( ";
             tryTranslate(expression, stream, namespaceSoFar, indent);

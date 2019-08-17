@@ -41,25 +41,7 @@ SymbolTable::SymbolTable() {
         // Check list
         auto number = list[0].expression.value();
 
-        if (
-            number.second > 52
-        ) {
-            throw "abs.52bitexceeded";
-        }
-        
-        double numberD = number.first.getLimitedValue();
-
-        double returnD;
-        
-        try {
-            returnD = std::abs(numberD);
-        } catch (int error) {
-            returnD = INFINITY;
-        }
-
-        uint64 returnedValue = returnD;
-
-        return std::pair(llvm::APInt(number.second, returnedValue), number.second);
+        return std::pair(number.first.abs(), number.second);
     }));
     add("abs", sysAbs);
 
@@ -71,15 +53,8 @@ SymbolTable::SymbolTable() {
         auto number = list[0].expression.value();
         auto base = list[1].expression.value();
 
-        if (
-            number.second > 52
-            || base.second > 52
-        ) {
-            throw "log.52bitexceeded";
-        }
-            
-        double numberD = number.first.getLimitedValue();
-        double baseD = base.first.getLimitedValue();
+        double numberD = number.first.roundToDouble();
+        double baseD = base.first.roundToDouble();
 
         double returnD;
             
@@ -103,27 +78,33 @@ SymbolTable::SymbolTable() {
         auto number = list[0].expression.value();
         auto exponent = list[1].expression.value();
 
+        llvm::APInt returnedValue;
+
         if (
             number.second > 52
             || exponent.second > 52
         ) {
-            throw "pow.52bitexceeded";
+            returnedValue = number.first;
+            for (llvm::APInt i(exponent.second, 1); i.ult(exponent.first); i += llvm::APInt(exponent.second, 1)) {
+                returnedValue *= number.first;
+            }
+        } else {
+            double numberD = number.first.getLimitedValue();
+            double exponentD = exponent.first.getLimitedValue();
+
+            double returnD;
+            
+            try {
+                returnD = std::pow(numberD, exponentD);
+            } catch (int error) {
+                returnD = INFINITY;
+            }
+
+            uint64 returnInt = returnD;
+            returnedValue = llvm::APInt(number.second, returnInt);
         }
-        
-        double numberD = number.first.getLimitedValue();
-        double exponentD = exponent.first.getLimitedValue();
 
-        double returnD;
-        
-        try {
-            returnD = std::pow(numberD, exponentD);
-        } catch (int error) {
-            returnD = INFINITY;
-        }
-
-        uint64 returnedValue = returnD;
-
-        return std::pair(llvm::APInt(number.second, returnedValue), number.second);
+        return std::pair(returnedValue, number.second);
     }));
     add("pow", sysPow);
 
@@ -237,7 +218,7 @@ SymbolTable::SymbolTable() {
         binaryFile.read(&buffer[0], length);
 
         // (1b0: Little endian, 1b1: big endian)
-        if(endian == 0){
+        if (endian == 0){
             // little endian
             // swaping
             std::vector<char> tempBufferContiguous(length);
@@ -252,7 +233,7 @@ SymbolTable::SymbolTable() {
             for(uint i=0; i<length; i++){
                 buffer[i] = tempBuffer[i];
             }
-        }else if(endian == 1){
+        }else if (endian == 1){
             // big endian
             // do nothing 
         }else {
@@ -265,14 +246,13 @@ SymbolTable::SymbolTable() {
         auto value = llvm::APInt(bytes * 8, 0);
         for(uint i=0; i<length; i++){
             value = value | buffer[i];
-            if(i!=length-1)
+            if (i!=length-1)
                 value = value << 8;
         }
 
         return std::pair(value, bytes * 8);
     }));
     add("fromFile", sysfromFile);
-
 
     stepOut();
 }

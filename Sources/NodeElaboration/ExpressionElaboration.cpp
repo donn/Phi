@@ -324,8 +324,14 @@ void Unary::MACRO_ELAB_SIG_IMP {
         type = Expression::Type::error;
         return;
     }
-
-    numBits = rightExpr->numBits;
+    switch (operation) {
+        case Operation::allAnd:
+        case Operation::allOr:
+            numBits = 1;
+            break;
+        default:
+            numBits = rightExpr->numBits;
+    }
 
     if (rightExpr->type == Expression::Type::compileTime) {
         auto rightUnwrapped = rightExpr->value.value();
@@ -337,11 +343,9 @@ void Unary::MACRO_ELAB_SIG_IMP {
                 rightUnwrapped.flipAllBits();
                 break;
             case Operation::allAnd:
-                numBits = 1;
                 rightUnwrapped = rightUnwrapped.isAllOnesValue() ? llvm::APInt(1, 1) : llvm::APInt(1, 0);
                 break;
             case Operation::allOr:
-                numBits = 1;
                 rightUnwrapped = rightUnwrapped.isNullValue() ? llvm::APInt(1, 0) : llvm::APInt(1, 1);
                 break;
         }

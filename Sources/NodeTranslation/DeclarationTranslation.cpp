@@ -156,7 +156,7 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     *stream << ";" << MACRO_EOL;
 
     //add wires,regs, always @ block, inside always @ block
-    if(type==VLD::Type::reg) {
+    if (type==VLD::Type::reg) {
         auto nsfLocal = namespaceSoFar + identifier->idString + ".";
 
         *stream << MACRO_EOL;
@@ -191,7 +191,7 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
 
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
-    } else if(type==VLD::Type::latch) {
+    } else if (type==VLD::Type::latch) {
         auto nsfLocal = namespaceSoFar + identifier->idString + ".";
 
         *stream << MACRO_EOL;

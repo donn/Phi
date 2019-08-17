@@ -49,7 +49,7 @@ void ArrayAccess::MACRO_TRANS_SIG_IMP {
     //example 2
     //a[3].k[0] --> ns_0A3 k[0]
 
-    if(index==false){
+    if (index==false){
         //array -> treat this as a namespace
         auto width = std::static_pointer_cast<Expression>(right);
         auto value = width->value.value();
