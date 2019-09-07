@@ -113,7 +113,7 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
 void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     tryElaborate(lhs, context);
     tryElaborate(expression, context);
-    LHExpression::lhDrivenProcess(expression, context->table);
+
     drivingAssignment(context, lhs, expression, &skipTranslation, &inComb);
     tryElaborate(right, context);
 }

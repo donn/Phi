@@ -5,8 +5,6 @@
 * Assigning to enable without annotation does not yet work
 
 ### Advanced
-* Namespace translation is often incorrect
-    * Might require LHExpression encapsulation: would actually clean up a lot of the compiler's design
 * Error reporting for semantics does not show location
 * For loops and arrays are not functional
 

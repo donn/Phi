@@ -104,6 +104,9 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWi
     while (!lhStack.empty()) {
         auto topWithParent = lhStack.top();
         auto top = topWithParent.first;
+        if (auto encapsulator = std::dynamic_pointer_cast<LHExpressionEncapsulator>(top)) {
+            top = encapsulator->lhExpression;
+        }
         auto parent = topWithParent.second;
         lhStack.pop();
         if (top->left && top->right) {
@@ -152,12 +155,10 @@ void LHExpression::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
 }
 
-
-// This is a second process for LHExpressions that are about to be USED AS EXPRESSIONS
-void LHExpression::lhDrivenProcess(std::shared_ptr<Node> suspect, Phi::SymbolTable* table) {
-    auto potential = std::dynamic_pointer_cast<LHExpression>(suspect);
-    if (!potential) { return; }
-
+// This is for LHExpressions that are about to be USED AS EXPRESSIONS
+void LHExpressionEncapsulator::MACRO_ELAB_SIG_IMP {
+    tryElaborate(lhExpression, context);
+    auto potential = lhExpression;
     std::vector< std::shared_ptr<LHExpression> > expressions;
 
     AccessWidth widthSum = 0;
@@ -187,7 +188,7 @@ void LHExpression::lhDrivenProcess(std::shared_ptr<Node> suspect, Phi::SymbolTab
         // Get and verify symbol
         optional<AccessWidth> from, to;
         auto accesses = lh->accessList(&from, &to);
-        auto symbol = table->find(&accesses, &from, &to);
+        auto symbol = context->table->find(&accesses, &from, &to);
 
         if (!symbol.has_value()) {
             throw "symbol.dne";
@@ -214,12 +215,14 @@ void LHExpression::lhDrivenProcess(std::shared_ptr<Node> suspect, Phi::SymbolTab
 
         // Check if RunTime
         if (std::dynamic_pointer_cast<Port>(driven->declarator)) {
-            lh->type = Expression::Type::runTime;
+            type = lh->type = Expression::Type::runTime;
+            numBits = lh->numBits;
             return;
         }
         if (auto dli = std::dynamic_pointer_cast<DeclarationListItem>(driven->declarator)) {
             if (dli->type != VariableLengthDeclaration::Type::var) {
-                lh->type = Expression::Type::runTime;
+                type = lh->type = Expression::Type::runTime;
+                numBits = lh->numBits;
                 return;
             }
         }
@@ -311,12 +314,14 @@ void LHExpression::lhDrivenProcess(std::shared_ptr<Node> suspect, Phi::SymbolTab
         widthSum += lh->numBits;
     }
 
-    potential->numBits = widthSum; 
+    numBits = potential->numBits = widthSum; 
+    type = potential->type;
+    value = potential->value;
 }
 
 void Unary::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
-    LHExpression::lhDrivenProcess(right, context->table);
+
     auto rightExpr = std::static_pointer_cast<Expression>(right);
 
     // Abort if error
@@ -360,8 +365,8 @@ void Unary::MACRO_ELAB_SIG_IMP {
 void Binary::MACRO_ELAB_SIG_IMP {
     tryElaborate(left, context);
     tryElaborate(right, context);
-    LHExpression::lhDrivenProcess(left, context->table);
-    LHExpression::lhDrivenProcess(right, context->table);
+
+
     auto leftExpr = std::static_pointer_cast<Expression>(left);
     auto rightExpr = std::static_pointer_cast<Expression>(right);
 
@@ -502,9 +507,9 @@ void Binary::MACRO_ELAB_SIG_IMP {
 
 void Concatenation::MACRO_ELAB_SIG_IMP {
     tryElaborate(left, context);
-    LHExpression::lhDrivenProcess(left, context->table);
+
     tryElaborate(right, context);
-    LHExpression::lhDrivenProcess(right, context->table);
+
     
     auto leftExpr = std::static_pointer_cast<Expression>(left);
     auto rightExpr = std::static_pointer_cast<Expression>(right);
@@ -519,9 +524,9 @@ void Concatenation::MACRO_ELAB_SIG_IMP {
 
 void RepeatConcatenation::MACRO_ELAB_SIG_IMP {
     tryElaborate(left, context);
-    LHExpression::lhDrivenProcess(left, context->table);
+
     tryElaborate(right, context);
-    LHExpression::lhDrivenProcess(right, context->table);
+
     
     auto leftExpr = std::static_pointer_cast<Expression>(left);
     auto rightExpr = std::static_pointer_cast<Expression>(right);
@@ -540,7 +545,7 @@ void RepeatConcatenation::MACRO_ELAB_SIG_IMP {
 
 void Multiplexer::MACRO_ELAB_SIG_IMP {
     tryElaborate(left, context);
-    LHExpression::lhDrivenProcess(left, context->table);
+
 
     tryElaborate(right, context);
     // TODO: Multiplexer runtime vs compiletime
@@ -557,10 +562,10 @@ void Multiplexer::MACRO_ELAB_SIG_IMP {
 
 void ExpressionPair::MACRO_ELAB_SIG_IMP {
     tryElaborate(label, context);
-    LHExpression::lhDrivenProcess(label, context->table);
+
     tryElaborate(specialNumber, context);
     tryElaborate(result, context);
-    LHExpression::lhDrivenProcess(result, context->table);
+
 
     tryElaborate(right, context);
 

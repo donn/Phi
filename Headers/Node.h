@@ -384,9 +384,17 @@ namespace Phi {
         // Left Hand Expressions
         struct LHExpression: public Expression { // Abstract
             std::vector<SymbolTable::Access> accessList(optional<AccessWidth>* from, optional<AccessWidth>* to);
-            static void lhDrivenProcess(std::shared_ptr<Node> suspect, Phi::SymbolTable* table);
 
             MACRO_ELAB_SIG_HDR
+        };
+
+        struct LHExpressionEncapsulator: public LHExpression {
+            std::shared_ptr<LHExpression> lhExpression;
+
+            LHExpressionEncapsulator(std::shared_ptr<LHExpression> lhExpression): lhExpression(lhExpression) {}
+
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
         };
 
         

@@ -6,7 +6,8 @@
 using namespace Phi::Node;
 
 void Identifier::MACRO_TRANS_SIG_IMP {
-    *stream << "\\" << namespaceSoFar << idString << " ";
+    std::string namespacePrefix = (namespaceSoFar.length() == 0) ? "" : namespaceSoFar + ".";
+    *stream << "\\" << namespacePrefix << idString << " ";
 
     tryTranslate(right, stream, namespaceSoFar, indent); 
 }

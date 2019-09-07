@@ -15,12 +15,14 @@ void Literal::MACRO_TRANS_SIG_IMP {
 }
 
 void IdentifierExpression::MACRO_TRANS_SIG_IMP {
-    //variable name
     tryTranslate(identifier, stream, namespaceSoFar, indent);
 }
 
-void Unary::MACRO_TRANS_SIG_IMP {
+void LHExpressionEncapsulator::MACRO_TRANS_SIG_IMP {
+    tryTranslate(lhExpression, stream, namespaceSoFar, indent);
+}
 
+void Unary::MACRO_TRANS_SIG_IMP {
     if (operation == Unary::Operation::negate) {
         //two's complement
         *stream << "-";

@@ -156,17 +156,16 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     *stream << ";" << MACRO_EOL;
 
     //add wires,regs, always @ block, inside always @ block
+    auto nsfLocal = namespaceSoFar.length() == 0 ? identifier->idString : namespaceSoFar + "." + identifier->idString;
     if (type==VLD::Type::reg) {
-        auto nsfLocal = namespaceSoFar + identifier->idString + ".";
-
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
 
         *stream << " // Declaration stub for " << nsfLocal << MACRO_EOL;
         *indent += 1;
-        *stream << "always @ (posedge \\" + nsfLocal +"clock  or posedge \\" + nsfLocal +"reset ) begin " << MACRO_EOL;
+        *stream << "always @ (posedge \\" + nsfLocal + ".clock  or posedge \\" + nsfLocal + ".reset ) begin " << MACRO_EOL;
             *indent += 1;
-            *stream << "if (\\" + nsfLocal + "reset ) begin" << MACRO_EOL;
+            *stream << "if (\\" + nsfLocal + ".reset ) begin" << MACRO_EOL;
                 *stream << MACRO_EOL;
                 *stream << "\\" << identifier->idString + " <= ";
                 tryTranslate(optionalAssignment, stream, nsfLocal, indent);
@@ -177,9 +176,9 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
             *stream << "else begin" << MACRO_EOL;
                 if (hasEnable) {
                     *indent += 1;
-                    *stream << "if (\\" << nsfLocal + "enable " << ") begin" << MACRO_EOL;
+                    *stream << "if (\\" << nsfLocal + ".enable " << ") begin" << MACRO_EOL;
                 }
-                *stream << "\\" << identifier->idString + " <= \\" + nsfLocal+ "data ; " << MACRO_EOL;
+                *stream << "\\" << identifier->idString + " <= \\" + nsfLocal + ".data ; " << MACRO_EOL;
                 if (hasEnable) {
                     *indent -= 1;
                     *stream << "end" << MACRO_EOL;
@@ -192,21 +191,19 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
     } else if (type==VLD::Type::latch) {
-        auto nsfLocal = namespaceSoFar + identifier->idString + ".";
-
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
 
         *stream << " // Declaration stub for " << nsfLocal << MACRO_EOL;
         *indent += 1;
-        *stream << "always @ (\\" + nsfLocal +"condition ) begin " << MACRO_EOL;
+        *stream << "always @ (\\" + nsfLocal +".condition ) begin " << MACRO_EOL;
         *indent += 1;
-            *stream << "if (\\" + nsfLocal + "condition ) begin" << MACRO_EOL;  
+            *stream << "if (\\" + nsfLocal + ".condition ) begin" << MACRO_EOL;  
                 if (hasEnable) {
                     *indent += 1;
-                    *stream << "if (\\" << nsfLocal + "enable" << ") begin" << MACRO_EOL;
+                    *stream << "if (\\" << nsfLocal + ".enable" << ") begin" << MACRO_EOL;
                 }
-                *stream << "\\" << identifier->idString + " <= \\" + nsfLocal+ "data ; " << MACRO_EOL;
+                *stream << "\\" << identifier->idString + " <= \\" + nsfLocal+ ".data ; " << MACRO_EOL;
                 if (hasEnable) {
                     *indent -= 1;
                     *stream << "end" << MACRO_EOL;

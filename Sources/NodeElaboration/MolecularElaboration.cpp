@@ -10,8 +10,6 @@ Identifier::Identifier(std::string identifier) {
 void Range::MACRO_ELAB_SIG_IMP {
     tryElaborate(from, context);
     tryElaborate(to, context);
-    LHExpression::lhDrivenProcess(from, context->table);
-    LHExpression::lhDrivenProcess(to, context->table);
 
     auto from = std::static_pointer_cast<Expression>(this->from);
     auto to = std::static_pointer_cast<Expression>(this->to);

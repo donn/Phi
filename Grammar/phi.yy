@@ -598,7 +598,7 @@ expression:
         $$ = std::make_shared<Literal>(cast->text, false);
     }
     | lhexpression {
-        $$ = $1;
+        $$ = std::make_shared<LHExpressionEncapsulator>(std::static_pointer_cast<LHExpression>($1));
     }
     ;
 

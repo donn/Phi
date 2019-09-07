@@ -168,7 +168,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     optional<AccessWidth> to = nullopt;
 
     tryElaborate(array, context);
-    LHExpression::lhDrivenProcess(array, context->table);
+
 
     declarativeModule = context->table->findNearest(SymbolSpace::Type::module);
     tld = std::static_pointer_cast<TopLevelDeclaration>(declarativeModule->declarator);
@@ -224,7 +224,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     }
 
     tryElaborate(optionalAssignment, context);
-    LHExpression::lhDrivenProcess(optionalAssignment, context->table);
+
 
     if (size == 1) {
         if (optionalAssignment) {
@@ -438,7 +438,7 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
             } else {
                 auto relevantPort = inputIterator->second.first;
                 auto width = relevantPort->getWidth();
-                LHExpression::lhDrivenProcess(relevantExpr, context->table);
+
                 if (width != relevantExpr->numBits) {
                     context->addError(nullopt, "driving.widthMismatch");
                 } else {
@@ -451,7 +451,7 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
             } else {
                 if (auto lhs = std::dynamic_pointer_cast<LHExpression>(relevantExpr)) {
                     auto relevantPort = outputIterator->second.first;
-                    LHExpression::lhDrivenProcess(relevantExpr, context->table);
+
                     auto width = relevantPort->getWidth();
                     bool trash = false;
                     try {

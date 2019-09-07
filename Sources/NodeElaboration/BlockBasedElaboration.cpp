@@ -3,8 +3,6 @@ using namespace Phi::Node;
 
 void If::MACRO_ELAB_SIG_IMP {
     tryElaborate(expression, context);
-    LHExpression::lhDrivenProcess(expression, context->table);
-
     auto comb = context->table->findNearest(SymbolSpace::Type::comb);
     if (comb) {
         inComb = true;
@@ -82,18 +80,14 @@ void Namespace::MACRO_ELAB_SIG_IMP {
 
 void Switch::MACRO_ELAB_SIG_IMP {
     if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
-        tryElaborate(expression, context);
-        LHExpression::lhDrivenProcess(expression, context->table);
-        tryElaborate(list, context);
+        tryElaborate(expression, context);        tryElaborate(list, context);
     } else {
         context->addError(nullopt, "decl.switchOutsideComb");
     }
 }
 
 void LabeledStatementList::MACRO_ELAB_SIG_IMP {
-    tryElaborate(label, context);
-    LHExpression::lhDrivenProcess(label, context->table);
-    tryElaborate(specialNumber, context);
+    tryElaborate(label, context);    tryElaborate(specialNumber, context);
     tryElaborate(statements, context);
 
     tryElaborate(right, context);

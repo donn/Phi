@@ -51,7 +51,10 @@ void ForLoop::MACRO_TRANS_SIG_IMP {
 
 void Namespace::MACRO_TRANS_SIG_IMP {
     //adjust namespace
-    namespaceSoFar = namespaceSoFar + "." + std::to_string((identifier->idString).length()) + identifier->idString; 
+    namespaceSoFar = namespaceSoFar.length() == 0 ?
+        identifier->idString :
+        namespaceSoFar + "." + identifier->idString
+    ;
     tryTranslate(contents, stream, namespaceSoFar, indent);
     tryTranslate(right, stream, namespaceSoFar, indent);
 }
