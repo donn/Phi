@@ -5,7 +5,6 @@
 * Assigning to enable without annotation does not yet work
 
 ### Advanced
-* Error reporting for semantics does not show location
 * For loops and arrays are not functional
 
 ### Core

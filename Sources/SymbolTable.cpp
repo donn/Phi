@@ -154,7 +154,7 @@ SymbolTable::SymbolTable() {
         }
 
         if (prospectiveWidth < 0 || prospectiveWidth > maxAccessWidth) {
-            throw "expr.tooWide";
+            throw "expr.maxWidthExceeded";
         }
 
         std::string radixCharacter = match[2];
@@ -236,8 +236,8 @@ SymbolTable::SymbolTable() {
         }else if (endian == 1){
             // big endian
             // do nothing 
-        }else {
-            throw "endianUnspecified";
+        } else {
+            throw "fromFile.invalidEndianness";
         }
         
         //close file

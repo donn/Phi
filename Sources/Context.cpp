@@ -1,5 +1,6 @@
 #include "Context.h"
 #include "Utils.h"
+#include "localization.h"
 
 #include <phi.yy.hh>
 
@@ -22,7 +23,7 @@ void Parser::error(Location const& location, const std::string& string) {
 }
 
 void Context::addError(const optional<Location> location, const std::string message) {
-    auto trueLocation = location.has_value() ? location.value() : Location(&files.back(), 0, 0);
+    auto trueLocation = location.has_value() ? location.value() : noLocation();
     errorList.push_back({trueLocation, message});
 }
 
@@ -43,7 +44,7 @@ void Context::prettyPrintErrors(std::ostream* out) {
             if (loc.begin.line != 0) {
                 *out << ":" << loc.begin.line << ":" << loc.begin.column;
             }
-            *out << ": " << message << std::endl;
+            *out << ": " << Localize(message) << std::endl;
             if (loc.begin.line != 0) {
                 *out << currentFileLines[loc.begin.line - 1] << std::endl;
                 *out <<

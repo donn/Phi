@@ -3,7 +3,7 @@
 #include <regex>
 using namespace Phi::Node;
 
-Identifier::Identifier(std::string identifier) {
+Identifier::Identifier(Location location, std::string identifier): Node(location) {
     idString = std::regex_replace(identifier, std::regex("_"), "__");
 }
 

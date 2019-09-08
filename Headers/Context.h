@@ -19,7 +19,6 @@ namespace Phi {
             Location loc;
             std::string message;
         };
-
         std::string executableName;
         std::vector<Error> errorList;
 
@@ -27,6 +26,14 @@ namespace Phi {
         std::vector<std::string> currentFileLines;
         std::shared_ptr<Node::Node> head = nullptr;
     public:
+        Location noLocation() {
+            return Location(&files.back(), 0, 0);
+        }
+
+        Location location(int start, int end) {
+            return Location(&files.back(), start, end);
+        }
+
         struct DriveCheck {
             std::shared_ptr<Driven> target;
             optional<AccessWidth> from;

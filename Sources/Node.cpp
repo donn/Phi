@@ -16,7 +16,7 @@ void Phi::Node::tryElaborate(std::shared_ptr<Phi::Node::Node> node, MACRO_ELAB_P
         try {
             node->elaborate(context);  
         } catch (const char* e) {
-            context->addError(nullopt, e);
+            context->addError(node->location, e);
         }
     }
 }

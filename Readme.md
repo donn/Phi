@@ -31,7 +31,7 @@ Install Xcode 9.0 or higher from the App Store.
 For the other dependencies, we recommend [Homebrew](https://brew.sh). Install it using the command in the link provided, then invoke:
 
 ```bash
-    brew install bison llvm
+    brew install ruby bison llvm
 ```
 
 This will take some time, llvm is big.
@@ -75,7 +75,7 @@ First, get [MSYS2-x86_64](https://www.msys2.org/) if you haven't already.
 pacman -S git make mingw-w64-x86_64-gcc bison mingw-w64-x86_64-llvm ruby
 ```
 
-You can also use Clang and lldb if you're into that:
+You can still also use Clang and lldb if you're into that:
 
 ```sh
 pacman -S mingw-w64-x86_64-clang lldb

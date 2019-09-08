@@ -40,6 +40,9 @@ LEX_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cc,$(LEX)))
 LEX_HEADER = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.hh,$(LEX)))
 YACC_OUT = $(addprefix $(BUILD_DIR)/, $(patsubst %,%.cc,$(YACC)))
 
+# Localization Files
+LOC_FILES = $(shell find Localization)
+
 # Compilation
 LIBRARY_HEADER_PATHS = $(addprefix -I, $(shell find Submodules -mindepth 1 -maxdepth 1)) $(addprefix -I, $(shell find Submodules -name include))
 
@@ -57,7 +60,7 @@ CPP_FLAGS = -Wall -pedantic $(CPP_LY_FLAGS)
 
 CPP_LY_SOURCES = $(YACC_OUT) $(LEX_OUT)
 CPP_SOURCES = $(shell find Sources | grep .cpp)
-CPP_HEADERS = $(shell find Headers | grep .h) $(BUILD_DIR)/git_version.h  $(LEX_HEADER)
+CPP_HEADERS = $(shell find Headers | grep .h) $(BUILD_DIR)/git_version.h $(BUILD_DIR)/localization.h  $(LEX_HEADER)
 CPP_LIBRARY_SOURCES =
 
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
@@ -88,6 +91,10 @@ $(BUILD_DIR)/git_version.h:
 	echo "const char* GIT_VER_STRING = \"$(shell git describe --always --tags)\";" >> $@
 	echo "}" >> $@
 	echo "#endif // _AUT0_git_version_h" >> $@
+
+$(BUILD_DIR)/localization.h: $(LOC_FILES)
+	mkdir -p $(@D)
+	ruby localization_into_cpp.rb > $@
 
 $(YACC_OUT): $(YACC)
 	mkdir -p $(@D)

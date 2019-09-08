@@ -35,7 +35,7 @@ void Port::MACRO_ELAB_SIG_IMP {
     // Add check if output
     if (polarity ==PortObject::Polarity::output) {
         auto check = Context::DriveCheck(pointer, nullopt, nullopt, [=](){
-            context->addError(nullopt, "output.undriven");
+            context->addError(location, "output.undriven");
         });
         context->checks.push_back(check);
     }
@@ -51,14 +51,14 @@ void Port::MACRO_ELAB_SIG_IMP {
             seeker++;
         }
         if (!*seeker) {
-            context->addError(nullopt, "port.unknownOrIncompatibleAnnotation");
+            context->addError(location, "port.unknownOrIncompatibleAnnotation");
         } else {
             // Place annotation if possible
             auto module = context->table->findNearest(SymbolSpace::Type::module);
             auto target = module->annotations.find(annotationUnwrapped);
 
             if (target != module->annotations.end()) {
-                context->addError(nullopt, "port.repeatedAnnotation");
+                context->addError(location, "port.repeatedAnnotation");
             } else {
                 module->annotations[annotationUnwrapped] = shared_from_this();
             }
@@ -91,13 +91,12 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
 }
 
-std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(std::string container, std::string property, std::shared_ptr<Range> range) {
-    // Unsafe allocations
-    auto containerID = std::make_shared<Identifier>(container.c_str());
-    auto containerNode = std::make_shared<IdentifierExpression>(containerID);
-    auto propertyNode = std::make_shared<IdentifierExpression>(std::make_shared<Identifier>(property.c_str()));
-    auto left = std::make_shared<PropertyAccess>(containerNode, propertyNode);
-    auto dli = std::make_shared<DeclarationListItem>(containerID, nullptr, nullptr);
+std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Context* context, std::string container, std::string property, std::shared_ptr<Range> range) {
+    auto containerID = std::make_shared<Identifier>(context->noLocation(), container.c_str());
+    auto containerNode = std::make_shared<IdentifierExpression>(context->noLocation(), containerID);
+    auto propertyNode = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), property.c_str()));
+    auto left = std::make_shared<PropertyAccess>(context->noLocation(), containerNode, propertyNode);
+    auto dli = std::make_shared<DeclarationListItem>(context->noLocation(), containerID, nullptr, nullptr);
     dli->trueIdentifier = left;
     dli->bus = range;
     dli->type = VariableLengthDeclaration::Type::wire;
@@ -112,13 +111,12 @@ std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(st
     return dli;
 }
 
-void TopLevelDeclaration::propertyAssignment(std::string container, std::string property, std::string rightHandSide) {
-    // Unsafe allocations
-    auto containerNode = std::make_shared<IdentifierExpression>(std::make_shared<Identifier>(container.c_str()));
-    auto propertyNode = std::make_shared<IdentifierExpression>(std::make_shared<Identifier>(property.c_str()));
-    auto left = std::make_shared<PropertyAccess>(containerNode, propertyNode);
-    auto right = std::make_shared<IdentifierExpression>(std::make_shared<Identifier>(rightHandSide.c_str()));
-    auto nda = std::make_shared<NondeclarativeAssignment>(left, right);
+void TopLevelDeclaration::propertyAssignment(Context* context, std::string container, std::string property, std::string rightHandSide) {
+    auto containerNode = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), container.c_str()));
+    auto propertyNode = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), property.c_str()));
+    auto left = std::make_shared<PropertyAccess>(context->noLocation(), containerNode, propertyNode);
+    auto right = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), rightHandSide.c_str()));
+    auto nda = std::make_shared<NondeclarativeAssignment>(context->noLocation(), left, right);
 
     auto placement = &addenda;
     while (*placement != nullptr) {
@@ -176,7 +174,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     assert(declarativeModule);
 
     if (array) {
-        context->addError(nullopt, "phi.arraysUnsupported"); // UNSUPPORTED
+        context->addError(location, "phi.arraysUnsupported"); // UNSUPPORTED
 
         if (optionalAssignment) {
             throw "array.inlineInitialization";
@@ -187,17 +185,17 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             break;
         case Expression::Type::compileTime:
             if (!Utils::apIntCheck(&array->value.value(), maxAccessWidth)) {
-                context->addError(nullopt, "array.maximumExceeded");
+                context->addError(location, "array.maximumExceeded");
                 goto exit; 
             }
             size = array->value.value().getLimitedValue();
             if (size == 0) {
-                context->addError(nullopt, "array.cannotBeZero");
+                context->addError(location, "array.cannotBeZero");
                 goto exit; 
             }
             break;
         case Expression::Type::runTime:
-            context->addError(nullopt, "array.hardwareExpression");
+            context->addError(location, "array.hardwareExpression");
             [[fallthrough]];
         case Expression::Type::error:
             goto exit;
@@ -230,10 +228,10 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
         if (optionalAssignment) {
             if (optionalAssignment->type != Expression::Type::error) {
                 if (width != optionalAssignment->numBits) {
-                    context->addError(nullopt, "driving.widthMismatch");
+                    context->addError(location, "driving.widthMismatch");
                 }
                 if (type == VariableLengthDeclaration::Type::var && optionalAssignment->type != Expression::Type::compileTime) {
-                    context->addError(nullopt, "driving.hardwareDominance");
+                    context->addError(location, "driving.hardwareDominance");
                 }
             }
         } 
@@ -243,29 +241,29 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             pointerAsContainer = std::make_shared<Container>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);   
             if (type == VLD::Type::reg) {                
                 // Register properties
-                clockDLI = tld->propertyDeclaration(identifier->idString, "clock", nullptr);
+                clockDLI = tld->propertyDeclaration(context, identifier->idString, "clock", nullptr);
                 clockDriven = std::make_shared<Driven>("clock", clockDLI);
                 pointerAsContainer->space["clock"] = clockDriven;
                 clockAnnotation = declarativeModule->annotations.find("@clock");
                 context->checks.push_back(Context::DriveCheck(clockDriven, nullopt, nullopt, [=]() {
                     if (clockAnnotation != declarativeModule->annotations.end()) {
                         auto port = std::static_pointer_cast<Port>(clockAnnotation->second);
-                        tld->propertyAssignment(identifier->idString, "clock", port->identifier->idString);
+                        tld->propertyAssignment(context, identifier->idString, "clock", port->identifier->idString);
                     } else {
-                        context->addError(nullopt, "register.clockUndriven");
+                        context->addError(location, "register.clockUndriven");
                     }
                 }));
 
-                resetDLI = tld->propertyDeclaration(identifier->idString, "reset", nullptr);
+                resetDLI = tld->propertyDeclaration(context, identifier->idString, "reset", nullptr);
                 resetDriven = std::make_shared<Driven>("reset", resetDLI);
                 pointerAsContainer->space["reset"] = resetDriven;
                 resetAnnotation = declarativeModule->annotations.find("@reset");
                 context->checks.push_back(Context::DriveCheck(resetDriven, nullopt, nullopt, [=]() {
                     if (resetAnnotation != declarativeModule->annotations.end()) {
                         auto port = std::static_pointer_cast<Port>(resetAnnotation->second);
-                        tld->propertyAssignment(identifier->idString, "reset", port->identifier->idString);
+                        tld->propertyAssignment(context, identifier->idString, "reset", port->identifier->idString);
                     } else {
-                        context->addError(nullopt, "register.resetUndriven");
+                        context->addError(location, "register.resetUndriven");
                     }
                 }));
 
@@ -275,44 +273,44 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
                 }
                 pointerAsContainer->space["_0R"] = resetValueDriven;
                 context->checks.push_back(Context::DriveCheck(resetValueDriven, nullopt, nullopt, [=](){
-                    context->addError(nullopt, "register.resetValueUndriven");
+                    context->addError(location, "register.resetValueUndriven");
                 }));
             } else {
                 // Latch properties
-                conditionDLI = tld->propertyDeclaration(identifier->idString, "condition", nullptr);
+                conditionDLI = tld->propertyDeclaration(context, identifier->idString, "condition", nullptr);
                 conditionDriven = std::make_shared<Driven>("condition", conditionDLI);
                 pointerAsContainer->space["condition"] = conditionDriven;
                 conditionAnnotation = declarativeModule->annotations.find("@condition");
                 context->checks.push_back(Context::DriveCheck(conditionDriven, nullopt, nullopt, [=]() {
                     if (conditionAnnotation != declarativeModule->annotations.end()) {
                         auto port = std::static_pointer_cast<Port>(conditionAnnotation->second);
-                        tld->propertyAssignment(identifier->idString, "condition", port->identifier->idString);
+                        tld->propertyAssignment(context, identifier->idString, "condition", port->identifier->idString);
                     } else {
-                        context->addError(nullopt, "latch.conditionUndriven");
+                        context->addError(location, "latch.conditionUndriven");
                     }
                 }));
 
                 if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
-                    context->addError(nullopt, "driving.latchNoReset");
+                    context->addError(location, "driving.latchNoReset");
                 }
             }
 
             // Common properties
-            dataDLI = tld->propertyDeclaration(identifier->idString, "data", busShared);
+            dataDLI = tld->propertyDeclaration(context, identifier->idString, "data", busShared);
             dataDriven = std::make_shared<Driven>("data", dataDLI, from.value(), to.value(), msbFirst);
             pointerAsContainer->space["data"] = dataDriven;
             context->checks.push_back(Context::DriveCheck(dataDriven, nullopt, nullopt, [=](){
-                context->addError(nullopt, "register.dataUndriven");
+                context->addError(location, "register.dataUndriven");
             }));
 
-            enableDLI = tld->propertyDeclaration(identifier->idString, "enable", nullptr);
+            enableDLI = tld->propertyDeclaration(context, identifier->idString, "enable", nullptr);
             enableDriven = std::make_shared<Driven>("enable", enableDLI);
             pointerAsContainer->space["enable"] = enableDriven;
             enableAnnotation = declarativeModule->annotations.find("@enable");
             context->checks.push_back(Context::DriveCheck(enableDriven, nullopt, nullopt, [=]() {
                 if (enableAnnotation != declarativeModule->annotations.end()) {
                     auto port = std::static_pointer_cast<Port>(enableAnnotation->second);
-                    tld->propertyAssignment(identifier->idString, "enable", port->identifier->idString);
+                    tld->propertyAssignment(context, identifier->idString, "enable", port->identifier->idString);
                     this->hasEnable = true;
                 }
             }));
@@ -335,7 +333,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
         pointer = pointerAsArray;
     }
     if ((comb = context->table->findNearest(SymbolSpace::Type::comb))) {
-        context->addError(nullopt, "comb.declarationNotAllowed");
+        context->addError(location, "comb.declarationNotAllowed");
         goto exit;
     } else {
         context->table->add(identifier->idString, pointer);
@@ -358,7 +356,7 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
         if (array->type == Expression::Type::parameterSensitive) {
             //Translate to assert and generate
         } else if (array->type == Expression::Type::runTime) {
-            context->addError(nullopt, "elaboration.softwareExpr");
+            context->addError(location, "elaboration.softwareExpr");
         } else {
             //unroll
         }
@@ -386,22 +384,22 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
 
                     } else {
                         this->symSpace = nullopt;
-                        context->addError(nullopt, "comb.declarationNotAllowed");
+                        context->addError(location, "comb.declarationNotAllowed");
                     }
                 } else {
                     this->symSpace = nullopt;
-                    context->addError(nullopt, "module.recursion");
+                    context->addError(location, "module.recursion");
                 }
             } else {
                 this->symSpace = nullopt;
-                context->addError(nullopt, "symbol.notAModule");
+                context->addError(location, "symbol.notAModule");
             }
         } else {
             this->symSpace = nullopt;
-            context->addError(nullopt, "symbol.notAModuleOrSpace");
+            context->addError(location, "symbol.notAModuleOrSpace");
         }
     } else {
-        context->addError(nullopt, "symbol.dne");
+        context->addError(location, "symbol.dne");
     }
     // I profusely apologize for what you just saw.
     
@@ -434,20 +432,20 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
         if (inputIterator != inputs.end()) {
             // Process as input
             if (inputIterator->second.second) {
-                context->addError(nullopt, "module.portAlreadyDriven");
+                context->addError(location, "module.portAlreadyDriven");
             } else {
                 auto relevantPort = inputIterator->second.first;
                 auto width = relevantPort->getWidth();
 
                 if (width != relevantExpr->numBits) {
-                    context->addError(nullopt, "driving.widthMismatch");
+                    context->addError(location, "driving.widthMismatch");
                 } else {
                     inputIterator->second.second = true;
                 }
             }
         } else if (outputIterator != outputs.end()) {
             if (outputIterator->second.second) {
-                context->addError(nullopt, "module.portAlreadyDriven");
+                context->addError(location, "module.portAlreadyDriven");
             } else {
                 if (auto lhs = std::dynamic_pointer_cast<LHExpression>(relevantExpr)) {
                     auto relevantPort = outputIterator->second.first;
@@ -458,15 +456,15 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
                         NondeclarativeAssignment::drivingAssignment(context, lhs, Expression::abstract(Expression::Type::runTime, width), &trash, &trash);
                         outputIterator->second.second = true;
                     } catch (const char* e) {
-                        context->addError(nullopt, e);
+                        context->addError(location, e);
                     }
                     
                 } else { 
-                    context->addError(nullopt, "module.outputConnectedToRHE");
+                    context->addError(location, "module.outputConnectedToRHE");
                 }
             }
         } else {
-            context->addError(nullopt, "module.portNotFound");
+            context->addError(location, "module.portNotFound");
         }
         seeker = std::static_pointer_cast<ExpressionIDPair>(seeker->right);
     }

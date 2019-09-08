@@ -6,7 +6,7 @@
 using namespace Phi::Node;
 
 // Numbers
-SpecialNumber::SpecialNumber(std::string interpretableSent) {
+SpecialNumber::SpecialNumber(Location location, std::string interpretableSent): Node(location) {
     auto interpretable = interpretableSent;
     auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9?]+)");
 
@@ -15,7 +15,7 @@ SpecialNumber::SpecialNumber(std::string interpretableSent) {
 
     auto prospectiveWidth = std::stoi(match[1]);
     if (prospectiveWidth < 0 || prospectiveWidth > maxAccessWidth) {
-        throw "expr.tooWide";
+        throw "expr.maxWidthExceeded";
     }
 
     numBits = prospectiveWidth;
@@ -45,7 +45,7 @@ SpecialNumber::SpecialNumber(std::string interpretableSent) {
     number = match[3];
 }
 
-Literal::Literal(std::string interpretableSent, bool widthIncluded) {
+Literal::Literal(Location location, std::string interpretableSent, bool widthIncluded): Expression(location) {
     auto interpretable = interpretableSent;
     type = Type::compileTime;
 
@@ -61,7 +61,7 @@ Literal::Literal(std::string interpretableSent, bool widthIncluded) {
 
         auto prospectiveWidth = std::stoi(match[1]);
         if (prospectiveWidth < 0 || prospectiveWidth > maxAccessWidth) {
-            throw "expr.tooWide";
+            throw "expr.maxWidthExceeded";
         }
 
         numBits = prospectiveWidth;
