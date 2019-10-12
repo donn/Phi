@@ -264,11 +264,19 @@ optional_annotation:
 special_number:
     FW_SPECIAL {
         auto cast = std::static_pointer_cast<Token>($1);
-        $$ = std::make_shared<SpecialNumber>(@$, cast->text);
+        try {
+            $$ = std::make_shared<SpecialNumber>(@$, cast->text);
+        } catch (const char* error) {
+            context->addError(@1, error);
+        }
     }
     | '(' FW_SPECIAL ')' {
         auto cast = std::static_pointer_cast<Token>($2);
-        $$ = std::make_shared<SpecialNumber>(@$, cast->text);
+        try {
+            $$ = std::make_shared<SpecialNumber>(@$, cast->text);
+        } catch (const char* error) {
+            context->addError(@2, error);
+        }
     }
     ;
 block_based:
@@ -499,6 +507,9 @@ expression:
     expression OP_EQ expression {
         $$ = std::make_shared<Binary>(@$, std::static_pointer_cast<Expression>($1), Binary::Operation::equal, std::static_pointer_cast<Expression>($3));
     }
+    | expression OP_EQ special_number {
+        $$ = std::make_shared<Binary>(@$, std::static_pointer_cast<Expression>($1), Binary::Operation::equal, std::static_pointer_cast<SpecialNumber>($3));
+    }
     | expression OP_NEQ expression {
         $$ = std::make_shared<Binary>(@$, std::static_pointer_cast<Expression>($1), Binary::Operation::notEqual, std::static_pointer_cast<Expression>($3));
     }
@@ -591,7 +602,11 @@ expression:
     }
     | FW_NUMERIC {
         auto cast = std::static_pointer_cast<Token>($1);
-        $$ = std::make_shared<Literal>(@$, cast->text, true);
+        try {
+            $$ = std::make_shared<Literal>(@$, cast->text, true);
+        } catch (const char *error) {
+            context->addError(@1, error);
+        }
     }
     | NUMERIC  {
         auto cast = std::static_pointer_cast<Token>($1);

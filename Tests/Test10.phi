@@ -6,6 +6,12 @@ module Adder(
     c = a &+ b
 }
 
+// Heck
+/*
+    HECK!!!!
+    (I'm testing comments)
+*/
+
 module Counter(
     clock: @clock Input,
     reset: @reset Input,

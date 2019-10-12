@@ -462,8 +462,7 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR
         };
 
-        struct SpecialNumber: public Node {
-            unsigned int numBits;
+        struct SpecialNumber: public Expression {
             uint8 radix;
             std::string number;
             

@@ -1,0 +1,3 @@
+module DontCareComparison() {
+    Wire valid = 32xABC == 32xA?C;
+}

@@ -4,8 +4,66 @@
 #include <fstream>
 #include <ios>
 #include <sstream>
+#include <cmath>
 
 using namespace Phi::Node;
+
+static void expandSpecialNumberEquivalence(std::shared_ptr<Expression> lhs, std::shared_ptr<SpecialNumber> specialNumber, MACRO_TRANS_PARAMS) {
+    // We need to account for all possibilities...
+    // The problem is, "inside", which is a part SystemVerilog doesn't work in iverilog
+    // Thus, for expressions with less than 256 possibilities, we will MANUALLY expand them
+    // Else, we will just give up and use inside. Use a better SV compiler. Or something.
+    // PII
+    auto number = specialNumber->number;
+    auto radix = specialNumber->radix;
+    auto radixString = (radix == 2) ? "b" : (radix == 16) ? "h" : "o";
+    size_t count = 0;
+    for (size_t i = 0; i < number.size(); i += 1) {
+        if (number[i] == '?') {
+            count += 1;
+        }
+    }
+
+    #define output_sn(numStr) *stream << specialNumber->numBits << "'" << radixString << numStr << " "
+
+    double possibilitiesF = pow(specialNumber->radix, count);
+    if (possibilitiesF > 256) {
+        tryTranslate(lhs, stream, namespaceSoFar, indent);
+        *stream << "inside ";
+        *stream << "{ ";
+        output_sn(number);
+        *stream << "} ";
+    } else {
+        auto positions = std::vector<size_t>();
+        for (size_t i = 0; i < number.size(); i += 1) {
+            if (number[i] == '?') {
+                positions.push_back(i);
+            }
+        }
+        size_t possibilities = possibilitiesF;
+        
+        for (size_t i = 0; i < possibilities; i += 1) {
+            auto currentPossibility = llvm::APInt(log2(radix), i).toString(radix, false);
+            if (currentPossibility.length() < count) {
+                currentPossibility = std::string(count - currentPossibility.length(), '0') + currentPossibility;
+            }
+            auto numberCopy = number;
+            for (size_t j = 0; j < currentPossibility.size(); j += 1) {
+                numberCopy[positions[j]] = currentPossibility[j];
+            }
+            *stream << "( ";
+            tryTranslate(lhs, stream, namespaceSoFar, indent);
+            *stream << "== ";
+            output_sn(numberCopy);
+            *stream << ") ";
+            if (i + 1 != possibilities) {
+                *stream << "|| ";
+            }
+        }
+    }
+
+    #undef output_sn
+}
 
 void Literal::MACRO_TRANS_SIG_IMP {
     // examples: 0, 21, 32b1010010101.., 32d3, ...
@@ -52,6 +110,14 @@ void Unary::MACRO_TRANS_SIG_IMP {
 
 void Binary::MACRO_TRANS_SIG_IMP {
 
+    if (operation == Operation::equal) {
+        auto specialNumber = std::dynamic_pointer_cast<SpecialNumber>(right);
+        if (specialNumber != nullptr) {
+            expandSpecialNumberEquivalence(std::static_pointer_cast<Expression>(left), specialNumber, stream, namespaceSoFar, indent);
+            return;
+        }
+    }
+
     // note:
     //     $Signed in :
     //     1- signed shift: shiftRightArithmetic
@@ -71,7 +137,6 @@ void Binary::MACRO_TRANS_SIG_IMP {
     } else{
         tryTranslate(left, stream, namespaceSoFar, indent);
     }
-    
 
     if (operation == Binary::Operation::equal) {
         *stream << "==";
@@ -133,7 +198,7 @@ void Binary::MACRO_TRANS_SIG_IMP {
         *stream << "$signed(";
         tryTranslate(right, stream, namespaceSoFar, indent);
         *stream << ")";
-    } else{
+    } else {
         tryTranslate(right, stream, namespaceSoFar, indent);
     }
 }
@@ -170,56 +235,7 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
                 *stream << " == ";
                 tryTranslate(cur->label, stream, namespaceSoFar, indent);
             } else {
-                // We need to account for all possibilities...
-                // The problem is, "inside", which is a part SystemVerilog doesn't work in iverilog
-                // Thus, for expressions with less than 256 possibilities, we will MANUALLY expand them
-                // PII
-                auto number = cur->specialNumber->number;
-                auto radix = cur->specialNumber->radix;
-                auto radixString = (radix == 2) ? "b" : (radix == 16) ? "h" : "o";
-                size_t count = 0;
-                for (size_t i = 0; i < number.size(); i += 1) {
-                    if (number[i] == '?') {
-                        count += 1;
-                    }
-                }
-
-                #define output_sn(numStr) *stream << cur->specialNumber->numBits << "'" << radixString << numStr << " "
-
-                double possibilitiesF = pow(cur->specialNumber->radix, count);
-                if (possibilitiesF > 256) {
-                    tryTranslate(selection, stream, namespaceSoFar, indent);
-                    *stream << "inside ";
-                    *stream << "{ ";
-                    output_sn(number);
-                    *stream << "} ";
-                } else {
-                    auto positions = std::vector<size_t>();
-                    for (size_t i = 0; i < number.size(); i += 1) {
-                        if (number[i] == '?') {
-                            positions.push_back(i);
-                        }
-                    }
-                    size_t possibilities = possibilitiesF;
-                    for (size_t i = 0; i < possibilities; i += 1) {
-                        auto currentPossibility = llvm::APInt(count, i).toString(radix, false);
-                        if (currentPossibility.length() < count) {
-                            currentPossibility = std::string(count - currentPossibility.length(), '0') + currentPossibility;
-                        }
-                        auto numberCopy = number;
-                        for (size_t j = 0; j < currentPossibility.size(); j += 1) {
-                            numberCopy[positions[j]] = currentPossibility[j];
-                        }
-                        *stream << "( ";
-                        tryTranslate(selection, stream, namespaceSoFar, indent);
-                        *stream << "== ";
-                        output_sn(numberCopy);
-                        *stream << ") ";
-                        if (i + 1 != possibilities) {
-                            *stream << "|| ";
-                        }
-                    }
-                }
+                expandSpecialNumberEquivalence(selection, cur->specialNumber, stream, namespaceSoFar, indent);
             }
             *stream << ") ";
             *stream << "? ";
@@ -244,3 +260,5 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
 
 LOCAL_CONCATDEF(LHConcatenation)
 LOCAL_CONCATDEF(Concatenation)
+
+#undef LOCAL_CONCATDEF

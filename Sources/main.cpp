@@ -97,7 +97,12 @@ int main(int argc, char* argv[]) {
 
     // Parse
     auto parser = Phi::Parser(&lexer, &context);
-    parser.parse();
+    try {
+        parser.parse();
+    } catch (const char* error) {
+        stderrStream << "[Critical Phi Error] Unhandled parse issue: " << error << std::endl;
+        exit(EX_SOFTWARE);
+    }
 
     if (context.error()) {
         context.prettyPrintErrors(&stderrStream);

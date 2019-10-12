@@ -6,7 +6,7 @@
 using namespace Phi::Node;
 
 // Numbers
-SpecialNumber::SpecialNumber(Location location, std::string interpretableSent): Node(location) {
+SpecialNumber::SpecialNumber(Location location, std::string interpretableSent): Expression(location) {
     auto interpretable = interpretableSent;
     auto regex = std::regex("([0-9]+)([bodxh])([A-F0-9?]+)");
 

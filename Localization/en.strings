@@ -1,14 +1,14 @@
 "parser.syntaxError" = "syntax error";
 "phi.arraysUnsupported" = "arrays are not implemented in this version of phi";
 "phi.parametersUnsupported" = "arrays are not implemented in this version of phi";
+"FATAL" = "a fatal internal compiler error has occurred, please report this as a bug";
 
 "expr.hardwareInIf" = "if statements only allow software expressions at the top level.";
 "expr.widthMismatch" = "widths of the two expressions do not match";
 "array.inlineInitialization" = "arrays are not initializable on the same line";
 "expr.maxWidthExceeded" = "expression exceeds the maximum width available";
 "specialNumber.decimalNotAllowed" = "don't care literals not allowed for decimals";
-"fixedNumber.usedVerilogH" = "[verilog migration note] phi uses 0x, not 0h";
-"FATAL" = "a fatal internal compiler error has occurred, please report this as a bug";
+"fixedNumber.usedVerilogH" = "phi uses x to denote hexadecimal numbers, not h";
 "access.errorValue" = "could not access based on expression error";
 "access.runTimeValue" = "array accessing not allowed based on hardware expressions";
 "access.maxWidthExceeded" = "access exceeds the maximum width available";
