@@ -1,0 +1,205 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Phi",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#punctuators"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#types"
+		},
+		{
+			"include": "#expressions"
+		},
+		{
+			"include": "#strings"
+		}
+	],
+	"repository": {
+		"punctuators": {
+			"patterns": [{
+				"name": "keyword.operator.phi",
+				"match": "[\\+\\-\\&\\|\\^\\/\\~\\>\\<\\=]|\\.\\."
+			}]
+		},
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.phi",
+				"match": "\\b(if|for|else)\\b"
+			}, {
+				"name": "keyword.tld.phi",
+				"match": "\\b(module|namespace)\\b"
+			}]
+		},
+		"types": {
+			"patterns": [{
+				"name": "meta.attribute.phi",
+				"match": "@[_A-Za-z][_A-Za-z0-9]*"
+			},
+			{
+				"name": "storage.type.phi",
+				"match": "\\b(Register|Latch|Wire|Var)\\b"
+			},
+			{
+				"name": "entity.name.type.phi",
+				"match": "\\b(Input|Output)\\b"
+			}]
+		},
+		"expressions": {
+			"patterns": [{
+				"name": "constant.numeric.phi",
+				"match": "\\b[0-9]+[bodxh][A-Fa-f0-9?]+\\b"
+			}, {
+				"name": "constant.numeric.32bit.phi",
+				"match": "\\b[0-9]+\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.phi",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.phi",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.comment.phi"
+						}
+					},
+					"match": "\\A^(#!).*$\\n?",
+					"name": "comment.line.number-sign.phi"
+				},
+				{
+					"begin": "/\\*\\*(?!/)",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.begin.phi"
+						}
+					},
+					"end": "\\*/",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.end.phi"
+						}
+					},
+					"name": "comment.block.documentation.phi",
+					"patterns": [
+						{
+							"include": "#nested"
+						}
+					]
+				},
+				{
+					"begin": "/\\*:",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.begin.phi"
+						}
+					},
+					"end": "\\*/",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.end.phi"
+						}
+					},
+					"name": "comment.block.documentation.playground.phi",
+					"patterns": [
+						{
+							"include": "#nested"
+						}
+					]
+				},
+				{
+					"begin": "/\\*",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.begin.phi"
+						}
+					},
+					"end": "\\*/",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.end.phi"
+						}
+					},
+					"name": "comment.block.phi",
+					"patterns": [
+						{
+							"include": "#nested"
+						}
+					]
+				},
+				{
+					"match": "\\*/",
+					"name": "invalid.illegal.unexpected-end-of-block-comment.phi"
+				},
+				{
+					"begin": "(^[ \\t]+)?(?=//)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.whitespace.comment.leading.phi"
+						}
+					},
+					"end": "(?!\\G)",
+					"patterns": [
+						{
+							"begin": "///",
+							"beginCaptures": {
+								"0": {
+									"name": "punctuation.definition.comment.phi"
+								}
+							},
+							"end": "^",
+							"name": "comment.line.triple-slash.documentation.phi"
+						},
+						{
+							"begin": "//:",
+							"beginCaptures": {
+								"0": {
+									"name": "punctuation.definition.comment.phi"
+								}
+							},
+							"end": "^",
+							"name": "comment.line.double-slash.documentation.phi"
+						},
+						{
+							"begin": "//",
+							"beginCaptures": {
+								"0": {
+									"name": "punctuation.definition.comment.phi"
+								}
+							},
+							"end": "^",
+							"name": "comment.line.double-slash.phi"
+						}
+					]
+				}
+			],
+			"repository": {
+				"nested": {
+					"begin": "/\\*",
+					"end": "\\*/",
+					"patterns": [
+						{
+							"include": "#nested"
+						}
+					]
+				}
+			}
+		}
+	},
+	"scopeName": "source.phi"
+}
