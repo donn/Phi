@@ -93,6 +93,13 @@ void Context::driveChecks() {
         if (coverage.size() == 0) {
             check.effect();
         }
+
+        if (check.afterEffect.has_value()) {
+            coverage = check.target->checkRangeCoverage(from, to);
+            if (coverage.size() != 0) {
+                check.afterEffect.value()();
+            }
+        }
     }
 }
 

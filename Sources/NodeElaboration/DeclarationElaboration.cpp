@@ -311,8 +311,9 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
                 if (enableAnnotation != declarativeModule->annotations.end()) {
                     auto port = std::static_pointer_cast<Port>(enableAnnotation->second);
                     tld->propertyAssignment(context, identifier->idString, "enable", port->identifier->idString);
-                    this->hasEnable = true;
                 }
+            }, [=]() {
+                this->hasEnable = true;
             }));
 
             pointerAsDriven = pointerAsContainer; // Believe it or not, we need this cast first anyway.

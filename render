@@ -5,7 +5,7 @@ elif [ "$1" = "dark" ]; then
 edgecolor="#ffffff"
 else
 echo "DOT graph renderer"
-echo "Usage: ./render <light|dark> <path to graph>"
+echo "Usage: ./render (light|dark) (path to graph) > image.png"
 exit 64
 fi
 

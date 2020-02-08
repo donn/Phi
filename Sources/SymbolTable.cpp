@@ -348,9 +348,12 @@ optional<DriveRange> Driven::checkRangeCoverage(AccessWidth unit) {
     return nullopt;
 }
 
-
-
-bool Driven::drive(std::shared_ptr<Node::Expression> expression, optional<AccessWidth> fromOptional, optional<AccessWidth> toOptional, bool dry) {
+bool Driven::drive(
+    std::shared_ptr<Node::Expression> expression,
+    optional<AccessWidth> fromOptional,
+    optional<AccessWidth> toOptional,
+    bool dry
+) {
     AccessWidth from = fromOptional.has_value() ? fromOptional.value() : this->from;
     AccessWidth to = toOptional.has_value() ? toOptional.value() : this->to;
     
@@ -376,7 +379,11 @@ bool Driven::drive(std::shared_ptr<Node::Expression> expression, optional<Access
 }
 
 
-optional< std::shared_ptr<Symbol> > SymbolTable::find(std::vector<Access>* accessesPtr, optional<AccessWidth>* from, optional<AccessWidth>* to) {
+optional< std::shared_ptr<Symbol> > SymbolTable::find(
+    std::vector<Access>* accessesPtr,
+    optional<AccessWidth>* from,
+    optional<AccessWidth>* to
+) {
     auto& accesses = *accessesPtr;
     for (auto i = stack.rbegin(); i != stack.rend(); i++) {
         std::shared_ptr<Symbol> pointer = *i;

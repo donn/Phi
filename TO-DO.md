@@ -2,7 +2,6 @@
 ## Implementation
 ### Intermediate
 * Interfaces are not implemented
-* Assigning to enable without annotation does not yet work
 
 ### Advanced
 * For loops and arrays are not functional
