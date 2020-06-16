@@ -85,10 +85,14 @@ namespace Phi {
         bool drive(std::shared_ptr<Node::Expression> expression, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt, bool dry = false);
     };
 
-    struct SymbolSpace: public Symbol {
+    struct Space: public Symbol {
         enum class Type {
+            // Port-havers
             module = 0,
-            comb,
+            interface = 1,
+
+            // Blocks
+            comb = 10,
             other
         };
 
@@ -96,7 +100,7 @@ namespace Phi {
         std::map< std::string, std::shared_ptr<Symbol> > space;
         std::map< std::string, std::shared_ptr<Node::Node> > annotations;
 
-        SymbolSpace(std::string id, std::shared_ptr<Node::Node> declarator, Type type = Type::other): Symbol(id, declarator), type(type) {}
+        Space(std::string id, std::shared_ptr<Node::Node> declarator, Type type = Type::other): Symbol(id, declarator), type(type) {}
 #if YYDEBUG
         int represent(std::ostream* stream, int* node);
 #endif
@@ -104,7 +108,7 @@ namespace Phi {
         virtual void moduleMetadata(void* jsonObject);
     };
 
-    struct PortObject {
+    struct PortObject { // Abstract
         enum class Polarity {
             input = 0,
             output,
@@ -116,16 +120,16 @@ namespace Phi {
         virtual AccessWidth getWidth() = 0;
     };
 
-    struct Module: public SymbolSpace {
-        Module(std::string id, std::shared_ptr<Node::Node> declarator): SymbolSpace(id, declarator, Type::module) {}
+    struct SpaceWithPorts: public Space {
+        SpaceWithPorts(std::string id, std::shared_ptr<Node::Node> declarator, Type type = Type::module): Space(id, declarator, type) {}
 
         std::vector< std::shared_ptr<PortObject> > ports = {};
 
         virtual void moduleMetadata(void* jsonObject);
     };
 
-    struct Container: public SymbolSpace, public Driven {
-        Container(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): SymbolSpace(id, declarator), Driven(id, declarator, from, to, msbFirst) {} 
+    struct Container: public Space, public Driven {
+        Container(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): Space(id, declarator), Driven(id, declarator, from, to, msbFirst) {} 
     };
 
     struct SymbolArray: public Symbol {
@@ -138,8 +142,8 @@ namespace Phi {
     };
 
     class SymbolTable {
-        std::shared_ptr<SymbolSpace> head = nullptr;
-        std::vector< std::shared_ptr<SymbolSpace> > stack;
+        std::shared_ptr<Space> head = nullptr;
+        std::vector< std::shared_ptr<Space> > stack;
 
     public:
         struct Access {
@@ -160,14 +164,14 @@ namespace Phi {
         SymbolTable();
         ~SymbolTable();
 
+        std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional<AccessWidth> > find(std::vector<Access>* accesses);
         void add(std::string id, std::shared_ptr<Symbol> symbol);
-        optional< std::shared_ptr<Symbol> > find(std::vector<Access>* accesses, optional<AccessWidth>* from, optional<AccessWidth>* to);
         void stepInto(std::string id);
         void stepIntoComb(std::shared_ptr<Node::Node> attached);
-        void stepIntoAndCreate(std::string id, std::shared_ptr<Node::Node> declarator, SymbolSpace::Type type = SymbolSpace::Type::other);
+        void stepIntoAndCreate(std::string id, std::shared_ptr<Node::Node> declarator, Space::Type type = Space::Type::other);
         void stepOut();
         
-        std::shared_ptr<SymbolSpace> findNearest(SymbolSpace::Type type);
+        std::shared_ptr<Space> findNearest(Space::Type type);
         std::string moduleMetadata();
 
 #if YYDEBUG

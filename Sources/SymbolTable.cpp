@@ -27,7 +27,7 @@ Argument::FunctionValue Function::call(Argument::List* listPtr) {
 }
 
 SymbolTable::SymbolTable() {
-    head = std::make_shared<SymbolSpace>("", nullptr);
+    head = std::make_shared<Space>("", nullptr);
     stack.push_back(head);
 
     // Create functions
@@ -275,18 +275,18 @@ void SymbolTable::stepInto(std::string space) {
         throw "symbol.dne";
     }
     auto& object = *iterator;
-    stack.push_back(std::dynamic_pointer_cast<SymbolSpace>(object.second));
+    stack.push_back(std::dynamic_pointer_cast<Space>(object.second));
 }
 
-void SymbolTable::stepIntoAndCreate(std::string space, std::shared_ptr<Node::Node> declarator, SymbolSpace::Type type) {
+void SymbolTable::stepIntoAndCreate(std::string space, std::shared_ptr<Node::Node> declarator, Space::Type type) {
     if (tableTop->space.find(space) != tableTop->space.end()) {
         throw "symbol.redefinition";
     }
 
-    if (type == SymbolSpace::Type::module) {
-        tableTop->space[space] = std::make_shared<Module>(space, declarator);
+    if ((int)type < 10) { // Less than 10 are things with ports: i.e. interfaces and modules
+        tableTop->space[space] = std::make_shared<SpaceWithPorts>(space, declarator, type);
     } else {
-        tableTop->space[space] = std::make_shared<SymbolSpace>(space, declarator, type);
+        tableTop->space[space] = std::make_shared<Space>(space, declarator, type);
     }
     stepInto(space);
 }
@@ -379,10 +379,8 @@ bool Driven::drive(
 }
 
 
-optional< std::shared_ptr<Symbol> > SymbolTable::find(
-    std::vector<Access>* accessesPtr,
-    optional<AccessWidth>* from,
-    optional<AccessWidth>* to
+std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional<AccessWidth> > SymbolTable::find(
+    std::vector<Access>* accessesPtr
 ) {
     auto& accesses = *accessesPtr;
     for (auto i = stack.rbegin(); i != stack.rend(); i++) {
@@ -392,7 +390,7 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(
             auto& access = *j;
 
             if (access.type == Access::Type::id) {
-                auto pointerAsSpace = std::dynamic_pointer_cast<SymbolSpace>(pointer);
+                auto pointerAsSpace = std::dynamic_pointer_cast<Space>(pointer);
                 if (pointerAsSpace == nullptr) {
                     flag = false;
                     continue;
@@ -405,7 +403,7 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(
                     continue;
                 }
                 if (std::next(j) == accesses.end()) {
-                    return next->second;
+                    return { next->second, nullopt, nullopt } ;
                 }
                 pointer = next->second;
             } else if (access.type == Access::Type::index) {
@@ -417,7 +415,7 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(
                     }
 
                     if (std::next(j) == accesses.end()) {
-                        return pointerAsArray->array[access.index];
+                        return { pointerAsArray->array[access.index], nullopt, nullopt };
                     }
 
                     pointer = pointerAsArray->array[access.index];
@@ -429,21 +427,18 @@ optional< std::shared_ptr<Symbol> > SymbolTable::find(
                         throw "symbol.outOfRangeAccess";
                     }
 
-                    *from = access.index;
-                    *to = access.index;
-
                     if (std::next(j) != accesses.end()) {
                         throw "symbol.accessIsFinal";
                     }
 
-                    return pointerAsDriven;
+                    return { pointerAsDriven, access.index, access.index };
                 } else {
                     throw "symbol.notIndexable";
                 } 
             }
         }
     }
-    return nullopt;
+    return {nullopt, nullopt, nullopt};
 }
 
 void SymbolTable::stepOut() {
@@ -451,11 +446,11 @@ void SymbolTable::stepOut() {
 }
 
 void SymbolTable::stepIntoComb(std::shared_ptr<Node::Node> attached) {
-    tableTop->space["_comb"] = std::make_shared<SymbolSpace>("_comb", attached, SymbolSpace::Type::comb);
+    tableTop->space["_comb"] = std::make_shared<Space>("_comb", attached, Space::Type::comb);
     stepInto("_comb");
 }
 
-std::shared_ptr<SymbolSpace> SymbolTable::findNearest(SymbolSpace::Type type) {
+std::shared_ptr<Space> SymbolTable::findNearest(Space::Type type) {
     for (auto iterator = stack.rbegin(); iterator != stack.rend(); iterator++) {
         if ((*iterator)->type == type) {
             return *iterator;
@@ -464,19 +459,19 @@ std::shared_ptr<SymbolSpace> SymbolTable::findNearest(SymbolSpace::Type type) {
     return nullptr;
 } 
 
-void SymbolSpace::moduleMetadata(void* array) {
+void Space::moduleMetadata(void* array) {
     auto& json = *static_cast<nlohmann::json*>(array);
     auto current = nlohmann::json::object();
     current["subs"] = nlohmann::json::object();
     for (auto& element: space) {
-        if (auto sp = std::dynamic_pointer_cast<SymbolSpace>(element.second)) {
+        if (auto sp = std::dynamic_pointer_cast<Space>(element.second)) {
             sp->moduleMetadata(&current["subs"]);
         }
     }
     json[id] = current;
 }
 
-void Module::moduleMetadata(void* array) {
+void SpaceWithPorts::moduleMetadata(void* array) {
     auto& json = *static_cast<nlohmann::json*>(array);
     auto current = nlohmann::json::object();
     current["ports"] = nlohmann::json::object();
@@ -493,7 +488,7 @@ void Module::moduleMetadata(void* array) {
 std::string SymbolTable::moduleMetadata() {
     nlohmann::json json = nlohmann::json::object();
     for (auto& element: head->space) {
-        if (auto sp = std::dynamic_pointer_cast<SymbolSpace>(element.second)) {
+        if (auto sp = std::dynamic_pointer_cast<Space>(element.second)) {
             sp->moduleMetadata(&json);
         }
     }
@@ -510,13 +505,13 @@ void SymbolTable::represent(std::ostream* stream) {
     *stream << "}" << std::endl;
 }
 
-int SymbolSpace::represent(std::ostream* stream, int* node) {
+int Space::represent(std::ostream* stream, int* node) {
     auto current = *node;
     for (auto& symbol: space) {
         *node = *node + 1;
         *stream << *node << " " << "[label=\"" << symbol.first << "\"]" << ";" << std::endl;
         auto connection = *node;
-        if (auto spacePointer = std::dynamic_pointer_cast<SymbolSpace>(symbol.second)) {
+        if (auto spacePointer = std::dynamic_pointer_cast<Space>(symbol.second)) {
             connection = spacePointer->represent(stream, node);
         }
         *stream << current << " -- " << connection << ";" << std::endl;

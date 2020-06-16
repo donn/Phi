@@ -1,0 +1,14 @@
+interface Alpha(a: Input, c: Output)
+
+module Beta(b: Output): Alpha  {
+    b = ~a
+    c = a
+}
+
+module Theta(a: Input, b: Output) {
+    Beta beta(
+        a: a,
+        b: b
+    )
+}
+

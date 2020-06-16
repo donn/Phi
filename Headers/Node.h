@@ -8,6 +8,7 @@
 #include <typeinfo>
 
 #include <ostream>
+#include <tuple>
 
 // Elaboration Macros
 #define MACRO_ELAB_PARAMS Phi::Context* context
@@ -107,6 +108,7 @@ namespace Phi {
             std::shared_ptr<Range> bus;
             
             optional<std::string> annotation;
+            bool doOutputCheck = true;
 
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
@@ -144,7 +146,7 @@ namespace Phi {
                 module = 0,
                 interface = 1
             };
-            constexpr static SymbolSpace::Type declTypeMap[] = {SymbolSpace::Type::module, SymbolSpace::Type::other};
+            constexpr static Space::Type declTypeMap[] = {Space::Type::module, Space::Type::interface};
 
             Type type;
             std::shared_ptr<Port> ports;
@@ -293,7 +295,7 @@ namespace Phi {
         struct ExpressionIDPair;
         struct InstanceDeclaration: public Declaration {
             // For elaborative use
-            std::optional< std::weak_ptr<Module> > symSpace;
+            std::optional< std::weak_ptr<SpaceWithPorts> > symSpace;
 
             std::shared_ptr<LHExpression> module;
             std::shared_ptr<ExpressionIDPair> parameters;
@@ -389,7 +391,7 @@ namespace Phi {
 
         // Left Hand Expressions
         struct LHExpression: public Expression { // Abstract
-            std::vector<SymbolTable::Access> accessList(optional<AccessWidth>* from, optional<AccessWidth>* to);
+            std::tuple< std::vector<SymbolTable::Access>, optional<AccessWidth>, optional<AccessWidth> > accessList();
             LHExpression(Location location): Expression(location) {}
             MACRO_ELAB_SIG_HDR
         };

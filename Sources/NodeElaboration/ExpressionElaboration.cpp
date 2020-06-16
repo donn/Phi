@@ -94,12 +94,14 @@ Literal::Literal(Location location, std::string interpretableSent, bool widthInc
     }
 }
 
-std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWidth>* from, optional<AccessWidth>* to) {
+std::tuple< std::vector<Phi::SymbolTable::Access>, optional<AccessWidth>, optional<AccessWidth> >  LHExpression::accessList() {
     using PSA = Phi::SymbolTable::Access;
     std::vector<PSA> vector;
 
     std::stack< std::pair< std::shared_ptr<Node> , std::shared_ptr<Node> > > lhStack; // pair<child, parent>
     lhStack.push(std::pair(shared_from_this(), nullptr));
+
+    optional<AccessWidth> from, to;
 
     while (!lhStack.empty()) {
         auto topWithParent = lhStack.top();
@@ -140,14 +142,13 @@ std::vector<Phi::SymbolTable::Access> LHExpression::accessList(optional<AccessWi
                 throw "driven.rangeAccessIsFinal";
             }
 
-            *from = fromValue;
-            *to = toValue;
-
+            from = fromValue;
+            to = toValue;
             // vector.push_back(PSA::Range(toValue, fromValue));
         }
     }
 
-    return vector;
+    return {vector, from, to};
 }
 
 void LHExpression::MACRO_ELAB_SIG_IMP {
@@ -186,9 +187,11 @@ void LHExpressionEncapsulator::MACRO_ELAB_SIG_IMP {
     
     for (auto& lh: expressions) {
         // Get and verify symbol
-        optional<AccessWidth> from, to;
-        auto accesses = lh->accessList(&from, &to);
-        auto symbol = context->table->find(&accesses, &from, &to);
+        auto accessTuple = lh->accessList();
+        auto accesses = std::get<0>(accessTuple);
+        auto from = std::get<1>(accessTuple);
+        auto to = std::get<2>(accessTuple);
+        auto symbol = std::get<0>(context->table->find(&accesses));
 
         if (!symbol.has_value()) {
             throw "symbol.dne";
@@ -551,7 +554,7 @@ void Multiplexer::MACRO_ELAB_SIG_IMP {
     // TODO: Multiplexer runtime vs compiletime
         // Selection algorithm
     type = Type::runTime;
-    inComb = context->table->findNearest(SymbolSpace::Type::comb) != nullptr;
+    inComb = context->table->findNearest(Space::Type::comb) != nullptr;
     
     // Limitation: Cannot verify integrity
 
@@ -594,10 +597,9 @@ void ExpressionArgument::MACRO_ELAB_SIG_IMP {
 
 void ProceduralCall::MACRO_ELAB_SIG_IMP {
     tryElaborate(left, context);
-    optional<AccessWidth> trash;
     auto function = std::static_pointer_cast<LHExpression>(left);
-    auto accessList = function->accessList(&trash, &trash);
-    auto symbolOptional = context->table->find(&accessList, &trash, &trash);
+    auto accessList = std::get<0>(function->accessList());
+    auto symbolOptional = std::get<0>(context->table->find(&accessList));
     if (!symbolOptional.has_value()) {
         throw "symbol.dne";
     }

@@ -3,7 +3,7 @@ using namespace Phi::Node;
 
 void If::MACRO_ELAB_SIG_IMP {
     tryElaborate(expression, context);
-    auto comb = context->table->findNearest(SymbolSpace::Type::comb);
+    auto comb = context->table->findNearest(Space::Type::comb);
     if (comb) {
         inComb = true;
     }
@@ -45,7 +45,7 @@ void If::MACRO_ELAB_SIG_IMP {
 void ForLoop::MACRO_ELAB_SIG_IMP {
     context->addError(location, "phi.forLoopUnsupported"); // UNSUPPORTED
     range->elaborate(context);
-    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+    if (auto comb = context->table->findNearest(Space::Type::comb)) {
         context->addError(location, "comb.forLoopNotAllowed");
     }
     // PII
@@ -54,7 +54,7 @@ void ForLoop::MACRO_ELAB_SIG_IMP {
 }
 
 void Combinational::MACRO_ELAB_SIG_IMP {
-    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+    if (auto comb = context->table->findNearest(Space::Type::comb)) {
         context->addError(location, "comb.nestingNotAllowed");
     } else {
         context->table->stepIntoComb(shared_from_this());
@@ -68,7 +68,7 @@ void Combinational::MACRO_ELAB_SIG_IMP {
 }
 
 void Namespace::MACRO_ELAB_SIG_IMP {
-    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+    if (auto comb = context->table->findNearest(Space::Type::comb)) {
         context->addError(location, "comb.declarationNotAllowed");
     } else {
         context->table->stepIntoAndCreate(identifier->idString, shared_from_this());
@@ -79,7 +79,7 @@ void Namespace::MACRO_ELAB_SIG_IMP {
 }
 
 void Switch::MACRO_ELAB_SIG_IMP {
-    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+    if (auto comb = context->table->findNearest(Space::Type::comb)) {
         tryElaborate(expression, context);        tryElaborate(list, context);
     } else {
         context->addError(location, "decl.switchOutsideComb");

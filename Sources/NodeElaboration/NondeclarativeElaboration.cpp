@@ -3,11 +3,9 @@ using namespace Phi::Node;
 
 void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_ptr<LHExpression> lhs, std::shared_ptr<Expression> expression, bool* skipTranslation, bool* inComb) {
     using VLD = VariableLengthDeclaration;
-    std::vector<SymbolTable::Access> accesses;
-    
-    optional< std::shared_ptr<Symbol> > symbolOptional;
+
     std::shared_ptr<Symbol> symbol;
-    std::shared_ptr<SymbolSpace> comb;
+    std::shared_ptr<Space> comb;
     std::shared_ptr<Driven> driven;
     std::shared_ptr<Container> container = nullptr;
 
@@ -15,14 +13,17 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
     std::shared_ptr<DeclarationListItem> dliAttache;
     std::shared_ptr<Port> portAttache;
 
-    optional<AccessWidth> from = nullopt, to = nullopt;
     AccessWidth width;
 
     bool elevate = false;
 
     // Find and get symbol
-    accesses = lhs->accessList(&from, &to);
-    symbolOptional = context->table->find(&accesses, &from, &to);
+    auto accessTuple = lhs->accessList();
+    auto accesses = std::get<0>(accessTuple);
+    auto from = std::get<1>(accessTuple);
+    auto to = std::get<2>(accessTuple);
+    
+    auto symbolOptional = std::get<0>(context->table->find(&accesses));
 
     if (!symbolOptional.has_value()) {
         throw "symbol.dne";
@@ -84,7 +85,7 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
         throw "assignment.alreadyDriven";
     } 
 
-    if ((comb = context->table->findNearest(SymbolSpace::Type::comb))) {
+    if ((comb = context->table->findNearest(Space::Type::comb))) {
         combDeclarator = std::static_pointer_cast<Combinational>(comb->declarator);
         if (dliAttache) {
             dliAttache->type = VLD::Type::wire_reg;
@@ -119,34 +120,26 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
 }
 
 void NondeclarativePorts::MACRO_ELAB_SIG_IMP {
-    optional<AccessWidth> trash;
-    std::vector<SymbolTable::Access> accesses;
-    
-    optional< std::shared_ptr<Symbol> > symbolOptional;
-    std::shared_ptr<Symbol> symbol;
-
-    std::shared_ptr<InstanceDeclaration> declarator;
-
     tryElaborate(lhs, context);
-    accesses = lhs->accessList(&trash, &trash);
-    symbolOptional = context->table->find(&accesses, &trash, &trash);
+    
+    auto accesses = std::get<0>(lhs->accessList());
+    auto symbolOptional = std::get<0>(context->table->find(&accesses));
     if (!symbolOptional.has_value()) {
         throw "symbol.dne";
     }
-    symbol = symbolOptional.value();
+    auto symbol = symbolOptional.value();
 
-    declarator = std::dynamic_pointer_cast<InstanceDeclaration>(symbol->declarator);
+    auto declarator = std::dynamic_pointer_cast<InstanceDeclaration>(symbol->declarator);
 
     if (!declarator) {
         throw "driving.notAnInstance";
     }
 
-    if (auto comb = context->table->findNearest(SymbolSpace::Type::comb)) {
+    if (auto comb = context->table->findNearest(Space::Type::comb)) {
         throw "comb.declarationNotAllowed";
     } else {
         tryElaborate(ports, context);
     }
-
     
     declarator->ports = ports;
     declarator->elaboratePorts(context);

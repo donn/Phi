@@ -33,11 +33,16 @@ void Port::MACRO_ELAB_SIG_IMP {
     auto pointer = std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
 
     // Add check if output
-    if (polarity ==PortObject::Polarity::output) {
+    if (doOutputCheck && polarity ==PortObject::Polarity::output) {
         auto check = Context::DriveCheck(pointer, nullopt, nullopt, [=](){
             context->addError(location, "output.undriven");
         });
         context->checks.push_back(check);
+    } else {
+        // PII
+        if (auto port = std::dynamic_pointer_cast<Port>(right)) {
+            port->doOutputCheck = false;
+        }
     }
     context->table->add(identifier->idString, pointer);
 
@@ -54,7 +59,7 @@ void Port::MACRO_ELAB_SIG_IMP {
             context->addError(location, "port.unknownOrIncompatibleAnnotation");
         } else {
             // Place annotation if possible
-            auto module = context->table->findNearest(SymbolSpace::Type::module);
+            auto module = context->table->findNearest(Space::Type::module);
             auto target = module->annotations.find(annotationUnwrapped);
 
             if (target != module->annotations.end()) {
@@ -77,16 +82,33 @@ void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
 void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     auto deducedType = declTypeMap[(int)type];
     context->table->stepIntoAndCreate(identifier->idString, shared_from_this(), deducedType);
-    tryElaborate(ports, context);
-    tryElaborate(contents, context);
-    if (deducedType == SymbolSpace::Type::module) {
-        auto space = std::static_pointer_cast<Module>(context->table->findNearest(SymbolSpace::Type::module));
-        for (auto& element: space->space) {
-            if (auto port = std::dynamic_pointer_cast<Port>(element.second->declarator)) {
-                space->ports.push_back(port);
-            }
+
+    // PII
+    if (type == TopLevelDeclaration::Type::interface) {
+        if (ports != nullptr) {
+            ports->doOutputCheck = false;
         }
     }
+
+    tryElaborate(ports, context);
+    tryElaborate(contents, context);
+    tryElaborate(inheritance, context);
+
+
+    auto seeker = inheritance;
+    while (seeker) {
+        auto accesses = std::get<0>(seeker->accessList());
+        auto result = std::get<0>(context->table->find(&accesses));
+        // TODO FOR INTERFACES
+    }
+
+    auto space = std::static_pointer_cast<SpaceWithPorts>(context->table->findNearest(Space::Type::module));
+    for (auto& element: space->space) {
+        if (auto port = std::dynamic_pointer_cast<Port>(element.second->declarator)) {
+            space->ports.push_back(port);
+        }
+    }
+
     context->table->stepOut();
     tryElaborate(right, context);
 }
@@ -140,7 +162,6 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     // Declaration Block because goto is going to happen
     std::shared_ptr<DeclarationListItem> rightDLI;
 
-    // I adamantly refuse to consider * part of the variable and not the type. To h*ck with society
     std::shared_ptr<DeclarationListItem> clockDLI;
     std::shared_ptr<DeclarationListItem> resetDLI;
     std::shared_ptr<DeclarationListItem> conditionDLI;
@@ -152,7 +173,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     std::shared_ptr<Driven> pointerAsDriven, clockDriven, resetDriven, resetValueDriven, conditionDriven, dataDriven, enableDriven;
     std::shared_ptr<Container> pointerAsContainer;
     std::shared_ptr<SymbolArray> pointerAsArray;
-    std::shared_ptr<SymbolSpace> declarativeModule, comb;
+    std::shared_ptr<Space> declarativeModule, comb;
     std::shared_ptr<Range> busShared = nullptr;
 
     std::map<std::string, std::shared_ptr<Node>>::iterator clockAnnotation, resetAnnotation, conditionAnnotation, enableAnnotation;
@@ -168,7 +189,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     tryElaborate(array, context);
 
 
-    declarativeModule = context->table->findNearest(SymbolSpace::Type::module);
+    declarativeModule = context->table->findNearest(Space::Type::module);
     tld = std::static_pointer_cast<TopLevelDeclaration>(declarativeModule->declarator);
 
     assert(declarativeModule);
@@ -333,7 +354,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
         }
         pointer = pointerAsArray;
     }
-    if ((comb = context->table->findNearest(SymbolSpace::Type::comb))) {
+    if ((comb = context->table->findNearest(Space::Type::comb))) {
         context->addError(location, "comb.declarationNotAllowed");
         goto exit;
     } else {
@@ -365,19 +386,18 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
     tryElaborate(module, context);
     tryElaborate(parameters, context);
 
-    std::optional<AccessWidth> trash;
-    auto accesses = module->accessList(&trash, &trash);
-    auto symbolOptional = context->table->find(&accesses, &trash, &trash);
+    auto accesses = std::get<0>(module->accessList());
+    auto symbolOptional = std::get<0>(context->table->find(&accesses));
 
     if (symbolOptional.has_value()) {
         auto symbol = symbolOptional.value();
-        if (auto symSpace = std::dynamic_pointer_cast<SymbolSpace>(symbol)) {
-            if (symSpace->type == SymbolSpace::Type::module) {
-                if (context->table->findNearest(SymbolSpace::Type::module) != symSpace) {
-                    if (!context->table->findNearest(SymbolSpace::Type::comb)) {
+        if (auto symSpace = std::dynamic_pointer_cast<Space>(symbol)) {
+            if (symSpace->type == Space::Type::module) {
+                if (context->table->findNearest(Space::Type::module) != symSpace) {
+                    if (!context->table->findNearest(Space::Type::comb)) {
                         context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, shared_from_this()));
 
-                        this->symSpace = std::static_pointer_cast<Module>(symSpace);
+                        this->symSpace = std::static_pointer_cast<SpaceWithPorts>(symSpace);
 
                         if (ports) {
                             elaboratePorts(context);
