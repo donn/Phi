@@ -20,8 +20,10 @@
 #define MACRO_TRANS_SIG_IMP translate (MACRO_TRANS_PARAMS)
 #define MACRO_TRANS_SIG_HDR virtual void MACRO_TRANS_SIG_IMP;
 
-#define MACRO_INDENT std::string(*indent * 4, ' ')
-#define MACRO_EOL std::endl << MACRO_INDENT
+#define MACRO_INDENTATION std::string(*indent * 4, ' ')
+#define MACRO_EOL std::endl << MACRO_INDENTATION
+#define MACRO_INDENT do { *indent += 1; *stream << MACRO_EOL; } while (0)
+#define MACRO_DEDENT do { *indent -= 1; *stream << MACRO_EOL; } while (0)
 
 // Debug Macros
 #if YYDEBUG
@@ -108,7 +110,6 @@ namespace Phi {
             std::shared_ptr<Range> bus;
             
             optional<std::string> annotation;
-            bool doOutputCheck = true;
 
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
@@ -117,6 +118,8 @@ namespace Phi {
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
+
+            void addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck);
 
             virtual Polarity getPolarity() { return polarity; }
             virtual std::string getName();
@@ -137,10 +140,12 @@ namespace Phi {
 
         struct Statement;
         struct DeclarationListItem;
+        struct InheritanceListItem;
         struct TopLevelDeclaration: public Declaration {
             // For elaborative use
             std::shared_ptr<Declaration> preambles = nullptr;
             std::shared_ptr<Statement> addenda = nullptr;
+            std::weak_ptr<SpaceWithPorts> space;
 
             enum class Type {
                 module = 0,
@@ -150,13 +155,13 @@ namespace Phi {
 
             Type type;
             std::shared_ptr<Port> ports;
-            std::shared_ptr<LHExpression> inheritance;
+            std::shared_ptr<InheritanceListItem> inheritance;
             std::shared_ptr<Statement> contents;
 
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
 
-            TopLevelDeclaration(Location location, std::shared_ptr<Identifier> identifier, Type type, std::shared_ptr<Port> ports, std::shared_ptr<LHExpression> inheritance, std::shared_ptr<Statement> contents = nullptr): Declaration(location,  identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
+            TopLevelDeclaration(Location location, std::shared_ptr<Identifier> identifier, Type type, std::shared_ptr<Port> ports, std::shared_ptr<InheritanceListItem> inheritance, std::shared_ptr<Statement> contents = nullptr): Declaration(location, identifier), type(type), ports(ports), inheritance(inheritance), contents(contents) {}
             
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -394,6 +399,11 @@ namespace Phi {
             std::tuple< std::vector<SymbolTable::Access>, optional<AccessWidth>, optional<AccessWidth> > accessList();
             LHExpression(Location location): Expression(location) {}
             MACRO_ELAB_SIG_HDR
+        };
+
+        struct InheritanceListItem: public Node {
+            std::shared_ptr<LHExpression> lhExpression;
+            InheritanceListItem(Location location, std::shared_ptr<LHExpression> contained): Node(location), lhExpression(contained) { }
         };
 
         struct LHExpressionEncapsulator: public LHExpression {

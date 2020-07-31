@@ -5,7 +5,7 @@ CXX ?= c++
 LLVM_CONFIG ?= llvm-config
 
 # Detect Terminal Color Support
-COLORS = $(shell tput colors)
+COLORS = $(shell tput colors || echo 0)
 ifeq ($(COLORS),256)
     PRESET = \033[1;32m
     RESET = \033[0m
@@ -59,8 +59,8 @@ CPP_LY_FLAGS = -std=c++17 $(LLVM_FLAGS)
 CPP_FLAGS = -Wall -pedantic $(CPP_LY_FLAGS)
 
 CPP_LY_SOURCES = $(YACC_OUT) $(LEX_OUT)
-CPP_SOURCES = $(shell find Sources | grep .cpp)
-CPP_HEADERS = $(shell find Headers | grep .h) $(BUILD_DIR)/git_version.h $(BUILD_DIR)/localization.h  $(LEX_HEADER)
+CPP_SOURCES = $(shell find Sources | grep .cpp) $(BUILD_DIR)/Localization.cpp
+CPP_HEADERS = $(shell find Headers | grep .h) $(BUILD_DIR)/git_version.h   $(LEX_HEADER)
 CPP_LIBRARY_SOURCES =
 
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
@@ -92,7 +92,7 @@ $(BUILD_DIR)/git_version.h:
 	echo "}" >> $@
 	echo "#endif // _AUT0_git_version_h" >> $@
 
-$(BUILD_DIR)/localization.h: $(LOC_FILES)
+$(BUILD_DIR)/Localization.cpp: $(LOC_FILES)
 	mkdir -p $(@D)
 	ruby localization_into_cpp.rb > $@
 
@@ -145,7 +145,10 @@ $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(R
 	$(CXX) -o $@ $^ $(LD_FLAGS)
 	@echo "$(PRESET)>> Build complete.$(RESET)"
 
-.PHONY: clean
+.PHONY: clean test
+
+test:
+	@sh ./Tests/run_tests
 
 clean:
 	rm -rf $(BUILD_DIR)

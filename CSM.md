@@ -1,8 +1,11 @@
 # Code Style Manual
+Note this is mostly for me: I'm very desperate for help with this thing and
+will accept anything.
+
 ## Spacing and Indentation
 
 Use 4 space indentation for anything but Makefiles, where you have to
-use tabs. There is no maximum line length limit.
+use tabs. There is no maximum line length limit, but *please* don't be ridiculous.
 
 We use the **Kernighan & Ritchie** style for **non-empty blocks**:
 

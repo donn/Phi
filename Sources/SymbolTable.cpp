@@ -278,17 +278,20 @@ void SymbolTable::stepInto(std::string space) {
     stack.push_back(std::dynamic_pointer_cast<Space>(object.second));
 }
 
-void SymbolTable::stepIntoAndCreate(std::string space, std::shared_ptr<Node::Node> declarator, Space::Type type) {
+std::shared_ptr<Space> SymbolTable::stepIntoAndCreate(std::string space, std::shared_ptr<Node::Node> declarator, Space::Type type) {
     if (tableTop->space.find(space) != tableTop->space.end()) {
         throw "symbol.redefinition";
     }
 
+    std::shared_ptr<Space> createdSpace;
     if ((int)type < 10) { // Less than 10 are things with ports: i.e. interfaces and modules
-        tableTop->space[space] = std::make_shared<SpaceWithPorts>(space, declarator, type);
+        createdSpace = std::make_shared<SpaceWithPorts>(space, declarator, type);
     } else {
-        tableTop->space[space] = std::make_shared<Space>(space, declarator, type);
+        createdSpace = std::make_shared<Space>(space, declarator, type);
     }
+    tableTop->space[space] = createdSpace;
     stepInto(space);
+    return createdSpace;
 }
 
 std::vector<DriveRange> Driven::checkRangeCoverage(AccessWidth from, AccessWidth to) {
@@ -380,7 +383,9 @@ bool Driven::drive(
 
 
 std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional<AccessWidth> > SymbolTable::find(
-    std::vector<Access>* accessesPtr
+    std::vector<Access>* accessesPtr,
+    optional<AccessWidth> from,
+    optional<AccessWidth> to
 ) {
     auto& accesses = *accessesPtr;
     for (auto i = stack.rbegin(); i != stack.rend(); i++) {
@@ -403,7 +408,7 @@ std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional
                     continue;
                 }
                 if (std::next(j) == accesses.end()) {
-                    return { next->second, nullopt, nullopt } ;
+                    return { next->second, from, to } ;
                 }
                 pointer = next->second;
             } else if (access.type == Access::Type::index) {
@@ -415,7 +420,7 @@ std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional
                     }
 
                     if (std::next(j) == accesses.end()) {
-                        return { pointerAsArray->array[access.index], nullopt, nullopt };
+                        return { pointerAsArray->array[access.index], from, to };
                     }
 
                     pointer = pointerAsArray->array[access.index];
@@ -427,7 +432,7 @@ std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional
                         throw "symbol.outOfRangeAccess";
                     }
 
-                    if (std::next(j) != accesses.end()) {
+                    if (std::next(j) != accesses.end() || from.has_value() || to.has_value()) {
                         throw "symbol.accessIsFinal";
                     }
 

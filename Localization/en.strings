@@ -30,3 +30,8 @@
 "symbol.outOfRangeAccess" = "out of range";
 "symbol.accessIsFinal" = "property not found";
 "symbol.notIndexable" = "symbol is not indexable";
+"register.clockUndriven" = "register clock not set";
+"register.resetUndriven" = "register reset not set";
+"register.dataUndriven" = "register data lines not driven";
+"module.portNotFound" = "port not found in module";
+"output.undriven" = "modules are to drive all outputs";

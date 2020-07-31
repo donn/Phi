@@ -1,6 +1,6 @@
 #include "Context.h"
 #include "Utils.h"
-#include "localization.h"
+#include "Localization.h"
 
 #include <phi.yy.hh>
 

@@ -164,11 +164,11 @@ namespace Phi {
         SymbolTable();
         ~SymbolTable();
 
-        std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional<AccessWidth> > find(std::vector<Access>* accesses);
+        std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional<AccessWidth> > find(std::vector<Access>* accesses, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt);
         void add(std::string id, std::shared_ptr<Symbol> symbol);
         void stepInto(std::string id);
         void stepIntoComb(std::shared_ptr<Node::Node> attached);
-        void stepIntoAndCreate(std::string id, std::shared_ptr<Node::Node> declarator, Space::Type type = Space::Type::other);
+        std::shared_ptr<Space> stepIntoAndCreate(std::string id, std::shared_ptr<Node::Node> declarator, Space::Type type = Space::Type::other);
         void stepOut();
         
         std::shared_ptr<Space> findNearest(Space::Type type);

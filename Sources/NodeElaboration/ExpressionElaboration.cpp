@@ -144,7 +144,6 @@ std::tuple< std::vector<Phi::SymbolTable::Access>, optional<AccessWidth>, option
 
             from = fromValue;
             to = toValue;
-            // vector.push_back(PSA::Range(toValue, fromValue));
         }
     }
 
@@ -189,15 +188,21 @@ void LHExpressionEncapsulator::MACRO_ELAB_SIG_IMP {
         // Get and verify symbol
         auto accessTuple = lh->accessList();
         auto accesses = std::get<0>(accessTuple);
-        auto from = std::get<1>(accessTuple);
-        auto to = std::get<2>(accessTuple);
-        auto symbol = std::get<0>(context->table->find(&accesses));
+        auto accessFrom = std::get<1>(accessTuple);
+        auto accessTo = std::get<2>(accessTuple);
 
-        if (!symbol.has_value()) {
+        auto symbolInfo = context->table->find(&accesses, accessFrom, accessTo);
+
+        auto symbolOptional = std::get<0>(symbolInfo);
+        auto from = std::get<1>(symbolInfo);
+        auto to = std::get<2>(symbolInfo);
+
+        if (!symbolOptional.has_value()) {
             throw "symbol.dne";
         }
 
-        auto unwrapped = symbol.value();
+
+        auto unwrapped = symbolOptional.value();
         auto driven = std::dynamic_pointer_cast<Phi::Driven>(unwrapped);
 
         if (!driven) {
@@ -213,7 +218,6 @@ void LHExpressionEncapsulator::MACRO_ELAB_SIG_IMP {
 
         auto fromUnwrapped = from.value();
         auto toUnwrapped = to.value();
-
         lh->numBits = driven->msbFirst ? (fromUnwrapped - toUnwrapped + 1) : (toUnwrapped - fromUnwrapped + 1);
 
         // Check if RunTime
@@ -598,8 +602,8 @@ void ExpressionArgument::MACRO_ELAB_SIG_IMP {
 void ProceduralCall::MACRO_ELAB_SIG_IMP {
     tryElaborate(left, context);
     auto function = std::static_pointer_cast<LHExpression>(left);
-    auto accessList = std::get<0>(function->accessList());
-    auto symbolOptional = std::get<0>(context->table->find(&accessList));
+    auto accesses = std::get<0>(function->accessList());
+    auto symbolOptional = std::get<0>(context->table->find(&accesses));
     if (!symbolOptional.has_value()) {
         throw "symbol.dne";
     }

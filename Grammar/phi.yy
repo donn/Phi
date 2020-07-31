@@ -128,13 +128,13 @@ optional_semicolon:
 
 declaration:
     KEYWORD_MODULE identifier template_declaration '(' port_declaration_list ')' inheritance block optional_semicolon {
-        $$ = std::make_shared<TopLevelDeclaration>(@$, std::static_pointer_cast<Identifier>($2), TopLevelDeclaration::Type::module, std::static_pointer_cast<Port>($5), std::static_pointer_cast<LHExpression>($7), std::static_pointer_cast<Statement>($8));
+        $$ = std::make_shared<TopLevelDeclaration>(@$, std::static_pointer_cast<Identifier>($2), TopLevelDeclaration::Type::module, std::static_pointer_cast<Port>($5), std::static_pointer_cast<InheritanceListItem>($7), std::static_pointer_cast<Statement>($8));
     }
     | KEYWORD_MODULE error '}' {
         $$ = std::make_shared<ErrorNode>(@$);
     }
     | KEYWORD_INTERFACE identifier template_declaration '(' port_declaration_list ')' inheritance optional_semicolon {
-        $$ = std::make_shared<TopLevelDeclaration>(@$, std::static_pointer_cast<Identifier>($2), TopLevelDeclaration::Type::interface, std::static_pointer_cast<Port>($5), std::static_pointer_cast<LHExpression>($7));
+        $$ = std::make_shared<TopLevelDeclaration>(@$, std::static_pointer_cast<Identifier>($2), TopLevelDeclaration::Type::interface, std::static_pointer_cast<Port>($5), std::static_pointer_cast<InheritanceListItem>($7));
     }
     ;
 
@@ -215,13 +215,18 @@ inheritance:
     }
     ;
 inheritance_list:
-    lhexpression ',' inheritance_list {
+    inheritance_list_item ',' inheritance_list {
         auto node = $1;
         node->right = $3;
         $$ = node;
     }
-    | lhexpression {
+    | inheritance_list_item {
         $$ = $1;
+    }
+    ;
+inheritance_list_item:
+    lhexpression {
+        $$ = std::make_shared<InheritanceListItem>(@$, std::static_pointer_cast<LHExpression>($1));
     }
     ;
 

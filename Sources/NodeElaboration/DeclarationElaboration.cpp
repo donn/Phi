@@ -2,6 +2,11 @@
 using namespace Phi::Node;
 
 void Port::MACRO_ELAB_SIG_IMP {
+    tryElaborate(bus, context);
+    tryElaborate(right, context);
+}
+
+void Port::addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck) {
     static const char* acceptableAnnotationsInput[] = {
         "@clock",
         "@reset",
@@ -16,7 +21,6 @@ void Port::MACRO_ELAB_SIG_IMP {
     optional<AccessWidth> to = nullopt;
     bool msbFirst = true;
 
-    tryElaborate(bus, context);
     if (bus) {
         if (bus->from->type == Expression::Type::error) {
             tryElaborate(right, context);
@@ -33,16 +37,11 @@ void Port::MACRO_ELAB_SIG_IMP {
     auto pointer = std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
 
     // Add check if output
-    if (doOutputCheck && polarity ==PortObject::Polarity::output) {
+    if (addOutputCheck && polarity ==PortObject::Polarity::output) {
         auto check = Context::DriveCheck(pointer, nullopt, nullopt, [=](){
             context->addError(location, "output.undriven");
         });
         context->checks.push_back(check);
-    } else {
-        // PII
-        if (auto port = std::dynamic_pointer_cast<Port>(right)) {
-            port->doOutputCheck = false;
-        }
     }
     context->table->add(identifier->idString, pointer);
 
@@ -69,7 +68,6 @@ void Port::MACRO_ELAB_SIG_IMP {
             }
         }
     }
-    tryElaborate(right, context);
 }
 
 void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
@@ -81,33 +79,48 @@ void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
 
 void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     auto deducedType = declTypeMap[(int)type];
-    context->table->stepIntoAndCreate(identifier->idString, shared_from_this(), deducedType);
+    space = std::static_pointer_cast<SpaceWithPorts>(context->table->stepIntoAndCreate(identifier->idString, shared_from_this(), deducedType));
 
-    // PII
-    if (type == TopLevelDeclaration::Type::interface) {
-        if (ports != nullptr) {
-            ports->doOutputCheck = false;
-        }
-    }
+    auto addOutputCheck = type == TopLevelDeclaration::Type::module;
 
     tryElaborate(ports, context);
-    tryElaborate(contents, context);
     tryElaborate(inheritance, context);
+    
+    auto space = std::static_pointer_cast<SpaceWithPorts>(context->table->findNearest(deducedType));
 
-
-    auto seeker = inheritance;
-    while (seeker) {
-        auto accesses = std::get<0>(seeker->accessList());
-        auto result = std::get<0>(context->table->find(&accesses));
-        // TODO FOR INTERFACES
-    }
-
-    auto space = std::static_pointer_cast<SpaceWithPorts>(context->table->findNearest(Space::Type::module));
-    for (auto& element: space->space) {
-        if (auto port = std::dynamic_pointer_cast<Port>(element.second->declarator)) {
-            space->ports.push_back(port);
+    std::function<void(std::shared_ptr<TopLevelDeclaration>, bool)> recursivelyProcessPorts = [&](std::shared_ptr<TopLevelDeclaration> tld, bool first) {
+        if (!first && tld->type != TopLevelDeclaration::Type::interface) {
+            throw "inherit.interfacesOnly";
         }
-    }
+
+        // PII
+        
+        auto port = tld->ports;
+        while (port) {
+            port->addInCurrentContext(context, addOutputCheck);
+            space->ports.push_back(port);
+            port = std::static_pointer_cast<Port>(port->right);
+        }
+
+        auto currentInheritance = tld->inheritance;
+        while (currentInheritance) {
+            auto lhExpression = currentInheritance->lhExpression;
+            auto accesses = std::get<0>(lhExpression->accessList());
+            auto inheritedSymbolOptional = std::get<0>(context->table->find(&accesses));
+            if (!inheritedSymbolOptional.has_value()) {
+                throw "symbol.dne";
+            }
+            auto inheritedSymbol = inheritedSymbolOptional.value();
+            auto newTLD = std::static_pointer_cast<TopLevelDeclaration>(inheritedSymbol->declarator);
+            recursivelyProcessPorts(newTLD, false);
+            currentInheritance = std::static_pointer_cast<InheritanceListItem>(currentInheritance->right);
+        }
+
+    };
+
+    recursivelyProcessPorts(std::static_pointer_cast<TopLevelDeclaration>(shared_from_this()), true);
+
+    tryElaborate(contents, context);
 
     context->table->stepOut();
     tryElaborate(right, context);

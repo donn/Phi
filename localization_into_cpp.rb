@@ -40,8 +40,6 @@ for (key, smallhash) in languages
 end
 finalHashValue.chomp! ", "
 file = <<HEREDOC
-#ifndef _localization_h
-#define _localization_h
 #include <cstdlib>
 #include <map>
 #include <string>
@@ -66,7 +64,5 @@ std::string Localize(std::string localizable) {
     }
     return localizable;
 }
-
-#endif
 HEREDOC
 puts file

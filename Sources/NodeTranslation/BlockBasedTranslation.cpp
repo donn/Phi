@@ -29,10 +29,11 @@ void If::MACRO_TRANS_SIG_IMP {
             *stream << " ) ";
         }   
         *stream << "begin ";
-        *indent += 1;
-        *stream << MACRO_EOL;
-        tryTranslate(contents, stream, namespaceSoFar, indent);
-        *indent -= 1;
+        
+        MACRO_INDENT;
+            tryTranslate(contents, stream, namespaceSoFar, indent);
+        MACRO_DEDENT;
+
         *stream << "end ";
 
         if (elseBlock) {
@@ -100,10 +101,11 @@ void Switch::MACRO_TRANS_SIG_IMP {
     *stream << "(";
     tryTranslate(expression, stream, namespaceSoFar, indent);
     *stream << " ) ";
-    *indent += 1;
-    *stream << MACRO_EOL;
-    tryTranslate(list, stream, namespaceSoFar, indent);
-    *indent -= 1;
+
+    MACRO_INDENT;
+        tryTranslate(list, stream, namespaceSoFar, indent);
+    MACRO_DEDENT;
+
     *stream << "endcase";
 
     tryTranslate(right, stream, namespaceSoFar, indent);
@@ -119,10 +121,12 @@ void Combinational::MACRO_TRANS_SIG_IMP {
     *stream << MACRO_EOL;
     *stream << MACRO_EOL;
 
-    *indent += 1;
-    *stream << "always @* begin " << MACRO_EOL;
+    *stream << "always @* begin ";
+    
+    MACRO_INDENT;
         tryTranslate(contents, stream, namespaceSoFar, indent);
-    *indent -= 1;
+    MACRO_DEDENT;
+    
     *stream << "end ";
 
     *stream << MACRO_EOL;

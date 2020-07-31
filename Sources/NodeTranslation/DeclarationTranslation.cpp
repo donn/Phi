@@ -5,11 +5,8 @@
 
 using namespace Phi::Node;
 
+// NOTE: This translation does NOT GO RIGHT! EVER!!
 void Port::MACRO_TRANS_SIG_IMP {
-    // example
-    // a: Input [width-1 .. 0]; 
-    // input [width-1 ..0] a;
-
     switch (polarity) {
         case PortObject::Polarity::input:
             *stream << "input";
@@ -31,16 +28,12 @@ void Port::MACRO_TRANS_SIG_IMP {
 
     *stream << ";";
     *stream << MACRO_EOL;
-
-    tryTranslate(right, stream, namespaceSoFar, indent);
-
 }
 
 void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
     //adjust namespaceSoFar
     namespaceSoFar = namespaceSoFar + "." + std::to_string((identifier->idString).length()) + identifier->idString;
     tryTranslate(contents, stream, namespaceSoFar, indent);
-
     tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
@@ -53,44 +46,42 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
         //adjust namespaceSoFar after entering the module to be nothing 
         namespaceSoFar = "";
         *stream << " (";
-        *indent += 1;
-        *stream << MACRO_EOL;
-        auto pointer = ports;
-        
-        // PII
-        while (pointer) {
-            tryTranslate(pointer->identifier, stream, namespaceSoFar, indent);
-            *stream << ", " << MACRO_EOL;
-            pointer = std::static_pointer_cast<Port>(pointer->right);
-        }
-        *indent -= 1;
-        *stream << ")";
 
+        MACRO_INDENT;
+            // PII
+            for (auto& abstractPort: space.lock()->ports) {
+                auto actualPort = std::static_pointer_cast<Port>(abstractPort);
+                tryTranslate(actualPort->identifier, stream, namespaceSoFar, indent);
+                *stream << ", " << MACRO_EOL;
+            }
+        MACRO_DEDENT;
 
-        *stream << ";" << MACRO_EOL;
+        *stream << ");" << MACRO_EOL;
 
-        *indent += 1;
+        MACRO_INDENT;
+            *stream << MACRO_EOL;
 
-        *stream << MACRO_EOL;
+            // Get ready for ports
+            for (auto& abstractPort: space.lock()->ports) {
+                auto actualPort = std::static_pointer_cast<Port>(abstractPort);;
+                tryTranslate(actualPort, stream, namespaceSoFar, indent);
+            }
+            *stream << MACRO_EOL;
 
-        // Get ready for ports
-        tryTranslate(ports, stream, namespaceSoFar, indent);
-        *stream << MACRO_EOL;
+            // Contents
+            tryTranslate(preambles, stream, namespaceSoFar, indent);
+            *stream << MACRO_EOL;
 
-        // Contents
-        tryTranslate(preambles, stream, namespaceSoFar, indent);
-        *stream << MACRO_EOL;
+            // Contents
+            tryTranslate(contents, stream, namespaceSoFar, indent);
+            *stream << MACRO_EOL;
 
-        // Contents
-        tryTranslate(contents, stream, namespaceSoFar, indent);
-        *stream << MACRO_EOL;
+            // Addenda
+            tryTranslate(addenda, stream, namespaceSoFar, indent);
 
-        // Addenda
-        tryTranslate(addenda, stream, namespaceSoFar, indent);
-
-        *indent -= 1;
-        *stream << MACRO_EOL;
+        MACRO_DEDENT;
         *stream << "endmodule" << MACRO_EOL;
+        *stream << MACRO_EOL << MACRO_EOL;
 
     } else if (type == TopLevelDeclaration::Type::interface){
         // Interfaces are elaboration-only
@@ -161,31 +152,30 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
 
-        *stream << " // Declaration stub for " << nsfLocal << MACRO_EOL;
-        *indent += 1;
+        *stream << "// Declaration stub for " << nsfLocal << MACRO_EOL;
         *stream << "always @ (posedge \\" + nsfLocal + ".clock  or posedge \\" + nsfLocal + ".reset ) begin " << MACRO_EOL;
-            *indent += 1;
+        MACRO_INDENT;
             *stream << "if (\\" + nsfLocal + ".reset ) begin" << MACRO_EOL;
-                *stream << MACRO_EOL;
+            MACRO_INDENT;
                 *stream << "\\" << identifier->idString + " <= ";
                 tryTranslate(optionalAssignment, stream, nsfLocal, indent);
                 *stream << "; " << MACRO_EOL;
-            *indent -= 1;
+            MACRO_DEDENT;
             *stream << "end " << MACRO_EOL;
-            *indent += 1;
-            *stream << "else begin" << MACRO_EOL;
+            MACRO_INDENT;
+                *stream << "else begin" << MACRO_EOL;
                 if (hasEnable) {
-                    *indent += 1;
+                    MACRO_INDENT;
                     *stream << "if (\\" << nsfLocal + ".enable " << ") begin" << MACRO_EOL;
                 }
                 *stream << "\\" << identifier->idString + " <= \\" + nsfLocal + ".data ; " << MACRO_EOL;
                 if (hasEnable) {
-                    *indent -= 1;
+                    MACRO_DEDENT;
                     *stream << "end" << MACRO_EOL;
                 }
-            *indent -= 1;
+            MACRO_DEDENT;
             *stream << "end " << MACRO_EOL;
-        *indent -= 1;
+        MACRO_DEDENT;
         *stream << "end ";
 
         *stream << MACRO_EOL;
@@ -194,23 +184,23 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         *stream << MACRO_EOL;
         *stream << MACRO_EOL;
 
-        *stream << " // Declaration stub for " << nsfLocal << MACRO_EOL;
-        *indent += 1;
+        *stream << "// Declaration stub for " << nsfLocal << MACRO_EOL;
         *stream << "always @ (\\" + nsfLocal +".condition ) begin " << MACRO_EOL;
-        *indent += 1;
-            *stream << "if (\\" + nsfLocal + ".condition ) begin" << MACRO_EOL;  
+        MACRO_INDENT;
+            *stream << "if (\\" + nsfLocal + ".condition ) begin" << MACRO_EOL;
+            MACRO_INDENT;  
                 if (hasEnable) {
-                    *indent += 1;
+                    MACRO_INDENT;
                     *stream << "if (\\" << nsfLocal + ".enable" << ") begin" << MACRO_EOL;
                 }
                 *stream << "\\" << identifier->idString + " <= \\" + nsfLocal+ ".data ; " << MACRO_EOL;
                 if (hasEnable) {
-                    *indent -= 1;
+                    MACRO_DEDENT;
                     *stream << "end" << MACRO_EOL;
                 }
-            *indent -= 1;
+            MACRO_DEDENT;
             *stream << "end " << MACRO_EOL;
-        *indent -= 1;
+        MACRO_DEDENT;
         *stream << "end ";
 
         *stream << MACRO_EOL;
@@ -247,7 +237,12 @@ void InstanceDeclaration::MACRO_TRANS_SIG_IMP {
     *stream << " ";
     tryTranslate(identifier, stream, namespaceSoFar, indent);
     *stream << "(";
-    tryTranslate(ports, stream, namespaceSoFar, indent);
+
+    MACRO_INDENT;
+        tryTranslate(ports, stream, namespaceSoFar, indent);
+    MACRO_DEDENT;
+
+    *stream << MACRO_EOL;
     *stream << "); " << MACRO_EOL;
 
     tryTranslate(right, stream, namespaceSoFar, indent);

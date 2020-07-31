@@ -17,13 +17,18 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
 
     bool elevate = false;
 
-    // Find and get symbol
+    // Get and verify symbol
     auto accessTuple = lhs->accessList();
     auto accesses = std::get<0>(accessTuple);
-    auto from = std::get<1>(accessTuple);
-    auto to = std::get<2>(accessTuple);
-    
-    auto symbolOptional = std::get<0>(context->table->find(&accesses));
+    auto accessFrom = std::get<1>(accessTuple);
+    auto accessTo = std::get<2>(accessTuple);
+
+    auto symbolInfo = context->table->find(&accesses, accessFrom, accessTo);
+
+    auto symbolOptional = std::get<0>(symbolInfo);
+    auto from = std::get<1>(symbolInfo);
+    auto to = std::get<2>(symbolInfo);
+
 
     if (!symbolOptional.has_value()) {
         throw "symbol.dne";
