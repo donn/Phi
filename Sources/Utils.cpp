@@ -17,10 +17,10 @@ std::vector<std::string> Utils::split(const std::string* string, char delimiter)
     return returnValue;
 }
 
-std::string Utils::join(std::vector<std::string>* arrays, char delimiter) {
+std::string Utils::join(std::vector<std::string>* array, char delimiter) {
     std::stringstream ss;
 
-    for (auto& string: *arrays) {
+    for (auto& string: *array) {
         ss << string << delimiter;
     }
     

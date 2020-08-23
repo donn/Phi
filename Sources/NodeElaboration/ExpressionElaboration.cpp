@@ -134,9 +134,9 @@ std::tuple< std::vector<Phi::SymbolTable::Access>, optional<AccessWidth>, option
             auto parentAsArrayAccess = std::static_pointer_cast<ArrayAccess>(parent);
             vector.push_back(PSA::Index(value, &parentAsArrayAccess->index));
         } else if (auto pointer = std::dynamic_pointer_cast<Range>(top)) {
-            // Elaborating on a range should have checked this by now
-            AccessWidth fromValue, toValue;
-            pointer->getValues(&fromValue, &toValue);
+            // Elaborating on a range should have checked a number of errors by now
+            auto pair = pointer->getValues();
+            AccessWidth fromValue = pair.first, toValue = pair.second;
 
             if (!lhStack.empty()) {
                 throw "driven.rangeAccessIsFinal";

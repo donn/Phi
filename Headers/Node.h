@@ -103,6 +103,8 @@ namespace Phi {
             std::shared_ptr<Identifier> identifier;
 
             Declaration(Location location, std::shared_ptr<Identifier> identifier):  Node(location),  identifier(identifier) {}
+
+            std::vector<SymbolTable::Access> immediateAccessList();
         };
 
         struct Port: public Declaration, public PortObject {
@@ -124,6 +126,9 @@ namespace Phi {
             virtual Polarity getPolarity() { return polarity; }
             virtual std::string getName();
             virtual AccessWidth getWidth();
+
+            bool operator==(const Port& rhs);
+            bool operator!=(const Port& rhs);
         };
 
         struct TopLevelNamespace: public Declaration {
@@ -390,7 +395,7 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR
 
             // CALL ONLY AFTER ELABORATION!!
-            void getValues(AccessWidth* from, AccessWidth* to);
+            std::pair<AccessWidth, AccessWidth> getValues();
             AccessWidth getWidth(); 
         };      
 

@@ -35,3 +35,5 @@
 "register.dataUndriven" = "register data lines not driven";
 "module.portNotFound" = "port not found in module";
 "output.undriven" = "modules are to drive all outputs";
+"compliance.interfacesOnly" = "modules may not comply with other modules' port interfaces";
+"compliance.conflictingPortDefinitions" = "port definitions are mismatched with an interface being complied to";

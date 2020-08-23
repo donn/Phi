@@ -186,8 +186,6 @@ SymbolTable::SymbolTable() {
     }));
     add("interpretFromFile", sysinterpretFromFile);
 
-
-
     auto sysfromFile = std::shared_ptr<Function>(new Function("fromFile", {Parameter::string, Parameter::expression, Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
         auto& list = *argList;
 
@@ -218,24 +216,21 @@ SymbolTable::SymbolTable() {
         binaryFile.read(&buffer[0], length);
 
         // (1b0: Little endian, 1b1: big endian)
-        if (endian == 0){
+        if (endian == 0) {
             // little endian
             // swaping
             std::vector<char> tempBufferContiguous(length);
             char* tempBuffer = &tempBufferContiguous[0];
-            int j=0;
-            for(uint i=length; i>0; i=i-1){
-                tempBuffer[i] = buffer[j];
-                //increment j
-                j++;
+            int j = 0;
+            for (uint i = length; i > 0; i -= 1) {
+                tempBuffer[i] = buffer[j++];
             }
             //adjust buffer
-            for(uint i=0; i<length; i++){
+            for (uint i = 0; i < length; i++) {
                 buffer[i] = tempBuffer[i];
             }
-        }else if (endian == 1){
-            // big endian
-            // do nothing 
+        } else if (endian == 1) {
+            // big endian: Do nothing
         } else {
             throw "fromFile.invalidEndianness";
         }
@@ -244,10 +239,11 @@ SymbolTable::SymbolTable() {
         binaryFile.close();
 
         auto value = llvm::APInt(bytes * 8, 0);
-        for(uint i=0; i<length; i++){
+        for (uint i = 0; i < length; i++) {
             value = value | buffer[i];
-            if (i!=length-1)
+            if (i != (length - 1)) {
                 value = value << 8;
+            }
         }
 
         return std::pair(value, bytes * 8);
@@ -483,8 +479,8 @@ void SpaceWithPorts::moduleMetadata(void* array) {
     for (auto& port: ports) {
         auto object = nlohmann::json::object();
         object["width"] = port->getWidth();
-        auto pol = port->getPolarity();
-        object["polarity"] = pol == PortObject::Polarity::input ? "input" : pol == PortObject::Polarity::output ? "output" : "other";
+        auto polarity = port->getPolarity();
+        object["polarity"] = polarity == PortObject::Polarity::input ? "input" : polarity == PortObject::Polarity::output ? "output" : "other";
         current["ports"][port->getName()] = object;
     }
     json[id] = current;

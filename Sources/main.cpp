@@ -43,14 +43,14 @@ int main(int argc, char* argv[]) {
             stdoutStream << "All rights reserved. Licensed under the Apache License 2.0." << std::endl;
             exit(0);
         }},
-        {"metadataJSON", std::nullopt, "Data to output JSON information about processed modules.", true, std::nullopt},
-        {"outFile", 'o', "Output file.", true, std::nullopt},
-        {"ignoreErrors", std::nullopt, "Attempt best translation despite errors.", false, std::nullopt},
+        {"metadataJSON", nullopt, "Data to output JSON information about processed modules.", true, nullopt},
+        {"outFile", 'o', "Output file.", true, nullopt},
+        {"ignoreErrors", nullopt, "Attempt best translation despite errors.", false, nullopt},
 #if YYDEBUG
         {"trace", 'T', "Trace GNU Bison/Phi semantic analysis operation. (Debug builds only.)", false, nullopt},
-        {"astGraph", std::nullopt, "Filename to output graphviz of syntax tree. (Debug builds only.)", true, nullopt},
-        {"elabGraph", std::nullopt, "Filename to output graphviz of post-elaboration tree. (Debug builds only.)", true, nullopt},
-        {"symGraph", std::nullopt, "Filename to output graphviz of symbol table. (Debug builds only.)", true, nullopt}
+        {"astGraph", nullopt, "Filename to output graphviz of syntax tree. (Debug builds only.)", true, nullopt},
+        {"elabGraph", nullopt, "Filename to output graphviz of post-elaboration tree. (Debug builds only.)", true, nullopt},
+        {"symGraph", nullopt, "Filename to output graphviz of symbol table. (Debug builds only.)", true, nullopt}
 #endif
     });
     auto opts = getOpt.process(argc, argv);
@@ -100,7 +100,8 @@ int main(int argc, char* argv[]) {
     try {
         parser.parse();
     } catch (const char* error) {
-        stderrStream << "[Critical Phi Error] Unhandled parse issue: " << error << std::endl;
+        stderrStream << "[CRITICAL] Unhandled parse issue: " << error << std::endl;
+        stderrStream << "Please report this issue." << std::endl;
         exit(EX_SOFTWARE);
     }
 

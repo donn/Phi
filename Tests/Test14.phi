@@ -1,12 +1,14 @@
-interface Alpha(a: Input, c: Output)
+interface Spade(a: Input)
 
-module Beta(b: Output): Alpha  {
+interface Club(b: Output): Spade
+
+module Heart(b: Output, c: Output): Club, Spade { // Second should be ignored
     b = ~a
     c = a
 }
 
-module Theta(a: Input, b: Output) {
-    Beta beta(
+module Diamond(a: Input, b: Output) {
+    Heart heart(
         a: a,
         b: b
     )

@@ -1,6 +1,15 @@
 #include "Node.h"
 using namespace Phi::Node;
 
+#include <set>
+#include <stack>
+
+std::vector<Phi::SymbolTable::Access> Declaration::immediateAccessList() {
+    return {
+        Phi::SymbolTable::Access::ID(&identifier->idString)
+    };
+}
+
 void Port::MACRO_ELAB_SIG_IMP {
     tryElaborate(bus, context);
     tryElaborate(right, context);
@@ -36,6 +45,8 @@ void Port::addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck) {
 
     auto pointer = std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
 
+    context->table->add(identifier->idString, pointer); // This will fail and go up in case of redefinition, so its better to do it earlier than possible.
+
     // Add check if output
     if (addOutputCheck && polarity ==PortObject::Polarity::output) {
         auto check = Context::DriveCheck(pointer, nullopt, nullopt, [=](){
@@ -43,14 +54,13 @@ void Port::addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck) {
         });
         context->checks.push_back(check);
     }
-    context->table->add(identifier->idString, pointer);
 
             
     // Do annotations
     if (annotation.has_value()) {
         auto annotationUnwrapped = annotation.value();
         // Check if annotation is valid
-        auto seeker = (polarity ==PortObject::Polarity::input) ? acceptableAnnotationsInput : acceptableAnnotationsOutput;
+        auto seeker = (polarity == PortObject::Polarity::input) ? acceptableAnnotationsInput : acceptableAnnotationsOutput;
         while (*seeker && *seeker != annotationUnwrapped) {
             seeker++;
         }
@@ -68,6 +78,17 @@ void Port::addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck) {
             }
         }
     }
+}
+
+bool Port::operator==(const Port& rhs) {
+    return
+        identifier->idString == rhs.identifier->idString &&
+        polarity == rhs.polarity &&
+        (bus ? bus->getValues() == rhs.bus->getValues() : true)
+        ;
+}
+bool Port::operator!=(const Port& rhs) {
+    return !(*this == rhs);
 }
 
 void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
@@ -88,17 +109,48 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     
     auto space = std::static_pointer_cast<SpaceWithPorts>(context->table->findNearest(deducedType));
 
-    std::function<void(std::shared_ptr<TopLevelDeclaration>, bool)> recursivelyProcessPorts = [&](std::shared_ptr<TopLevelDeclaration> tld, bool first) {
+    std::set<
+        std::shared_ptr<Symbol>
+    > symbolSet;
+
+    std::function<
+        void(std::shared_ptr<TopLevelDeclaration>, bool)
+    > recursivelyProcessPorts = [&](
+        std::shared_ptr<TopLevelDeclaration> tld, bool first
+    ) {
         if (!first && tld->type != TopLevelDeclaration::Type::interface) {
-            throw "inherit.interfacesOnly";
+            throw "compliance.interfacesOnly";
         }
 
         // PII
-        
         auto port = tld->ports;
         while (port) {
-            port->addInCurrentContext(context, addOutputCheck);
-            space->ports.push_back(port);
+            try {
+                port->addInCurrentContext(context, addOutputCheck);
+                space->ports.push_back(port);
+            } catch (const char* e) {
+                if (
+                    std::string(e) == "symbol.redefinition"
+                ) {
+                    if (first) {
+                        throw e;
+                    }
+
+                    // Duplicate ports *across inheritances* are allowed
+                    // if the ports are identical
+                    auto accessList = port->immediateAccessList();
+                    auto result = context->table->find(&accessList);
+                    auto symbolOptional = std::get<0>(result);
+                    assert(symbolOptional.has_value());
+                    auto symbol = symbolOptional.value();
+                    auto portDeclarator = symbol->declarator;
+                    auto conflictingPort = std::static_pointer_cast<Port>(portDeclarator);
+
+                    if (*conflictingPort != *port) {
+                        throw "compliance.conflictingPortDefinitions";
+                    }
+                }
+            }
             port = std::static_pointer_cast<Port>(port->right);
         }
 
@@ -111,8 +163,12 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
                 throw "symbol.dne";
             }
             auto inheritedSymbol = inheritedSymbolOptional.value();
-            auto newTLD = std::static_pointer_cast<TopLevelDeclaration>(inheritedSymbol->declarator);
-            recursivelyProcessPorts(newTLD, false);
+            if (symbolSet.find(inheritedSymbol) == symbolSet.end()) {
+                // Multiple inheritances of the same symbol are SKIPPED.
+                symbolSet.insert(inheritedSymbol);
+                auto newTLD = std::static_pointer_cast<TopLevelDeclaration>(inheritedSymbol->declarator);
+                recursivelyProcessPorts(newTLD, false);
+            }
             currentInheritance = std::static_pointer_cast<InheritanceListItem>(currentInheritance->right);
         }
 

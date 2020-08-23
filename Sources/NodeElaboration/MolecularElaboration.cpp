@@ -29,7 +29,7 @@ void Range::MACRO_ELAB_SIG_IMP {
     }
 }
 
-void Range::getValues(AccessWidth* fromRef, AccessWidth* toRef) {
+std::pair<AccessWidth, AccessWidth> Range::getValues() {
     auto from = std::static_pointer_cast<Expression>(this->from);
     auto to = std::static_pointer_cast<Expression>(this->to);
 
@@ -44,12 +44,12 @@ void Range::getValues(AccessWidth* fromRef, AccessWidth* toRef) {
     assert(toValue <= maxAccessWidth);
     assert(fromValue <= maxAccessWidth);
 
-    *fromRef = fromValue;
-    *toRef = toValue;
+    return std::pair(fromValue, toValue);
 }
 
 AccessWidth Range::getWidth() {
-    AccessWidth from, to;
-    getValues(&from, &to);
+    auto pair = getValues();
+    AccessWidth from = pair.first, to = pair.second;
+    
     return (from < to) ? to - from + 1 : from - to + 1;
 }
