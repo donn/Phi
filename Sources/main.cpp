@@ -7,7 +7,7 @@
 #include <phi.yy.hh>
 #include <phi.l.hh>
 
-#include <StupidSimpleCPPOpts.h>
+#include <SSCO/StupidSimpleCPPOpts.h>
 
 #include <iomanip>
 #include <fstream>

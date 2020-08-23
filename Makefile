@@ -54,8 +54,8 @@ LIBRARY_SOURCES =
 OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.c,%.o,$(LIBRARY_SOURCES)))
 
 ## C++
-LLVM_FLAGS = $(shell $(LLVM_CONFIG) --cxxflags | tr ' ' '\n' | grep '\-I' | tr '\n' ' ')
-CPP_LY_FLAGS = -std=c++17 $(LLVM_FLAGS)
+LLVM_INCLUDES = $(shell $(LLVM_CONFIG) --cxxflags | tr ' ' '\n' | grep '\-I' | tr '\n' ' ')
+CPP_LY_FLAGS = -std=c++17 $(LLVM_INCLUDES)
 CPP_FLAGS = -Wall -pedantic $(CPP_LY_FLAGS)
 
 CPP_LY_SOURCES = $(YACC_OUT) $(LEX_OUT)
