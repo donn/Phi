@@ -1,13 +1,32 @@
 # Φ Phi
-Phi is a hardware description language that aims to succeed Verilog using concepts from modern programming languages.
+Phi is a pure-ish RTL hardware description language based on Verilog that aims to be safer and more explicit.
 
-It is our goal to design a well-defined language with:
+Phi aims to have:
 * No behavioral ambiguity
 * A clear definition and meta-definition divide
 
-It's basically a mix of Swift/C++'s syntax with Verilog's semantics.
+Syntactically, it takes a lot from C/C++/Swift. Semantically, it takes the best parts of Verilog.
 
 Phi supports Linux, macOS, and Windows with MSYS2.
+
+# Examples
+## Counter
+```phi
+module Counter(
+    clock: Input,
+    reset: Input,
+    enable: Input,
+    output: Output[31..0]
+) {
+    Register[31..0] counter = 32b0
+    counter.clock = clock
+    counter.reset = reset
+    counter.data = counter &+ 32b1
+    counter.enable = enable
+
+    output = counter
+}
+```
 
 # Dependencies
 ## Running
@@ -97,11 +116,9 @@ There are two invocation options here: `./phic` and `./phi`.
 
 The former is a ruby script with certain capabilities including the ability to load .sv files and simulate them instantly: bypassing the .out file as a middle step. It also processes a special extension to SystemVerilog, ``` `phi ```. Tick phi allows you to include Phi files from SystemVerilog files, where the script will automatically invoke the Phi compiler on them.
 
-To invoke it, simply write `./phi <.phi or .sv file>`. In case of a phi file, it acts like the compiler itself, but some options (especially the debug only ones) are not available.
+To invoke it, simply write `./phi <.phi or .sv file>`. In case of a phi file, it acts like the compiler itself, but some options (primarily the debug only ones) are not available.
 
 Both executables comply with BSD-style system exits, and you can write `./phi(c) --help` for more info.
 
 # ⚖️ License
 Phi is available under the Apache 2.0 license, available at the root of this project as 'License'.
-
-Please try to keep any copyleft code out of the final binary, and that includes LGPL libraries.

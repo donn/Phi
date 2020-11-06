@@ -9,7 +9,8 @@ module EdgeDetector(
     actuallyGo = go & ~status
 }
 
-module SuccessiveApproximationControl(clk: @clock Input,
+module SuccessiveApproximationControl(
+    clk: @clock Input,
     reset: @reset Input,
     go : Input,
     cmp: Input,

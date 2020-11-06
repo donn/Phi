@@ -8,6 +8,7 @@
 #include <memory>
 #include <set>
 #include <functional>
+#include <sstream>
 
 namespace Phi {
     namespace Node {
@@ -105,7 +106,7 @@ namespace Phi {
         int represent(std::ostream* stream, int* node);
 #endif
 
-        virtual void moduleMetadata(void* jsonObject);
+        virtual void moduleMetadata(std::stringstream* jsonObject);
     };
 
     struct PortObject { // Abstract
@@ -125,7 +126,7 @@ namespace Phi {
 
         std::vector< std::shared_ptr<PortObject> > ports = {};
 
-        virtual void moduleMetadata(void* jsonObject);
+        virtual void moduleMetadata(std::stringstream* jsonObject);
     };
 
     struct Container: public Space, public Driven {
