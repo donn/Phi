@@ -86,7 +86,7 @@ $(BUILD_DIR)/git_version.h:
 	mkdir -p $(@D)
 	echo "#ifndef _AUTO_git_version_h" > $@
 	echo "#define _AUTO_git_version_h" >> $@
-	echo "namespace Phi {" >> $@
+	echo "namespace BuildInfo {" >> $@
 	echo "const char* GIT_TAG = \"$(shell git tag | tail -n 1)\";" >> $@
 	echo "const char* GIT_VER_STRING = \"$(shell git describe --always --tags)\";" >> $@
 	echo "}" >> $@
@@ -148,7 +148,10 @@ $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(R
 .PHONY: clean test
 
 test:
-	@sh ./Tests/run_tests
+	@ruby ./run_tests.rb
+
+clean_tests:
+	rm -rf ./Tests/**/*.phi.sv
 
 clean:
 	rm -rf $(BUILD_DIR)

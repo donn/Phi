@@ -9,7 +9,6 @@ module Adder(
 // Heck
 /*
     HECK!!!!
-    (I'm testing comments)
 */
 
 module Counter(

@@ -1,0 +1,18 @@
+module aa1(
+    a: Input,
+    b: Input,
+    c: Output[1..0]
+) {
+    c = a + b;
+}
+
+
+module aa2(
+    a: Input,
+    b: Input,
+    c: Output[1..0]
+) {
+    aa1 ss;
+    ss(a: a, b: b, c: c); // Out of line hooking
+}
+

@@ -1,8 +1,5 @@
 # List of problems or limitations with the current compiler by difficulty
 ## Implementation
-### Intermediate
-* Interfaces are not implemented
-
 ### Advanced
 * For loops and arrays are not functional
 

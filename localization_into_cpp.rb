@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+require_relative './bsd_exits.rb'
+
 errors = 0
 languages = {}
 for localization in Dir["Localization/*"]
@@ -25,7 +27,7 @@ end
 
 if errors != 0
     STDERR.puts "Errors have occurred trying to process the localization files. The compilation will stop."
-    exit 65
+    exit BSDExits[:DATAERR]
 end
 
 finalHashValue = ""
