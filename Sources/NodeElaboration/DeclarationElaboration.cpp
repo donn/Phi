@@ -68,7 +68,7 @@ void Port::addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck) {
             context->addError(location, "port.unknownOrIncompatibleAnnotation");
         } else {
             // Place annotation if possible
-            auto module = context->table->findNearest(Space::Type::module);
+            auto module = std::static_pointer_cast<SpaceWithPorts>(context->table->findNearest(Space::Type::module));
             auto target = module->annotations.find(annotationUnwrapped);
 
             if (target != module->annotations.end()) {
@@ -242,7 +242,8 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     std::shared_ptr<Driven> pointerAsDriven, clockDriven, resetDriven, resetValueDriven, conditionDriven, dataDriven, enableDriven;
     std::shared_ptr<Container> pointerAsContainer;
     std::shared_ptr<SymbolArray> pointerAsArray;
-    std::shared_ptr<Space> declarativeModule, comb;
+    std::shared_ptr<SpaceWithPorts> declarativeModule;
+    std::shared_ptr<Space> comb;
     std::shared_ptr<Range> busShared = nullptr;
 
     std::map<std::string, std::shared_ptr<Node>>::iterator clockAnnotation, resetAnnotation, conditionAnnotation, enableAnnotation;
@@ -257,8 +258,7 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 
     tryElaborate(array, context);
 
-
-    declarativeModule = context->table->findNearest(Space::Type::module);
+    declarativeModule = std::static_pointer_cast<SpaceWithPorts>(context->table->findNearest(Space::Type::module));
     tld = std::static_pointer_cast<TopLevelDeclaration>(declarativeModule->declarator);
 
     assert(declarativeModule);
@@ -416,13 +416,8 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             }
             pointer = pointerAsDriven;
         }
-    } else {
-        pointerAsArray = std::make_shared<SymbolArray>(identifier->idString, shared_from_this(), size);
-        for (AccessWidth i = 0; i < size; i += 1) {
-            pointerAsArray->array.push_back(std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst));
-        }
-        pointer = pointerAsArray;
     }
+    
     if ((comb = context->table->findNearest(Space::Type::comb))) {
         context->addError(location, "comb.declarationNotAllowed");
         goto exit;

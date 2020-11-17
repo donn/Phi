@@ -410,15 +410,17 @@ std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional
                 if (auto pointerAsArray = std::dynamic_pointer_cast<SymbolArray>(pointer)) {
                     *access.trueIndex = false;
                     
-                    if (access.index >= pointerAsArray->array.size()) {
+                    if (access.index >= pointerAsArray->size || access.index < 0) {
                         throw "symbol.outOfRangeAccess";
                     }
 
+                    auto indexString = std::to_string(access.index);
+
                     if (std::next(j) == accesses.end()) {
-                        return { pointerAsArray->array[access.index], from, to };
+                        return { pointerAsArray->space[indexString], from, to };
                     }
 
-                    pointer = pointerAsArray->array[access.index];
+                    pointer = pointerAsArray->space[indexString];
                 } else if (auto pointerAsDriven = std::dynamic_pointer_cast<Driven>(pointer)) {
                     if (
                     (pointerAsDriven->msbFirst && (access.index > pointerAsDriven->from || access.index < pointerAsDriven->to))

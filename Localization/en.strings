@@ -1,6 +1,6 @@
 "parser.syntaxError" = "syntax error";
 "phi.arraysUnsupported" = "arrays are not implemented in this version of phi";
-"phi.parametersUnsupported" = "arrays are not implemented in this version of phi";
+"phi.parametersUnsupported" = "parameters are not implemented in this version of phi";
 "FATAL" = "a fatal internal compiler error has occurred, please report this as a bug";
 
 "expr.hardwareInIf" = "if statements only allow software expressions at the top level.";

@@ -99,7 +99,6 @@ namespace Phi {
 
         Type type;
         std::map< std::string, std::shared_ptr<Symbol> > space;
-        std::map< std::string, std::shared_ptr<Node::Node> > annotations;
 
         Space(std::string id, std::shared_ptr<Node::Node> declarator, Type type = Type::other): Symbol(id, declarator), type(type) {}
 #if YYDEBUG
@@ -125,6 +124,7 @@ namespace Phi {
         SpaceWithPorts(std::string id, std::shared_ptr<Node::Node> declarator, Type type = Type::module): Space(id, declarator, type) {}
 
         std::vector< std::shared_ptr<PortObject> > ports = {};
+        std::map< std::string, std::shared_ptr<Node::Node> > annotations;
 
         virtual void moduleMetadata(std::stringstream* jsonObject);
     };
@@ -133,10 +133,10 @@ namespace Phi {
         Container(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): Space(id, declarator), Driven(id, declarator, from, to, msbFirst) {} 
     };
 
-    struct SymbolArray: public Symbol {
-        std::vector <std::shared_ptr<Symbol> > array;
+    struct SymbolArray: public Space {
+        AccessWidth size;
 
-        SymbolArray(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth size = 1): Symbol(id, declarator) {}
+        SymbolArray(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth size = 1): Space(id, declarator), size(size) {}
 #if YYDEBUG
         //int represent(std::ostream* stream, int* node);
 #endif
