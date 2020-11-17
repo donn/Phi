@@ -296,21 +296,11 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
 
     tryElaborate(optionalAssignment, context);
 
-    std::shared_ptr<Symbol> symbol = nullptr;
-
+    auto generatedSymbols = std::vector< std::pair< std::string, std::shared_ptr<Symbol> > >();
     for (AccessWidth it = 0; it < size; it += 1) {
-        if (optionalAssignment) { // Already reported error if it's an array
-            if (optionalAssignment->type != Expression::Type::error) {
-                if (width != optionalAssignment->numBits) {
-                    context->addError(location, "driving.widthMismatch");
-                }
-                if (type == VariableLengthDeclaration::Type::var && optionalAssignment->type != Expression::Type::compileTime) {
-                    context->addError(location, "driving.hardwareDominance");
-                }
-            }
-        } 
+        auto id = size == 1 ? identifier->idString : identifier->idString + "[" + std::to_string(it) + "]";
         if (type == VLD::Type::reg || type == VLD::Type::latch) {
-            auto container = std::make_shared<Container>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
+            auto container = std::make_shared<Container>(id, shared_from_this(), from.value(), to.value(), msbFirst);
 
             auto declProp = [&](
                 std::string name,
@@ -322,7 +312,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
             ) {
                 auto dli = selfAsDLI ?
                     shared_from_this() :
-                    tld->propertyDeclaration(context, identifier->idString, name, nullptr)
+                    tld->propertyDeclaration(context, id, name, nullptr)
                     ;
 
                 auto driven = fullWidth ?
@@ -337,7 +327,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
                 context->checks.push_back(Context::DriveCheck(driven, nullopt, nullopt, [=]() {
                     if (annotation != declarativeModule->annotations.end()) {
                         auto port = std::static_pointer_cast<Port>(annotation->second);
-                        tld->propertyAssignment(context, identifier->idString, name, port->identifier->idString);
+                        tld->propertyAssignment(context, id, name, port->identifier->idString);
                         if (ifDriven.has_value()) {
                             ifDriven.value()();
                         }
@@ -374,23 +364,45 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
                 this->hasEnable = true;
             });
 
-            symbol = std::static_pointer_cast<Symbol>(std::static_pointer_cast<Driven>(container));
-            break;
+            generatedSymbols.push_back(std::pair(std::to_string(it), std::static_pointer_cast<Symbol>(std::static_pointer_cast<Driven>(container))));
         } else {
-            auto driven = std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
+            auto driven = std::make_shared<Driven>(id, shared_from_this(), from.value(), to.value(), msbFirst);
             if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
                 driven->drive(optionalAssignment);
             }
-            symbol = std::static_pointer_cast<Symbol>(driven);
+            generatedSymbols.push_back(std::pair(std::to_string(it), std::static_pointer_cast<Symbol>(driven)));
         }
+        
+        if (optionalAssignment) { // Already reported error if it's an array
+            if (optionalAssignment->type != Expression::Type::error) {
+                if (width != optionalAssignment->numBits) {
+                    context->addError(location, "driving.widthMismatch");
+                }
+                if (type == VariableLengthDeclaration::Type::var && optionalAssignment->type != Expression::Type::compileTime) {
+                    context->addError(location, "driving.hardwareDominance");
+                }
+            }
+        } 
     }
     
     std::shared_ptr<Space> comb;
     if ((comb = context->table->findNearest(Space::Type::comb))) {
         context->addError(location, "comb.declarationNotAllowed");
+        return;
+    } 
+    
+
+    std::shared_ptr<Symbol> symbol = nullptr;
+    if (size != 1) {
+        auto array = std::make_shared<SymbolArray>(identifier->idString, shared_from_this(), size);
+        for (auto& symbol: generatedSymbols) {
+            array->space[symbol.first] = symbol.second;
+        }
+        symbol = array;
     } else {
-        context->table->add(identifier->idString, symbol);
+        symbol = generatedSymbols[0].second;
     }
+    context->table->add(identifier->idString, symbol);
 }
 
 

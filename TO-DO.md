@@ -1,7 +1,10 @@
 # List of problems or limitations with the current compiler by difficulty
 ## Implementation
+### Intermediate
+* Proper "next" structure for Nodes (error reporting currently collapses too much)
+* Arrays translation not functional
+
 ### Advanced
-* Arrays are not functional
 * For loops are not functional
 
 ### Grueling

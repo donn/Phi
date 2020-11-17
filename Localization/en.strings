@@ -30,9 +30,11 @@
 "symbol.outOfRangeAccess" = "out of range";
 "symbol.accessIsFinal" = "property not found";
 "symbol.notIndexable" = "symbol is not indexable";
-"register.clockUndriven" = "register clock not set";
-"register.resetUndriven" = "register reset not set";
-"register.dataUndriven" = "register data lines not driven";
+"container.clockUndriven" = "register clock not set";
+"container.resetUndriven" = "register reset not set";
+"container.resetValueUndriven" = "register reset value not set";
+"container.dataUndriven" = "register/latch data lines not driven";
+"container.conditionUndriven" = "latch condition not set";
 "module.portNotFound" = "port not found in module";
 "output.undriven" = "modules are to drive all outputs";
 "compliance.interfacesOnly" = "modules may not comply with other modules' port interfaces";
