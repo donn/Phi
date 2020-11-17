@@ -20,6 +20,7 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
     // Get and verify symbol
     auto accessTuple = lhs->accessList();
     auto accesses = std::get<0>(accessTuple);
+    // Phi::SymbolTable::Access::representList(&std::cout, &accesses);
     auto accessFrom = std::get<1>(accessTuple);
     auto accessTo = std::get<2>(accessTuple);
 
@@ -57,7 +58,7 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
         } else if (dliAttache->type == VLD::Type::reg) {
             if ((container = std::dynamic_pointer_cast<Container>(driven))){
                 *skipTranslation = true;
-                driven = std::dynamic_pointer_cast<Driven>(container->space["_0R"]);
+                driven = std::dynamic_pointer_cast<Driven>(container->space["resetValue"]);
                 elevate = true;
             }
         } else if (dliAttache->type == VLD::Type::latch) {
@@ -100,12 +101,8 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
         }
         *inComb = true;
         combDeclarator->conclusionTriggers.push_back([=](){
-            //Unsafe allocation
             auto exp = Expression::abstract(Expression::Type::runTime, width);
             driven->drive(exp, from, to);
-            // if (!driven->drive(exp, from, to)) { // If we accidentally created another unneeded one for this comb block, just deallocate
-            //     delete exp;
-            // }
         });
     } else {
         driven->drive(expression, from, to);

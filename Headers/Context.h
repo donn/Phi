@@ -38,16 +38,16 @@ namespace Phi {
             std::shared_ptr<Driven> target;
             optional<AccessWidth> from;
             optional<AccessWidth> to;
-            std::function<void()> effect;
-            optional< std::function<void()> > afterEffect;
+            optional< std::function<void()> > ifUndriven;
+            optional< std::function<void()> > ifDriven;
 
             DriveCheck(
                 std::shared_ptr<Driven> target,
                 optional<AccessWidth> from,
                 optional<AccessWidth> to,
-                std::function<void()> effect,
-                optional< std::function<void()> > afterEffect = nullopt
-            ): target(target), from(from), to(to), effect(effect), afterEffect(afterEffect) {}
+                optional< std::function<void()> > ifUndriven = nullopt,
+                optional< std::function<void()> > ifDriven = nullopt
+            ): target(target), from(from), to(to), ifUndriven(ifUndriven), ifDriven(ifDriven) {}
         };
         std::vector<DriveCheck> checks;
         SymbolTable* table = nullptr;

@@ -226,27 +226,10 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
 }
 
-void DeclarationListItem::MACRO_ELAB_SIG_IMP {
+// This assistant function exists because of the number of exits this function can take.
+// This is easily the most disgustingly written function in this whole codebase.
+void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
     using VLD = VariableLengthDeclaration;
-    // Declaration Block because goto is going to happen
-    std::shared_ptr<DeclarationListItem> rightDLI;
-
-    std::shared_ptr<DeclarationListItem> clockDLI;
-    std::shared_ptr<DeclarationListItem> resetDLI;
-    std::shared_ptr<DeclarationListItem> conditionDLI;
-    std::shared_ptr<DeclarationListItem> dataDLI;
-    std::shared_ptr<DeclarationListItem> enableDLI;
-    std::shared_ptr<TopLevelDeclaration> tld;
-
-    std::shared_ptr<Symbol> pointer;
-    std::shared_ptr<Driven> pointerAsDriven, clockDriven, resetDriven, resetValueDriven, conditionDriven, dataDriven, enableDriven;
-    std::shared_ptr<Container> pointerAsContainer;
-    std::shared_ptr<SymbolArray> pointerAsArray;
-    std::shared_ptr<SpaceWithPorts> declarativeModule;
-    std::shared_ptr<Space> comb;
-    std::shared_ptr<Range> busShared = nullptr;
-
-    std::map<std::string, std::shared_ptr<Node>>::iterator clockAnnotation, resetAnnotation, conditionAnnotation, enableAnnotation;
 
     AccessWidth size = 1;
     AccessWidth width = 1;
@@ -258,49 +241,49 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 
     tryElaborate(array, context);
 
-    declarativeModule = std::static_pointer_cast<SpaceWithPorts>(context->table->findNearest(Space::Type::module));
-    tld = std::static_pointer_cast<TopLevelDeclaration>(declarativeModule->declarator);
+    auto declarativeModule = std::static_pointer_cast<SpaceWithPorts>(context->table->findNearest(Space::Type::module));
+    auto tld = std::static_pointer_cast<TopLevelDeclaration>(declarativeModule->declarator);
 
     assert(declarativeModule);
 
     if (array) {
-        context->addError(location, "phi.arraysUnsupported"); // UNSUPPORTED
-
         if (optionalAssignment) {
             throw "array.inlineInitialization";
         }
         switch (array->type) {
         case Expression::Type::parameterSensitive:
             size = 0;
+            context->addError(location, "phi.parametersUnsupported");
+            return;
             break;
         case Expression::Type::compileTime:
             if (!Utils::apIntCheck(&array->value.value(), maxAccessWidth)) {
                 context->addError(location, "array.maximumExceeded");
-                goto exit; 
+                return; 
             }
             size = array->value.value().getLimitedValue();
             if (size == 0) {
                 context->addError(location, "array.cannotBeZero");
-                goto exit; 
+                return;
             }
             break;
         case Expression::Type::runTime:
             context->addError(location, "array.hardwareExpression");
             [[fallthrough]];
         case Expression::Type::error:
-            goto exit;
-            break;
+            return;
         }
     }
 
     from = to = 0;
 
+    std::shared_ptr<Range> busShared = nullptr;
     if (bus.has_value()) {
         busShared = bus.value().lock();
         tryElaborate(busShared, context);
         if (busShared) {
             if (busShared->from->type == Expression::Type::error) {
-                goto exit;
+                return;
             }
             from = busShared->from->value.value().getLimitedValue();
             to = busShared->to->value.value().getLimitedValue();
@@ -313,9 +296,10 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 
     tryElaborate(optionalAssignment, context);
 
+    std::shared_ptr<Symbol> symbol = nullptr;
 
-    if (size == 1) {
-        if (optionalAssignment) {
+    for (AccessWidth it = 0; it < size; it += 1) {
+        if (optionalAssignment) { // Already reported error if it's an array
             if (optionalAssignment->type != Expression::Type::error) {
                 if (width != optionalAssignment->numBits) {
                     context->addError(location, "driving.widthMismatch");
@@ -325,60 +309,59 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
                 }
             }
         } 
-        switch (type) {
-        case VLD::Type::reg:
-        case VLD::Type::latch:     
-            pointerAsContainer = std::make_shared<Container>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);   
-            if (type == VLD::Type::reg) {                
+        if (type == VLD::Type::reg || type == VLD::Type::latch) {
+            auto container = std::make_shared<Container>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
+
+            auto declProp = [&](
+                std::string name,
+                std::string annotationStr = "",
+                bool selfAsDLI = false,
+                bool fullWidth = false,
+                bool mandatory = true,
+                std::optional< std::function<void()> > ifDriven = nullopt
+            ) {
+                auto dli = selfAsDLI ?
+                    shared_from_this() :
+                    tld->propertyDeclaration(context, identifier->idString, name, nullptr)
+                    ;
+
+                auto driven = fullWidth ?
+                    std::make_shared<Driven>(name, dli, from.value(), to.value(), msbFirst) :
+                    std::make_shared<Driven>(name, dli)
+                    ;
+
+                auto annotation = declarativeModule->annotations.find(annotationStr);
+
+                container->space[name] = driven;
+
+                context->checks.push_back(Context::DriveCheck(driven, nullopt, nullopt, [=]() {
+                    if (annotation != declarativeModule->annotations.end()) {
+                        auto port = std::static_pointer_cast<Port>(annotation->second);
+                        tld->propertyAssignment(context, identifier->idString, name, port->identifier->idString);
+                        if (ifDriven.has_value()) {
+                            ifDriven.value()();
+                        }
+                    } else {
+                        if (mandatory) {
+                            context->addError(location, "container." + name + "Undriven");
+                        }
+                    }
+                }, ifDriven));
+                return driven;
+            };
+
+            if (type == VLD::Type::reg) {
                 // Register properties
-                clockDLI = tld->propertyDeclaration(context, identifier->idString, "clock", nullptr);
-                clockDriven = std::make_shared<Driven>("clock", clockDLI);
-                pointerAsContainer->space["clock"] = clockDriven;
-                clockAnnotation = declarativeModule->annotations.find("@clock");
-                context->checks.push_back(Context::DriveCheck(clockDriven, nullopt, nullopt, [=]() {
-                    if (clockAnnotation != declarativeModule->annotations.end()) {
-                        auto port = std::static_pointer_cast<Port>(clockAnnotation->second);
-                        tld->propertyAssignment(context, identifier->idString, "clock", port->identifier->idString);
-                    } else {
-                        context->addError(location, "register.clockUndriven");
-                    }
-                }));
+                declProp("clock", "@clock");
+                declProp("reset", "@reset");
 
-                resetDLI = tld->propertyDeclaration(context, identifier->idString, "reset", nullptr);
-                resetDriven = std::make_shared<Driven>("reset", resetDLI);
-                pointerAsContainer->space["reset"] = resetDriven;
-                resetAnnotation = declarativeModule->annotations.find("@reset");
-                context->checks.push_back(Context::DriveCheck(resetDriven, nullopt, nullopt, [=]() {
-                    if (resetAnnotation != declarativeModule->annotations.end()) {
-                        auto port = std::static_pointer_cast<Port>(resetAnnotation->second);
-                        tld->propertyAssignment(context, identifier->idString, "reset", port->identifier->idString);
-                    } else {
-                        context->addError(location, "register.resetUndriven");
-                    }
-                }));
-
-                auto resetValueDriven = std::make_shared<Driven>("_0R", shared_from_this(), from.value(), to.value(), msbFirst);
+                auto resetValueDriven = declProp("resetValue", "", true, true);
                 if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
                     resetValueDriven->drive(optionalAssignment);
                 }
-                pointerAsContainer->space["_0R"] = resetValueDriven;
-                context->checks.push_back(Context::DriveCheck(resetValueDriven, nullopt, nullopt, [=](){
-                    context->addError(location, "register.resetValueUndriven");
-                }));
             } else {
                 // Latch properties
-                conditionDLI = tld->propertyDeclaration(context, identifier->idString, "condition", nullptr);
-                conditionDriven = std::make_shared<Driven>("condition", conditionDLI);
-                pointerAsContainer->space["condition"] = conditionDriven;
-                conditionAnnotation = declarativeModule->annotations.find("@condition");
-                context->checks.push_back(Context::DriveCheck(conditionDriven, nullopt, nullopt, [=]() {
-                    if (conditionAnnotation != declarativeModule->annotations.end()) {
-                        auto port = std::static_pointer_cast<Port>(conditionAnnotation->second);
-                        tld->propertyAssignment(context, identifier->idString, "condition", port->identifier->idString);
-                    } else {
-                        context->addError(location, "latch.conditionUndriven");
-                    }
-                }));
+                declProp("condition", "@condition");
 
                 if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
                     context->addError(location, "driving.latchNoReset");
@@ -386,49 +369,38 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
             }
 
             // Common properties
-            dataDLI = tld->propertyDeclaration(context, identifier->idString, "data", busShared);
-            dataDriven = std::make_shared<Driven>("data", dataDLI, from.value(), to.value(), msbFirst);
-            pointerAsContainer->space["data"] = dataDriven;
-            context->checks.push_back(Context::DriveCheck(dataDriven, nullopt, nullopt, [=](){
-                context->addError(location, "register.dataUndriven");
-            }));
-
-            enableDLI = tld->propertyDeclaration(context, identifier->idString, "enable", nullptr);
-            enableDriven = std::make_shared<Driven>("enable", enableDLI);
-            pointerAsContainer->space["enable"] = enableDriven;
-            enableAnnotation = declarativeModule->annotations.find("@enable");
-            context->checks.push_back(Context::DriveCheck(enableDriven, nullopt, nullopt, [=]() {
-                if (enableAnnotation != declarativeModule->annotations.end()) {
-                    auto port = std::static_pointer_cast<Port>(enableAnnotation->second);
-                    tld->propertyAssignment(context, identifier->idString, "enable", port->identifier->idString);
-                }
-            }, [=]() {
+            declProp("data", "", false, true);
+            declProp("enable", "@enable", false, false, false, [=]() {
                 this->hasEnable = true;
-            }));
+            });
 
-            pointerAsDriven = pointerAsContainer; // Believe it or not, we need this cast first anyway.
-            pointer = pointerAsDriven;
+            symbol = std::static_pointer_cast<Symbol>(std::static_pointer_cast<Driven>(container));
             break;
-        default:
-            pointerAsDriven = std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
+        } else {
+            auto driven = std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
             if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
-                pointerAsDriven->drive(optionalAssignment);
+                driven->drive(optionalAssignment);
             }
-            pointer = pointerAsDriven;
+            symbol = std::static_pointer_cast<Symbol>(driven);
         }
     }
     
+    std::shared_ptr<Space> comb;
     if ((comb = context->table->findNearest(Space::Type::comb))) {
         context->addError(location, "comb.declarationNotAllowed");
-        goto exit;
     } else {
-        context->table->add(identifier->idString, pointer);
+        context->table->add(identifier->idString, symbol);
     }
+}
 
-exit:
+
+
+void DeclarationListItem::MACRO_ELAB_SIG_IMP {
+    elaborationAssistant(context);
+
     //PII
     if (right) {
-        rightDLI = std::static_pointer_cast<DeclarationListItem>(right);
+        auto rightDLI = std::static_pointer_cast<DeclarationListItem>(right);
         rightDLI->type = type;
         rightDLI->bus = bus;
         tryElaborate(right, context);

@@ -90,15 +90,10 @@ void Context::driveChecks() {
 
         auto coverage = check.target->checkRangeCoverage(from, to);
 
-        if (coverage.size() == 0) {
-            check.effect();
-        }
-
-        if (check.afterEffect.has_value()) {
-            coverage = check.target->checkRangeCoverage(from, to);
-            if (coverage.size() != 0) {
-                check.afterEffect.value()();
-            }
+        if (coverage.size() == 0 && check.ifUndriven.has_value()) {
+            check.ifUndriven.value()();
+        } else if (coverage.size() != 0 && check.ifDriven.has_value()) {
+            check.ifDriven.value()();
         }
     }
 }

@@ -376,6 +376,20 @@ bool Driven::drive(
     return true;
 }
 
+#if YYDEBUG
+void SymbolTable::Access::representList(std::ostream* ostream, std::vector<Access>* list) {
+    auto& accesses = *list;
+    for (auto j = accesses.begin(); j != accesses.end(); j++) {
+        auto& access = *j;
+        if (access.type == Access::Type::id) {
+            *ostream << ((j != accesses.begin()) ? "." : "") << access.id;
+        } else if (access.type == Access::Type::index) {
+            *ostream << "[" << access.index << "]";
+        }
+    }
+    *ostream << std::endl;
+}
+#endif
 
 std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional<AccessWidth> > SymbolTable::find(
     std::vector<Access>* accessesPtr,

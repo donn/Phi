@@ -31,17 +31,19 @@ for test in tests
     file_sv = file + ".sv"
 
     `cd #{cwd}; '#{absolute_phic}' -o '#{file_sv}' '#{file}' 2>&1`
-    phi_exit = $?.exitstatus    
+    phi_exit = $?.exitstatus
+    iv_exit = nil    
     if phi_exit == 0
         valid_phi += 1
-    end
     
-    `cd #{cwd}; 'iverilog' '#{file_sv}'  2>&1 && rm -f a.out`
-    iv_exit = $?.exitstatus
-    if iv_exit == 0
-        valid_iverilog += 1
+        `cd #{cwd}; 'iverilog' '#{file_sv}'  2>&1 && rm -f a.out`
+        iv_exit = $?.exitstatus
+        if iv_exit == 0
+            valid_iverilog += 1
+        end
     end
-    puts output_format_str % [test_name, phi_exit == 0 ? '⭕' : '❌', iv_exit == 0 ? '⭕' : '❌']
+
+    puts output_format_str % [test_name, phi_exit == 0 ? '⭕' : '❌', iv_exit.nil? ? '⛔' : iv_exit == 0 ? '⭕' : '❌']
 end
 puts "---"
 puts "#{valid_phi}/#{tests.count} passed Phi."

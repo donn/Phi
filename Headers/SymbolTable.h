@@ -161,6 +161,9 @@ namespace Phi {
 
             inline static Access ID(std::string* id) { return {Type::id, *id, 0, nullptr}; }
             inline static Access Index(AccessWidth access, bool* trueIndex) { return {Type::index, "", access, trueIndex}; }
+#if YYDEBUG
+            static void representList(std::ostream* ostream, std::vector<Access>* list);
+#endif
         };
         SymbolTable();
         ~SymbolTable();

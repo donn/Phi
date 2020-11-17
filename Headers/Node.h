@@ -299,6 +299,7 @@ namespace Phi {
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
+            void elaborationAssistant(MACRO_ELAB_PARAMS);
 
         };
 
