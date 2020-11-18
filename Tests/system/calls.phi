@@ -1,8 +1,8 @@
 module Example() {
-    Wire[7..0] k1 = $Sys.pow(8d2, 32d5);
-    Wire[7..0] k2 = $Sys.log(8d100, 32d2);
-    Wire[7..0] k3 = $Sys.abs(8d100);
+    Wire[7..0] k1 = $Phi.Sys.pow(8d2, 32d5);
+    Wire[7..0] k2 = $Phi.Sys.log(8d100, 32d2);
+    Wire[7..0] k3 = $Phi.Sys.abs(8d100);
 
-    Wire[31..0] k4 = $Sys.interpretFromFile("example.txt", 3);
-    Wire[31..0] k5 = $Sys.fromFile("example.bin", 3, 4, 1);
+    Wire[31..0] k4 = $Phi.Sys.interpretFromFile("example.txt", 3);
+    Wire[31..0] k5 = $Phi.Sys.fromFile("example.bin", 3, 4, 1);
 }

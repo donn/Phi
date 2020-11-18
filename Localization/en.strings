@@ -3,6 +3,7 @@
 "phi.parametersUnsupported" = "parameters are not implemented in this version of phi";
 "FATAL" = "a fatal internal compiler error has occurred, please report this as a bug";
 
+"namespace.reserved" = "this namespace is reserved for use by the language";
 "expr.hardwareInIf" = "if statements only allow software expressions at the top level.";
 "expr.widthMismatch" = "widths of the two expressions do not match";
 "array.inlineInitialization" = "arrays are not initializable on the same line";

@@ -1,16 +1,13 @@
-module Kappa() {
-    namespace Beta {
-        namespace Gamma {
-            Register[31..0] k[2];
+namespace Alpha {
+    module Kappa() {
+        namespace Beta {
+            namespace Gamma {
+                Register[31..0] k;
+            }
         }
+        Beta.Gamma.k = 0;
+        Beta.Gamma.k.data = 32;
+        Beta.Gamma.k.clock = 1b1;
+        Beta.Gamma.k.reset = 1b0;
     }
-    Beta.Gamma.k[0] = 0;
-    Beta.Gamma.k[0].data = 32;
-    Beta.Gamma.k[0].clock = 1b1;
-    Beta.Gamma.k[0].reset = 1b0;
-
-    Beta.Gamma.k[1] = 0;
-    Beta.Gamma.k[1].data = 32;
-    Beta.Gamma.k[1].clock = 1b1;
-    Beta.Gamma.k[1].reset = 1b0;
 }

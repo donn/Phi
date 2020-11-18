@@ -2,6 +2,7 @@
 #define _context_h
 #include "Types.h"
 #include "SymbolTable.h"
+#include "BuildInfo.h"
 
 #include <location.hh>
 

@@ -60,7 +60,7 @@ CPP_FLAGS = -Wall -pedantic $(CPP_LY_FLAGS)
 
 CPP_LY_SOURCES = $(YACC_OUT) $(LEX_OUT)
 CPP_SOURCES = $(shell find Sources | grep .cpp) $(BUILD_DIR)/Localization.cpp
-CPP_HEADERS = $(shell find Headers | grep .h) $(BUILD_DIR)/git_version.h   $(LEX_HEADER)
+CPP_HEADERS = $(shell find Headers | grep .h) $(BUILD_DIR)/git_version.h $(BUILD_DIR)/sv_primitives.h $(LEX_HEADER)
 CPP_LIBRARY_SOURCES =
 
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
@@ -86,9 +86,24 @@ $(BUILD_DIR)/git_version.h:
 	mkdir -p $(@D)
 	echo "#ifndef _AUTO_git_version_h" > $@
 	echo "#define _AUTO_git_version_h" >> $@
+	echo "namespace Phi {" >> $@
 	echo "namespace BuildInfo {" >> $@
 	echo "const char* GIT_TAG = \"$(shell git tag | tail -n 1)\";" >> $@
 	echo "const char* GIT_VER_STRING = \"$(shell git describe --always --tags)\";" >> $@
+	echo "}" >> $@
+	echo "}" >> $@
+	echo "#endif // _AUT0_git_version_h" >> $@
+
+$(BUILD_DIR)/sv_primitives.h: Sources/SystemVerilog/Primitives.sv
+	mkdir -p $(@D)
+	echo "#ifndef _AUTO_git_version_h" > $@
+	echo "#define _AUTO_git_version_h" >> $@
+	echo "namespace Phi {" >> $@
+	echo "namespace Common {" >> $@
+	echo "const char* primitives = R\"EOF( " >> $@
+	cat $< >> $@
+	echo ")EOF\";" >> $@
+	echo "}" >> $@
 	echo "}" >> $@
 	echo "#endif // _AUT0_git_version_h" >> $@
 
@@ -124,7 +139,7 @@ $(LEX_OUT): $(LEX) $(YACC_OUT) Intermediates/reflex
 $(LEX_HEADER): $(LEX_OUT)
 	@echo "$(PRESET)>> Scanner header generated.$(RESET)"
 
-$(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS)
+$(OBJECTS): $(BUILD_DIR)/%.o : %.c $(HEADERS) 
 	mkdir -p $(@D)
 	@echo "$(PRESET)>> Compiling $< $(RESET)"
 	$(CC) $(C_FLAGS) -c -I$(HEADER_DIR) -o $@ $<

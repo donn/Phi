@@ -111,8 +111,7 @@ namespace Phi {
     struct PortObject { // Abstract
         enum class Polarity {
             input = 0,
-            output,
-            output_reg
+            output
         };
 
         virtual Polarity getPolarity() = 0;

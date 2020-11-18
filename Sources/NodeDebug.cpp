@@ -21,9 +21,6 @@ std::string Port::debugLabel() {
         case PortObject::Polarity::output:
             polarityString = "Output";
             break;
-        case PortObject::Polarity::output_reg:
-            polarityString = "Output (Register in Verilog)";
-            break;
         default:
             polarityString = "Unknown";
     }
@@ -58,9 +55,6 @@ std::string VariableLengthDeclaration::debugLabel() {
         case VLD::Type::wire:
             typeString = "Wire";
             break;
-        case VLD::Type::wire_reg:
-            typeString = "Wire (Register in Verilog)";
-            break;
         case VLD::Type::reg:
             typeString = "Register";
             break;
@@ -76,9 +70,6 @@ std::string DeclarationListItem::debugLabel() {
     switch (type) {
         case VLD::Type::wire:
             typeString = "Wire";
-            break;
-        case VLD::Type::wire_reg:
-            typeString = "Wire (Register in Verilog)";
             break;
         case VLD::Type::reg:
             typeString = "Register";

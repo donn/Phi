@@ -5,6 +5,10 @@
 
 using namespace Phi::Node;
 
+static std::string adjustNamespace(std::string soFar, std::string adding) {
+    return soFar == "" ? adding : soFar + "." + adding;
+}
+
 // NOTE: This translation does NOT GO RIGHT! EVER!!
 void Port::MACRO_TRANS_SIG_IMP {
     switch (polarity) {
@@ -13,9 +17,9 @@ void Port::MACRO_TRANS_SIG_IMP {
             break;
         case PortObject::Polarity::output:
             *stream << "output";
-            break;
-        case PortObject::Polarity::output_reg:
-            *stream << "output reg";
+            if (assignedInComb) {
+                *stream << " reg";
+            }
             break;
     }
     
@@ -32,7 +36,7 @@ void Port::MACRO_TRANS_SIG_IMP {
 
 void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
     //adjust namespaceSoFar
-    namespaceSoFar = namespaceSoFar + "." + std::to_string((identifier->idString).length()) + identifier->idString;
+    namespaceSoFar = adjustNamespace(namespaceSoFar, identifier->idString);
     tryTranslate(contents, stream, namespaceSoFar, indent);
     tryTranslate(right, stream, namespaceSoFar, indent);
 }
@@ -101,22 +105,15 @@ void VariableLengthDeclaration::MACRO_TRANS_SIG_IMP {
 void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     using VLD = VariableLengthDeclaration;
 
-    switch(type){
-        case VLD::Type::wire_reg:
-        case VLD::Type::reg:
-        case VLD::Type::latch:
-            *stream << "reg ";
-            break;
-
-        case VLD::Type::wire:
-            //wire
-            *stream << "wire ";
-            break;
-        default:
-            // Var handled during elaboration
-            tryTranslate(right, stream, namespaceSoFar, indent);
-            return;
-    };
+    if (type == VLD::Type::wire && assignedInComb) {
+        *stream << "reg ";
+    } else if (type != VLD::Type::var) {
+        *stream << "wire ";
+    } else {
+        // Var is immutable and is handled at compile time.
+        tryTranslate(right, stream, namespaceSoFar, indent);
+        return;
+    }
 
     if (bus.has_value()) {
         tryTranslate(bus.value().lock(), stream, namespaceSoFar, indent);
@@ -128,84 +125,53 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         tryTranslate(identifier, stream, namespaceSoFar, indent);
     }
 
-    // Expression* array;
-    if (array) {
-        *stream << "[";
-        tryTranslate(array, stream, namespaceSoFar, indent);
-        *stream << "]";
-    }
-
-    if (optionalAssignment) {
-        *stream << " ";
-        *stream << "=";
-        *stream << " ";
-        *stream << "(";
-        tryTranslate(optionalAssignment, stream, namespaceSoFar, indent);
-        *stream << ")";
-    }
-
-    *stream << ";" << MACRO_EOL;
-
     //add wires,regs, always @ block, inside always @ block
-    auto nsfLocal = namespaceSoFar.length() == 0 ? identifier->idString : namespaceSoFar + "." + identifier->idString;
-    if (type==VLD::Type::reg) {
-        *stream << MACRO_EOL;
+    auto nsfLocal = adjustNamespace(namespaceSoFar, identifier->idString);
+    if (type == VLD::Type::reg || type == VLD::Type::latch) {
+        *stream << ";" << MACRO_EOL;
         *stream << MACRO_EOL;
 
-        *stream << "// Declaration stub for " << nsfLocal << MACRO_EOL;
-        *stream << "always @ (posedge \\" + nsfLocal + ".clock  or posedge \\" + nsfLocal + ".reset ) begin " << MACRO_EOL;
+        auto verilogPrimitive = type == VLD::Type::reg ? "\\Phi.Common.Register " : "\\Phi.Common.Latch";
+
+        *stream << verilogPrimitive << " ";
+        if (bus.has_value()) {
+            auto busStrong = bus.value().lock();
+            if (busStrong) {
+                *stream << "#(.from(";
+                tryTranslate(busStrong->from, stream, namespaceSoFar, indent);
+                *stream << "), .to(";
+                tryTranslate(busStrong->to, stream, namespaceSoFar, indent);
+                *stream << ")) ";
+            }
+        }
+        *stream <<  ("\\" + nsfLocal + ".module ");
+        
+        *stream << "(";
         MACRO_INDENT;
-            *stream << "if (\\" + nsfLocal + ".reset ) begin" << MACRO_EOL;
-            MACRO_INDENT;
-                *stream << "\\" << identifier->idString + " <= ";
-                tryTranslate(optionalAssignment, stream, nsfLocal, indent);
-                *stream << "; " << MACRO_EOL;
-            MACRO_DEDENT;
-            *stream << "end " << MACRO_EOL;
-            MACRO_INDENT;
-                *stream << "else begin" << MACRO_EOL;
-                if (hasEnable) {
-                    MACRO_INDENT;
-                    *stream << "if (\\" << nsfLocal + ".enable " << ") begin" << MACRO_EOL;
-                }
-                *stream << "\\" << identifier->idString + " <= \\" + nsfLocal + ".data ; " << MACRO_EOL;
-                if (hasEnable) {
-                    MACRO_DEDENT;
-                    *stream << "end" << MACRO_EOL;
-                }
-            MACRO_DEDENT;
-            *stream << "end " << MACRO_EOL;
+            *stream << ".data(" << ("\\" + nsfLocal + ".data ") << ")," << MACRO_EOL;
+            *stream << ".out("; tryTranslate(identifier, stream, namespaceSoFar, indent); *stream << ")," << MACRO_EOL;
+            if (type == VLD::Type::reg) {
+                *stream << ".resetValue("; tryTranslate(optionalAssignment, stream, nsfLocal, indent); *stream << "), " << MACRO_EOL;
+                *stream << ".reset(" << ("\\" + nsfLocal + ".reset ") << ")," << MACRO_EOL;
+                *stream << ".clock(" << ("\\" + nsfLocal + ".clock ") << ")," << MACRO_EOL;
+            } else {
+                *stream << ".condition(" << ("\\" + nsfLocal + ".condition ") << ")," << MACRO_EOL; 
+            }
+            *stream << ".enable(" << (hasEnable ? "\\" + nsfLocal + ".enable " : "1'b1") << ")";
         MACRO_DEDENT;
-        *stream << "end ";
+        *stream << "); " << MACRO_EOL << MACRO_EOL;
+    } else {
+        if (optionalAssignment) {
+            *stream << " ";
+            *stream << "=";
+            *stream << " ";
+            *stream << "(";
+            tryTranslate(optionalAssignment, stream, namespaceSoFar, indent);
+            *stream << ")";
+        }
 
-        *stream << MACRO_EOL;
-        *stream << MACRO_EOL;
-    } else if (type==VLD::Type::latch) {
-        *stream << MACRO_EOL;
-        *stream << MACRO_EOL;
-
-        *stream << "// Declaration stub for " << nsfLocal << MACRO_EOL;
-        *stream << "always @ (\\" + nsfLocal +".condition ) begin " << MACRO_EOL;
-        MACRO_INDENT;
-            *stream << "if (\\" + nsfLocal + ".condition ) begin" << MACRO_EOL;
-            MACRO_INDENT;  
-                if (hasEnable) {
-                    MACRO_INDENT;
-                    *stream << "if (\\" << nsfLocal + ".enable" << ") begin" << MACRO_EOL;
-                }
-                *stream << "\\" << identifier->idString + " <= \\" + nsfLocal+ ".data ; " << MACRO_EOL;
-                if (hasEnable) {
-                    MACRO_DEDENT;
-                    *stream << "end" << MACRO_EOL;
-                }
-            MACRO_DEDENT;
-            *stream << "end " << MACRO_EOL;
-        MACRO_DEDENT;
-        *stream << "end ";
-
-        *stream << MACRO_EOL;
-        *stream << MACRO_EOL;
-    } 
+        *stream << ";" << MACRO_EOL;
+    }
 
     tryTranslate(right, stream, namespaceSoFar, indent);
 }

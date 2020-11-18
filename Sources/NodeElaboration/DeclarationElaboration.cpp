@@ -92,9 +92,13 @@ bool Port::operator!=(const Port& rhs) {
 }
 
 void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
-    context->table->stepIntoAndCreate(identifier->idString, shared_from_this());
-    tryElaborate(contents, context);
-    context->table->stepOut();
+    if (identifier->idString == "Phi") {
+        throw "namespace.reserved";
+    } else {
+        context->table->stepIntoAndCreate(identifier->idString, shared_from_this());
+        tryElaborate(contents, context);
+        context->table->stepOut();
+    }
     tryElaborate(right, context);
 }
 
@@ -188,6 +192,7 @@ std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Co
     auto propertyNode = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), property.c_str()));
     auto left = std::make_shared<PropertyAccess>(context->noLocation(), containerNode, propertyNode);
     auto dli = std::make_shared<DeclarationListItem>(context->noLocation(), containerID, nullptr, nullptr);
+    std::cout << container << "." << property << ":" << range << std::endl;
     dli->trueIdentifier = left;
     dli->bus = range;
     dli->type = VariableLengthDeclaration::Type::wire;
@@ -312,9 +317,8 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
             ) {
                 auto dli = selfAsDLI ?
                     shared_from_this() :
-                    tld->propertyDeclaration(context, id, name, nullptr)
+                    tld->propertyDeclaration(context, id, name, fullWidth ? busShared : nullptr)
                     ;
-
                 auto driven = fullWidth ?
                     std::make_shared<Driven>(name, dli, from.value(), to.value(), msbFirst) :
                     std::make_shared<Driven>(name, dli)

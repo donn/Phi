@@ -129,6 +129,9 @@ namespace Phi {
 
             bool operator==(const Port& rhs);
             bool operator!=(const Port& rhs);
+            
+            // For elaborative use
+            bool assignedInComb = false;
         };
 
         struct TopLevelNamespace: public Declaration {
@@ -262,8 +265,6 @@ namespace Phi {
             enum class Type {
                 var = 0,
                 wire, reg, latch,
-
-                wire_reg, // For things that are Wires in Phi and Registers in Verilog (i.e. assigned to inside a comb block),
                 undefined
             };
             Type type = Type::undefined;
@@ -280,18 +281,10 @@ namespace Phi {
         };
 
         struct DeclarationListItem: public Declaration {
-            // CHECK IF THIS EXISTS FIRST: IF IT DOES, THEN TRANSLATE *THIS* INSTEAD OF IDENTIFIER
-            // THIS HAS BEEN A HACKY PSA
-            // For elaborative use
-            std::shared_ptr<LHExpression> trueIdentifier = nullptr;
-            
-            optional< std::weak_ptr<Range> > bus;
 
             VariableLengthDeclaration::Type type;
             std::shared_ptr<Expression> array;
             std::shared_ptr<Expression> optionalAssignment;
-
-            bool hasEnable = false;
 
             MACRO_DEBUGLABEL_SIG_HDR
 
@@ -300,6 +293,16 @@ namespace Phi {
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
             void elaborationAssistant(MACRO_ELAB_PARAMS);
+            
+            // For elaborative use
+            // CHECK IF THIS EXISTS FIRST: IF IT DOES, THEN TRANSLATE *THIS* INSTEAD OF IDENTIFIER
+            // THIS HAS BEEN A HACKY PSA
+            std::shared_ptr<LHExpression> trueIdentifier = nullptr;
+
+            bool hasEnable = false;
+            bool assignedInComb = false;
+            
+            optional< std::weak_ptr<Range> > bus;
 
         };
 

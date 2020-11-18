@@ -94,10 +94,10 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
     if ((comb = context->table->findNearest(Space::Type::comb))) {
         combDeclarator = std::static_pointer_cast<Combinational>(comb->declarator);
         if (dliAttache) {
-            dliAttache->type = VLD::Type::wire_reg;
+            dliAttache->assignedInComb = true;
         }
         if (portAttache) {
-            portAttache->polarity =PortObject::Polarity::output_reg;
+            portAttache->assignedInComb = true;
         }
         *inComb = true;
         combDeclarator->conclusionTriggers.push_back([=](){

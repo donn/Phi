@@ -2,7 +2,6 @@
 ## Implementation
 ### Intermediate
 * Proper "next" structure for Nodes (error reporting currently collapses too much)
-* Arrays translation not functional
 
 ### Advanced
 * For loops are not functional

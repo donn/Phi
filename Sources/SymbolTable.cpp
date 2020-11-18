@@ -30,9 +30,9 @@ SymbolTable::SymbolTable() {
     stack.push_back(head);
 
     // Create functions
+    stepIntoAndCreate("Phi", NULL);
     stepIntoAndCreate("Sys", NULL);
     using Parameter = Argument::Type;
-
 
     auto sysAbs= std::shared_ptr<Function>(new Function("abs", {Parameter::expression}, [](Argument::List* argList) {
         auto& list = *argList;
@@ -250,8 +250,8 @@ SymbolTable::SymbolTable() {
     add("fromFile", sysfromFile);
 
     stepOut();
+    stepOut();
 }
-
 
 SymbolTable::~SymbolTable() {
 }
@@ -486,7 +486,7 @@ void Space::moduleMetadata(std::stringstream* ssptr) {
         if (
             auto sp = std::dynamic_pointer_cast<Space>(element.second)
         ) {
-            if (sp->id != "Sys") {
+            if (sp->id != "Phi") {
                 if (it != space.begin()) {
                     ss << ",";
                 }
