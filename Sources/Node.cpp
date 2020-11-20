@@ -3,32 +3,39 @@
 
 using namespace Phi::Node;
 
-void Node::MACRO_ELAB_SIG_IMP {
-    tryElaborate(right, context);
-}
-
-void Node::MACRO_TRANS_SIG_IMP {
-    tryTranslate(right, stream, namespaceSoFar, indent);
-}
+void Node::MACRO_ELAB_SIG_IMP {}
+void Node::MACRO_TRANS_SIG_IMP {}
 
 void Phi::Node::tryElaborate(std::shared_ptr<Phi::Node::Node> node, MACRO_ELAB_PARAMS) {
-    if (node) {
+    while (node) {
         try {
             node->elaborate(context);  
         } catch (const char* e) {
             context->addError(node->location, e);
         }
+        auto asStatement = std::dynamic_pointer_cast<Statement>(node);
+        if (asStatement) {
+            node = asStatement->next;
+        } else {
+            node = nullptr;
+        }
     }
 }
 
 void Phi::Node::tryTranslate(std::shared_ptr<Phi::Node::Node> node, MACRO_TRANS_PARAMS) {
-    if (node) {
+    while (node) {
         auto asExpr = std::dynamic_pointer_cast<Expression>(node);
         if (asExpr && asExpr->type == Expression::Type::compileTime) {
             auto str = asExpr->value.value().toString(16, false);
             *stream << asExpr->numBits << "'h" << str;
         } else {
             node->translate(stream, namespaceSoFar, indent);
+        }
+        auto asStatement = std::dynamic_pointer_cast<Statement>(node);
+        if (asStatement) {
+            node = asStatement->next;
+        } else {
+            node = nullptr;
         }
     }
 }

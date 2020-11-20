@@ -30,20 +30,23 @@ for test in tests
     test_name = test_pathname.relative_path_from(test_folder_pathname)
     file_sv = file + ".sv"
 
-    `cd #{cwd}; '#{absolute_phic}' -o '#{file_sv}' '#{file}' 2>&1`
+    phi_results = `cd #{cwd}; '#{absolute_phic}' -o '#{file_sv}' '#{file}' 2>&1`
     phi_exit = $?.exitstatus
-    iv_exit = nil    
+    iv_exit = nil
+    iv_warning = false
     if phi_exit == 0
         valid_phi += 1
     
-        `cd #{cwd}; 'iverilog' '#{file_sv}'  2>&1 && rm -f a.out`
+        iv_results = `cd #{cwd}; 'iverilog' '-Wall' '#{file_sv}'  2>&1 && rm -f a.out`
         iv_exit = $?.exitstatus
-        if iv_exit == 0
+        if iv_results.include?("warning")
+            iv_warning = true
+        elsif iv_exit == 0
             valid_iverilog += 1
         end
     end
 
-    puts output_format_str % [test_name, phi_exit == 0 ? '⭕' : '❌', iv_exit.nil? ? '⛔' : iv_exit == 0 ? '⭕' : '❌']
+    puts output_format_str % [test_name, phi_exit == 0 ? '⭕' : '❌', iv_exit.nil? ? '⛔' : iv_exit == 0 ? iv_warning ? '⚠' : '⭕' : '❌']
 end
 puts "---"
 puts "#{valid_phi}/#{tests.count} passed Phi."

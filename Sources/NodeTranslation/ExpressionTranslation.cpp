@@ -228,7 +228,7 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
     auto cur = std::static_pointer_cast<ExpressionPair>(right);
     auto selection = std::static_pointer_cast<Expression>(left);
     while (cur != NULL) {
-        if (cur->right) {
+        if (cur->next) {
             *stream << "(";
             if (cur->label) {
                 tryTranslate(selection, stream, namespaceSoFar, indent);
@@ -241,11 +241,11 @@ void Multiplexer::MACRO_TRANS_SIG_IMP{
             *stream << "? ";
         }
         tryTranslate(cur->result, stream, namespaceSoFar, indent);
-        if (cur->right) {
+        if (cur->next) {
             *stream << ": ";
         }
         
-        cur = std::static_pointer_cast<ExpressionPair>(cur->right);
+        cur = std::static_pointer_cast<ExpressionPair>(cur->next);
     }
 }
 

@@ -8,8 +8,6 @@ using namespace Phi::Node;
 void Identifier::MACRO_TRANS_SIG_IMP {
     std::string namespacePrefix = (namespaceSoFar.length() == 0) ? "" : namespaceSoFar + ".";
     *stream << "\\" << namespacePrefix << idString << " ";
-
-    tryTranslate(right, stream, namespaceSoFar, indent); 
 }
 
 void ErrorNode::MACRO_TRANS_SIG_IMP {
@@ -62,8 +60,6 @@ void SpecialNumber::MACRO_TRANS_SIG_IMP {
         }
     }
     *stream << copy;
-    
-    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void LabeledStatementList::MACRO_TRANS_SIG_IMP {
@@ -124,7 +120,6 @@ void LabeledStatementList::MACRO_TRANS_SIG_IMP {
         }
     }
     tryTranslate(statements, stream, namespaceSoFar, indent); 
-    tryTranslate(right, stream, namespaceSoFar, indent); 
 }
 
 void Range::MACRO_TRANS_SIG_IMP {
@@ -141,7 +136,5 @@ void Range::MACRO_TRANS_SIG_IMP {
     *stream << ":";
     tryTranslate(to, stream, namespaceSoFar, indent); //to
     *stream << "] ";
-
-    tryTranslate(right, stream, namespaceSoFar, indent); 
 }
 

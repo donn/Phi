@@ -110,13 +110,15 @@ description:
     { $$ = epsilon; }
     | declaration description  {
         auto node = $1;
-        node->right = $2;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($2);
         $$ = node;
         context->head = node;
     }
     | KEYWORD_NAMESPACE identifier '{' description '}' description {
         auto node = std::make_shared<TopLevelNamespace>(@$, std::static_pointer_cast<Identifier>($2), $4);
-        node->right = $6;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($6);
         $$ = node;
         context->head = node;
     }
@@ -157,7 +159,8 @@ populated_port_declaration_list:
         auto polarity = polarityCast->text[0] == 'O';
 
         auto node = std::make_shared<Port>(@$, std::static_pointer_cast<Identifier>($1), polarity, std::static_pointer_cast<Range>($5), annotation);
-        node->right = $7;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($7);
         $$ = node;
     }
     | identifier ':' optional_annotation port_polarity optional_bus_declaration {
@@ -193,7 +196,8 @@ template_declaration:
 template_declaration_list:
     identifier optional_template_assignment template_declaration_list {
         auto node = std::make_shared<TemplateDeclaration>(@$, std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($2));
-        node->right = $3;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($3);
         $$ = node;
     }
     | identifier optional_template_assignment {
@@ -217,7 +221,8 @@ inheritance:
 inheritance_list:
     inheritance_list_item ',' inheritance_list {
         auto node = $1;
-        node->right = $3;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($3);
         $$ = node;
     }
     | inheritance_list_item {
@@ -324,12 +329,14 @@ labeled_statement_list:
     { $$ = epsilon; }
     | KEYWORD_CASE expression ':' statement_list labeled_statement_list {
         auto node = std::make_shared<LabeledStatementList>(@$, false, std::static_pointer_cast<Expression>($2), nullptr, std::static_pointer_cast<Statement>($4));
-        node->right = $5;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($5);
         $$ = node;
     }
     | KEYWORD_CASE special_number ':' statement_list labeled_statement_list {
         auto node = std::make_shared<LabeledStatementList>(@$, false, nullptr, std::static_pointer_cast<SpecialNumber>($2), std::static_pointer_cast<Statement>($4));
-        node->right = $5;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($5);
         $$ = node;
     }
     | KEYWORD_DEFAULT ':' statement_list {
@@ -347,7 +354,8 @@ statement_list:
     { $$ = epsilon; }
     | statement statement_list {
         auto node = $1;
-        node->right = $2;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($2);
         $$ = $1;
     }
     ;
@@ -410,7 +418,8 @@ optional_array_declaration:
 declaration_list:
     identifier optional_array_declaration optional_assignment ',' declaration_list {
         auto node = std::make_shared<DeclarationListItem>(@$, std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($2), std::static_pointer_cast<Expression>($3));
-        node->right = $5;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($5);
         $$ = node;
     }
     | identifier optional_array_declaration optional_assignment {
@@ -434,7 +443,8 @@ template_list:
     { $$ = epsilon; }
     | identifier ':' '(' expression ')' ',' template_list {
         auto node = std::make_shared<ExpressionIDPair>(@$, std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($4));
-        node->right = $7;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($7);
         $$ = node;
     }
     | identifier ':' '(' expression ')' {
@@ -461,7 +471,8 @@ ports:
 port_list:
     identifier ':' expression ',' port_list {
         auto node = std::make_shared<ExpressionIDPair>(@$, std::static_pointer_cast<Identifier>($1), std::static_pointer_cast<Expression>($3));
-        node->right = $5;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($5);
         $$ = node;
     }
     | identifier ':' expression {
@@ -663,13 +674,15 @@ procedural_call:
 procedural_call_list:
     expression ',' procedural_call_list {
         auto node = std::make_shared<ExpressionArgument>(@$, std::static_pointer_cast<Expression>($1));
-        node->right = $3;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($3);
         $$ = node;
     }
     | STRING ',' procedural_call_list {
         auto cast = std::static_pointer_cast<Token>($1);
         auto node = std::make_shared<StringArgument>(@$, cast->text);
-        node->right = $3;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($3);
         $$ = node;
     }
     | expression {
@@ -690,12 +703,14 @@ labeled_expression_list:
     { $$ = epsilon; }
     | expression ':' expression ',' labeled_expression_list {
         auto node = std::make_shared<ExpressionPair>(@$, std::static_pointer_cast<Expression>($1), nullptr, std::static_pointer_cast<Expression>($3));
-        node->right = $5;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($5);
         $$ = node;
     }
     | special_number ':' expression ',' labeled_expression_list {
         auto node = std::make_shared<ExpressionPair>(@$, nullptr, std::static_pointer_cast<SpecialNumber>($1), std::static_pointer_cast<Expression>($3));
-        node->right = $5;
+        auto ns = std::static_pointer_cast<Statement>(node);
+        ns->next = std::static_pointer_cast<Statement>($5);
         $$ = node;
     }
     | expression ':' expression {

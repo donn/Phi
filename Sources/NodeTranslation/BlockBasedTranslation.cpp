@@ -9,7 +9,6 @@ void If::MACRO_TRANS_SIG_IMP {
     /*
     struct Statement: public Node {
             optional<std::string> annotation = nullopt;
-            bool inComb = false;
     };
     struct BlockBased: public Statement {
             Statement* contents;
@@ -22,7 +21,7 @@ void If::MACRO_TRANS_SIG_IMP {
 
     //think of it as if{} else, not if{}else{}
     //translate iff inside comb block
-    if (Statement::inComb) {
+    if (inComb) {
         if (expression) {
             *stream << "if ( ";
             tryTranslate(expression, stream, namespaceSoFar, indent);
@@ -41,14 +40,9 @@ void If::MACRO_TRANS_SIG_IMP {
             tryTranslate(elseBlock, stream, namespaceSoFar, indent);
         }
     }
-    
-
-    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
-void ForLoop::MACRO_TRANS_SIG_IMP {
-    tryTranslate(right, stream, namespaceSoFar, indent);
-}
+void ForLoop::MACRO_TRANS_SIG_IMP {} // Notto Yetto
 
 void Namespace::MACRO_TRANS_SIG_IMP {
     //adjust namespace
@@ -57,7 +51,6 @@ void Namespace::MACRO_TRANS_SIG_IMP {
         namespaceSoFar + "." + identifier->idString
     ;
     tryTranslate(contents, stream, namespaceSoFar, indent);
-    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void Switch::MACRO_TRANS_SIG_IMP {
@@ -107,8 +100,6 @@ void Switch::MACRO_TRANS_SIG_IMP {
     MACRO_DEDENT;
 
     *stream << "endcase";
-
-    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void Combinational::MACRO_TRANS_SIG_IMP {
@@ -131,6 +122,4 @@ void Combinational::MACRO_TRANS_SIG_IMP {
 
     *stream << MACRO_EOL;
     *stream << MACRO_EOL;
-    
-    tryTranslate(right, stream, namespaceSoFar, indent);
 }

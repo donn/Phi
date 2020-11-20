@@ -105,7 +105,7 @@ std::tuple< std::vector<Phi::SymbolTable::Access>, optional<AccessWidth>, option
 
     while (!lhStack.empty()) {
         auto topWithParent = lhStack.top();
-        auto top = topWithParent.first;
+        auto top = std::static_pointer_cast<LHExpression>(topWithParent.first);
         if (auto encapsulator = std::dynamic_pointer_cast<LHExpressionEncapsulator>(top)) {
             top = encapsulator->lhExpression;
         }
@@ -120,6 +120,17 @@ std::tuple< std::vector<Phi::SymbolTable::Access>, optional<AccessWidth>, option
         assert(!top->left && !top->right);
         if (auto pointer = std::dynamic_pointer_cast<IdentifierExpression>(top)) {
             vector.push_back(PSA::ID(&pointer->identifier->idString));
+        } else if (auto pointer = std::dynamic_pointer_cast<Range>(top)) {
+            // Elaborating on a range should have checked a number of errors by now
+            auto pair = pointer->getValues();
+            AccessWidth fromValue = pair.first, toValue = pair.second;
+
+            if (!lhStack.empty()) {
+                throw "driven.rangeAccessIsFinal";
+            }
+
+            from = fromValue;
+            to = toValue;
         } else if (auto pointer = std::dynamic_pointer_cast<Expression>(top)) {
             if (pointer->type == Type::error) {
                 throw "access.errorValue";
@@ -133,17 +144,6 @@ std::tuple< std::vector<Phi::SymbolTable::Access>, optional<AccessWidth>, option
             }
             auto parentAsArrayAccess = std::static_pointer_cast<ArrayAccess>(parent);
             vector.push_back(PSA::Index(value, &parentAsArrayAccess->index));
-        } else if (auto pointer = std::dynamic_pointer_cast<Range>(top)) {
-            // Elaborating on a range should have checked a number of errors by now
-            auto pair = pointer->getValues();
-            AccessWidth fromValue = pair.first, toValue = pair.second;
-
-            if (!lhStack.empty()) {
-                throw "driven.rangeAccessIsFinal";
-            }
-
-            from = fromValue;
-            to = toValue;
         }
     }
 
@@ -563,8 +563,8 @@ void Multiplexer::MACRO_ELAB_SIG_IMP {
     // Limitation: Cannot verify integrity
 
     // PII
-    auto rightEP = std::static_pointer_cast<ExpressionPair>(right);
-    numBits = rightEP->result->numBits;
+    auto nextEP = std::static_pointer_cast<ExpressionPair>(right);
+    numBits = nextEP->result->numBits;
 }
 
 void ExpressionPair::MACRO_ELAB_SIG_IMP {
@@ -572,21 +572,20 @@ void ExpressionPair::MACRO_ELAB_SIG_IMP {
 
     tryElaborate(specialNumber, context);
     tryElaborate(result, context);
-
-
-    tryElaborate(right, context);
+    
+    return;
 
     // PII
-    if (right) {
-        auto rightEP = std::static_pointer_cast<ExpressionPair>(right);
-        if (rightEP->result->numBits != result->numBits) {
+    if (next) {
+        auto nextEP = std::static_pointer_cast<ExpressionPair>(next);
+        if (nextEP->result->numBits != result->numBits) {
             throw "expr.widthMismatch";
         }
-        if (rightEP->label || rightEP->specialNumber) { // We don't need to check the current node because if it has a right, it must not be default
+        if (nextEP->label || nextEP->specialNumber) { // We don't need to check the current node because if it has a right, it must not be default
             auto numBitsHere = specialNumber ? specialNumber->numBits : label->numBits;
-            auto numBitsThere = rightEP->specialNumber ?
-                rightEP->specialNumber->numBits:
-                rightEP->label->numBits;
+            auto numBitsThere = nextEP->specialNumber ?
+                nextEP->specialNumber->numBits:
+                nextEP->label->numBits;
             if (numBitsHere != numBitsThere) {
                 throw "expr.widthMismatch";
             }
@@ -596,7 +595,6 @@ void ExpressionPair::MACRO_ELAB_SIG_IMP {
 
 void ExpressionArgument::MACRO_ELAB_SIG_IMP {
     tryElaborate(argument, context);
-    tryElaborate(right, context);
 }
 
 void ProceduralCall::MACRO_ELAB_SIG_IMP {
@@ -629,7 +627,7 @@ void ProceduralCall::MACRO_ELAB_SIG_IMP {
             
             args.push_back({Phi::Argument::Type::expression, nullopt, std::pair(expression->value.value(), expression->numBits)});
         }
-        head = std::static_pointer_cast<Argument>(head->right);
+        head = std::static_pointer_cast<Argument>(head->next);
     }
     
     auto result = symbol->call(&args);

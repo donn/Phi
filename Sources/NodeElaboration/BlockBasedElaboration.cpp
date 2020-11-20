@@ -39,7 +39,6 @@ void If::MACRO_ELAB_SIG_IMP {
         tryElaborate(contents, context);
         tryElaborate(elseBlock, context);
     }
-    tryElaborate(right, context);
 }
 
 void ForLoop::MACRO_ELAB_SIG_IMP {
@@ -50,7 +49,6 @@ void ForLoop::MACRO_ELAB_SIG_IMP {
     }
     // PII
     // TODO
-    tryElaborate(right, context);
 }
 
 void Combinational::MACRO_ELAB_SIG_IMP {
@@ -64,7 +62,6 @@ void Combinational::MACRO_ELAB_SIG_IMP {
             fn();
         }
     }
-    tryElaborate(right, context);
 }
 
 void Namespace::MACRO_ELAB_SIG_IMP {
@@ -75,7 +72,6 @@ void Namespace::MACRO_ELAB_SIG_IMP {
         tryElaborate(contents, context);
         context->table->stepOut();
     }
-    tryElaborate(right, context);
 }
 
 void Switch::MACRO_ELAB_SIG_IMP {
@@ -87,19 +83,21 @@ void Switch::MACRO_ELAB_SIG_IMP {
 }
 
 void LabeledStatementList::MACRO_ELAB_SIG_IMP {
-    tryElaborate(label, context);    tryElaborate(specialNumber, context);
+    tryElaborate(label, context);
+    tryElaborate(specialNumber, context);
     tryElaborate(statements, context);
 
-    tryElaborate(right, context);
-
+    return;
+    
+    // THIS PART HAS TO HAPPEN *AFTER* AND I STILL HAVE NOT FIGURED OUT HOW
     // PII
-    if (right) {
-        auto rightLSL = std::static_pointer_cast<LabeledStatementList>(right);
-        if (rightLSL->label || rightLSL->specialNumber) { // We don't need to check the current node because if it has a right, it must not be default
+    if (next) {
+        auto nextLSL = std::static_pointer_cast<LabeledStatementList>(next);
+        if (nextLSL->label || nextLSL->specialNumber) { // We don't need to check the current node because if it has a right, it must not be default
             auto numBitsHere = specialNumber ? specialNumber->numBits : label->numBits;
-            auto numBitsThere = rightLSL->specialNumber ?
-                rightLSL->specialNumber->numBits:
-                rightLSL->label->numBits;
+            auto numBitsThere = nextLSL->specialNumber ?
+                nextLSL->specialNumber->numBits:
+                nextLSL->label->numBits;
             if (numBitsHere != numBitsThere) {
                 throw "expr.widthMismatch";
             }

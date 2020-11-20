@@ -89,7 +89,11 @@ int Node::MACRO_GRAPHPRINT_SIG_IMP {
     *node = current + 1;
     
     *stream << current << " " << "[label=\"" << debugLabel() << "\"]" << ";" << std::endl;
+    return current;
+}
 
+int Expression::MACRO_GRAPHPRINT_SIG_IMP {
+    auto current = Node::graphPrint(stream, node);
     if (left) {
         auto nodeID = left->graphPrint(stream, node);
         *stream << current << " -- " << nodeID << ";" << std::endl;
@@ -99,6 +103,15 @@ int Node::MACRO_GRAPHPRINT_SIG_IMP {
         *stream << current << " -- " << nodeID << ";" << std::endl;
     }
 
+    return current;
+}
+
+int Statement::MACRO_GRAPHPRINT_SIG_IMP {
+    auto current = Node::graphPrint(stream, node);
+    if (next) {
+        auto nodeID = next->graphPrint(stream, node);
+        *stream << current << " -- " << nodeID << ";" << std::endl;
+    }
     return current;
 }
 

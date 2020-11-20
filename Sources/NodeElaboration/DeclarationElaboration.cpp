@@ -12,7 +12,6 @@ std::vector<Phi::SymbolTable::Access> Declaration::immediateAccessList() {
 
 void Port::MACRO_ELAB_SIG_IMP {
     tryElaborate(bus, context);
-    tryElaborate(right, context);
 }
 
 void Port::addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck) {
@@ -32,7 +31,6 @@ void Port::addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck) {
 
     if (bus) {
         if (bus->from->type == Expression::Type::error) {
-            tryElaborate(right, context);
             return;
         }
         from = bus->from->value.value().getLimitedValue();
@@ -99,7 +97,6 @@ void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
         tryElaborate(contents, context);
         context->table->stepOut();
     }
-    tryElaborate(right, context);
 }
 
 void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
@@ -155,7 +152,7 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
                     }
                 }
             }
-            port = std::static_pointer_cast<Port>(port->right);
+            port = std::static_pointer_cast<Port>(port->next);
         }
 
         auto currentInheritance = tld->inheritance;
@@ -173,7 +170,7 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
                 auto newTLD = std::static_pointer_cast<TopLevelDeclaration>(inheritedSymbol->declarator);
                 recursivelyProcessPorts(newTLD, false);
             }
-            currentInheritance = std::static_pointer_cast<InheritanceListItem>(currentInheritance->right);
+            currentInheritance = std::static_pointer_cast<InheritanceListItem>(currentInheritance->next);
         }
 
     };
@@ -183,7 +180,6 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     tryElaborate(contents, context);
 
     context->table->stepOut();
-    tryElaborate(right, context);
 }
 
 std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Context* context, std::string container, std::string property, std::shared_ptr<Range> range) {
@@ -191,15 +187,15 @@ std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Co
     auto containerNode = std::make_shared<IdentifierExpression>(context->noLocation(), containerID);
     auto propertyNode = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), property.c_str()));
     auto left = std::make_shared<PropertyAccess>(context->noLocation(), containerNode, propertyNode);
+
     auto dli = std::make_shared<DeclarationListItem>(context->noLocation(), containerID, nullptr, nullptr);
-    std::cout << container << "." << property << ":" << range << std::endl;
     dli->trueIdentifier = left;
     dli->bus = range;
     dli->type = VariableLengthDeclaration::Type::wire;
 
     auto placement = &preambles;
     while (*placement != nullptr) {
-        placement = (std::shared_ptr<Declaration>*)&(*placement)->right;
+        placement = (std::shared_ptr<Declaration>*)&(*placement)->next;
     }
 
     *placement = dli;
@@ -208,15 +204,18 @@ std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Co
 }
 
 void TopLevelDeclaration::propertyAssignment(Context* context, std::string container, std::string property, std::string rightHandSide) {
-    auto containerNode = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), container.c_str()));
+    auto containerID = std::make_shared<Identifier>(context->noLocation(), container.c_str());
+    auto containerNode = std::make_shared<IdentifierExpression>(context->noLocation(), containerID);
     auto propertyNode = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), property.c_str()));
     auto left = std::make_shared<PropertyAccess>(context->noLocation(), containerNode, propertyNode);
+
     auto right = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), rightHandSide.c_str()));
+
     auto nda = std::make_shared<NondeclarativeAssignment>(context->noLocation(), left, right);
 
     auto placement = &addenda;
     while (*placement != nullptr) {
-        placement = (std::shared_ptr<Statement>*)&(*placement)->right;
+        placement = (std::shared_ptr<Statement>*)&(*placement)->next;
     }
 
     *placement = nda;
@@ -228,7 +227,6 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
     declarationList->type = type;
     declarationList->bus = bus;
     tryElaborate(declarationList, context);
-    tryElaborate(right, context);
 }
 
 // This assistant function exists because of the number of exits this function can take.
@@ -251,13 +249,14 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
 
     assert(declarativeModule);
 
+    std::shared_ptr<Symbol> symbol = nullptr;
+
     if (array) {
         if (optionalAssignment) {
             throw "array.inlineInitialization";
         }
         switch (array->type) {
         case Expression::Type::parameterSensitive:
-            size = 0;
             context->addError(location, "phi.parametersUnsupported");
             return;
             break;
@@ -303,7 +302,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
 
     auto generatedSymbols = std::vector< std::pair< std::string, std::shared_ptr<Symbol> > >();
     for (AccessWidth it = 0; it < size; it += 1) {
-        auto id = size == 1 ? identifier->idString : identifier->idString + "[" + std::to_string(it) + "]";
+        auto id = array ? identifier->idString + "[" + std::to_string(it) + "]" : identifier->idString;
         if (type == VLD::Type::reg || type == VLD::Type::latch) {
             auto container = std::make_shared<Container>(id, shared_from_this(), from.value(), to.value(), msbFirst);
 
@@ -395,14 +394,12 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
         return;
     } 
     
-
-    std::shared_ptr<Symbol> symbol = nullptr;
-    if (size != 1) {
-        auto array = std::make_shared<SymbolArray>(identifier->idString, shared_from_this(), size);
-        for (auto& symbol: generatedSymbols) {
-            array->space[symbol.first] = symbol.second;
+    if (array) {
+        auto as = std::make_shared<SymbolArray>(identifier->idString, shared_from_this(), size);
+        for (auto& s: generatedSymbols) {
+            as->space[s.first] = s.second;
         }
-        symbol = array;
+        symbol = as;
     } else {
         symbol = generatedSymbols[0].second;
     }
@@ -415,11 +412,10 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     elaborationAssistant(context);
 
     //PII
-    if (right) {
-        auto rightDLI = std::static_pointer_cast<DeclarationListItem>(right);
-        rightDLI->type = type;
-        rightDLI->bus = bus;
-        tryElaborate(right, context);
+    if (next) {
+        auto nextDLI = std::static_pointer_cast<DeclarationListItem>(next);
+        nextDLI->type = type;
+        nextDLI->bus = bus;
     }
 }
 
@@ -475,8 +471,6 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
         context->addError(location, "symbol.dne");
     }
     // I profusely apologize for what you just saw.
-    
-    tryElaborate(right, context);
 }
 
 void InstanceDeclaration::elaboratePorts(Context* context) {
@@ -539,12 +533,10 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
         } else {
             context->addError(location, "module.portNotFound");
         }
-        seeker = std::static_pointer_cast<ExpressionIDPair>(seeker->right);
+        seeker = std::static_pointer_cast<ExpressionIDPair>(seeker->next);
     }
 }
 
 void ExpressionIDPair::MACRO_ELAB_SIG_IMP {
     tryElaborate(expression, context);
-
-    tryElaborate(right, context);
 }

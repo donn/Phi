@@ -113,7 +113,7 @@ void Context::translate(std::ostream* stream) {
 
     *stream << Phi::Common::primitives << std::endl << std::endl;
 
-    head->translate(stream, namespaceSoFar, &indent);
+    tryTranslate(head, stream, namespaceSoFar, &indent);
 }
 
 #if YYDEBUG

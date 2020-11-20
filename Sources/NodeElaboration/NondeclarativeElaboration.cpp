@@ -118,7 +118,6 @@ void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
     tryElaborate(expression, context);
 
     drivingAssignment(context, lhs, expression, &skipTranslation, &inComb);
-    tryElaborate(right, context);
 }
 
 void NondeclarativePorts::MACRO_ELAB_SIG_IMP {
@@ -145,6 +144,4 @@ void NondeclarativePorts::MACRO_ELAB_SIG_IMP {
     
     declarator->ports = ports;
     declarator->elaboratePorts(context);
-
-    tryElaborate(right, context);
 }

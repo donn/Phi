@@ -38,7 +38,6 @@ void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
     //adjust namespaceSoFar
     namespaceSoFar = adjustNamespace(namespaceSoFar, identifier->idString);
     tryTranslate(contents, stream, namespaceSoFar, indent);
-    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
@@ -67,8 +66,8 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
 
             // Get ready for ports
             for (auto& abstractPort: space.lock()->ports) {
-                auto actualPort = std::static_pointer_cast<Port>(abstractPort);;
-                tryTranslate(actualPort, stream, namespaceSoFar, indent);
+                auto actualPort = std::static_pointer_cast<Port>(abstractPort);
+                actualPort->translate(stream, namespaceSoFar, indent);
             }
             *stream << MACRO_EOL;
 
@@ -90,16 +89,10 @@ void TopLevelDeclaration::MACRO_TRANS_SIG_IMP {
     } else if (type == TopLevelDeclaration::Type::interface){
         // Interfaces are elaboration-only
     }
-
-
-    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void VariableLengthDeclaration::MACRO_TRANS_SIG_IMP {
-
     tryTranslate(declarationList, stream, namespaceSoFar, indent);
-    
-    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void DeclarationListItem::MACRO_TRANS_SIG_IMP {
@@ -111,7 +104,6 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
         *stream << "wire ";
     } else {
         // Var is immutable and is handled at compile time.
-        tryTranslate(right, stream, namespaceSoFar, indent);
         return;
     }
 
@@ -172,8 +164,6 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
 
         *stream << ";" << MACRO_EOL;
     }
-
-    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void InstanceDeclaration::MACRO_TRANS_SIG_IMP {
@@ -210,8 +200,6 @@ void InstanceDeclaration::MACRO_TRANS_SIG_IMP {
 
     *stream << MACRO_EOL;
     *stream << "); " << MACRO_EOL;
-
-    tryTranslate(right, stream, namespaceSoFar, indent);
 }
 
 void ExpressionIDPair::MACRO_TRANS_SIG_IMP {
@@ -231,8 +219,8 @@ void ExpressionIDPair::MACRO_TRANS_SIG_IMP {
     tryTranslate(expression, stream, namespaceSoFar, indent);
     *stream << ")";
 
-    if (right) {
+    // PII
+    if (next) {
         *stream << "," << MACRO_EOL;
-        tryTranslate(right, stream, namespaceSoFar, indent);
     }
 }

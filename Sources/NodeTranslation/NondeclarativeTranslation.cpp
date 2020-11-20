@@ -24,7 +24,7 @@ void NondeclarativeAssignment::MACRO_TRANS_SIG_IMP {
     // }
 
     if (!skipTranslation) {
-        if (!Statement::inComb) {
+        if (!inComb) {
             *stream << "assign ";
         }
 
@@ -34,7 +34,5 @@ void NondeclarativeAssignment::MACRO_TRANS_SIG_IMP {
         *stream << ";";
         *stream << MACRO_EOL;
     }
-
-    tryTranslate(right, stream, namespaceSoFar, indent); 
 }
 
