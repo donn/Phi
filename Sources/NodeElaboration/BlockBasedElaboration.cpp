@@ -76,9 +76,25 @@ void Namespace::MACRO_ELAB_SIG_IMP {
 
 void Switch::MACRO_ELAB_SIG_IMP {
     if (auto comb = context->table->findNearest(Space::Type::comb)) {
-        tryElaborate(expression, context);        tryElaborate(list, context);
+        tryElaborate(expression, context);
+        tryElaborate(list, context);
+
+        // PII
+        // Width checks on LSL
+        std::optional<AccessWidth> labelNumbits = nullopt;
+        auto c = list;
+        while (c) {
+            auto currentNumbits = c->specialNumber ? c->specialNumber->numBits : c->label->numBits;
+            if (labelNumbits.has_value() && labelNumbits.value() != currentNumbits) {
+                context->addError(c->location, "expr.widthMismatch");
+                return;
+            } else {
+                labelNumbits = currentNumbits;
+            }
+            c = std::static_pointer_cast<LabeledStatementList>(c->next);
+        }        
     } else {
-        context->addError(location, "decl.switchOutsideComb");
+        throw "decl.switchOutsideComb";
     }
 }
 
@@ -86,22 +102,4 @@ void LabeledStatementList::MACRO_ELAB_SIG_IMP {
     tryElaborate(label, context);
     tryElaborate(specialNumber, context);
     tryElaborate(statements, context);
-
-    return;
-    
-    // THIS PART HAS TO HAPPEN *AFTER* AND I STILL HAVE NOT FIGURED OUT HOW
-    // PII
-    if (next) {
-        auto nextLSL = std::static_pointer_cast<LabeledStatementList>(next);
-        if (nextLSL->label || nextLSL->specialNumber) { // We don't need to check the current node because if it has a right, it must not be default
-            auto numBitsHere = specialNumber ? specialNumber->numBits : label->numBits;
-            auto numBitsThere = nextLSL->specialNumber ?
-                nextLSL->specialNumber->numBits:
-                nextLSL->label->numBits;
-            if (numBitsHere != numBitsThere) {
-                throw "expr.widthMismatch";
-            }
-        }
-
-    }
 }

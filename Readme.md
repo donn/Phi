@@ -122,3 +122,7 @@ Both executables comply with BSD-style system exits, and you can write `./phi(c)
 
 # ⚖️ License
 Phi is available under the Apache 2.0 license, available at the root of this project as 'License'.
+
+# Special Thanks
+* [Prof. Shalan](https://github.com/shalan) for consistent input and encouragement.
+* [Genivia/RE-flex](https://github.com/Genivia/RE-flex), our primary dependency, for not breaking the API and the CLI every three seconds like some libraries do.

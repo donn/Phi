@@ -62,7 +62,7 @@ void Context::setFile(std::string currentFile)  {
 
     auto file = std::ifstream(currentFile);
     if (file.fail()) {
-        addError(nullopt, "io.fileNotFound");
+        addError(nullopt, "function.fileNotFound");
         return;
     }
 

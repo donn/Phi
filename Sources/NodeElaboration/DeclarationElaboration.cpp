@@ -48,7 +48,7 @@ void Port::addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck) {
     // Add check if output
     if (addOutputCheck && polarity ==PortObject::Polarity::output) {
         auto check = Context::DriveCheck(pointer, nullopt, nullopt, [=](){
-            context->addError(location, "output.undriven");
+            context->addError(location, "module.outputUndriven");
         });
         context->checks.push_back(check);
     }
@@ -379,10 +379,10 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
         if (optionalAssignment) { // Already reported error if it's an array
             if (optionalAssignment->type != Expression::Type::error) {
                 if (width != optionalAssignment->numBits) {
-                    context->addError(location, "driving.widthMismatch");
+                    context->addError(location, "expr.widthMismatch.driving");
                 }
                 if (type == VariableLengthDeclaration::Type::var && optionalAssignment->type != Expression::Type::compileTime) {
-                    context->addError(location, "driving.hardwareDominance");
+                    context->addError(location, "expr.widthMismatch.driving");
                 }
             }
         } 
@@ -505,7 +505,7 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
                 auto width = relevantPort->getWidth();
 
                 if (width != relevantExpr->numBits) {
-                    context->addError(location, "driving.widthMismatch");
+                    context->addError(location, "expr.widthMismatch.driving");
                 } else {
                     inputIterator->second.second = true;
                 }

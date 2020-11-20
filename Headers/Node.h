@@ -374,10 +374,6 @@ namespace Phi {
                 runTime,
                 error = 0xFF
             };
-
-            Type type = Type::error;
-            AccessWidth numBits = 0;
-            optional<llvm::APInt> value = nullopt; // Value iff compileTime
             
             std::shared_ptr<Node> left = nullptr;
             std::shared_ptr<Node> right = nullptr;
@@ -392,6 +388,11 @@ namespace Phi {
             }
 
             MACRO_GRAPHPRINT_SIG_HDR
+
+            // For elaborative use
+            Type type = Type::error;
+            AccessWidth numBits = 0;
+            optional<llvm::APInt> value = nullopt; // Value iff compileTime
         };
 
         // Left Hand Expressions

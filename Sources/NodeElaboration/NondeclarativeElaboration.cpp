@@ -84,11 +84,11 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
     width = driven->msbFirst ? from.value() - to.value() + 1 : to.value() - from.value() + 1;
 
     if (width != expression->numBits) {
-        throw "driving.widthMismatch";
+        throw "expr.widthMismatch.driving";
     }
 
     if (!driven->drive(expression, from, to, true)) {
-        throw "assignment.alreadyDriven";
+        throw "driven.alreadyDriven";
     } 
 
     if ((comb = context->table->findNearest(Space::Type::comb))) {

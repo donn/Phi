@@ -120,7 +120,7 @@ SymbolTable::SymbolTable() {
         std::ifstream f;
         f.open(fileName);
         if (!f) {
-            throw "io.fileNotFound";
+            throw "function.fileNotFound";
         }
         
         //read from file
@@ -149,7 +149,7 @@ SymbolTable::SymbolTable() {
         try {
             prospectiveWidth = std::stoi(match[1]);
         } catch (std::invalid_argument& error) {
-            throw "interpretFromFile.notANumber";
+            throw "function.notANumber";
         }
 
         if (prospectiveWidth < 0 || prospectiveWidth > maxAccessWidth) {
@@ -202,7 +202,7 @@ SymbolTable::SymbolTable() {
         std::ifstream binaryFile;
         binaryFile.open(fileName, std::ios::in | std::ios::binary);
         if (!binaryFile) {
-            throw "io.fileNotFound";
+            throw "function.fileNotFound";
         }
 
         // Seek to offset from the beginning of the file 
@@ -231,7 +231,7 @@ SymbolTable::SymbolTable() {
         } else if (endian == 1) {
             // big endian: Do nothing
         } else {
-            throw "fromFile.invalidEndianness";
+            throw "function.invalidEndianness";
         }
         
         //close file

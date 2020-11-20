@@ -1,29 +1,43 @@
-"parser.syntaxError" = "syntax error";
-"phi.arraysUnsupported" = "arrays are not implemented in this version of phi";
-"phi.parametersUnsupported" = "parameters are not implemented in this version of phi";
 "FATAL" = "a fatal internal compiler error has occurred, please report this as a bug";
 
-"namespace.reserved" = "this namespace is reserved for use by the language";
-"expr.hardwareInIf" = "if statements only allow software expressions at the top level.";
-"expr.widthMismatch" = "widths of the two expressions do not match";
+"parser.syntaxError" = "syntax error";
+
+"phi.arraysUnsupported" = "arrays are not implemented in this version of phi";
+"phi.parametersUnsupported" = "parameters are not implemented in this version of phi";
+
 "array.inlineInitialization" = "arrays are not initializable on the same line";
-"expr.maxWidthExceeded" = "expression exceeds the maximum width available";
-"specialNumber.decimalNotAllowed" = "don't care literals not allowed for decimals";
-"fixedNumber.usedVerilogH" = "phi uses x to denote hexadecimal numbers, not h";
+
+"namespace.reserved" = "this namespace is reserved for use by the language";
+
+"expr.hardwareInIf" = "if statements only allow software expressions at the top level.";
+"expr.maxWidthExceeded" = "expression exceeds the maximum supported width";
+"expr.widthMismatch" = "widths of the two expressions do not match";
+"expr.widthMismatch.conditions" = "mux/switch conditions must have identical widths";
+"expr.widthMismatch.results" = "mux results must have identical widths";
+"expr.widthMismatch.driving" = "left hand and right hand sides of assignment must have identical widths";
+
+"range.runTimeValue" = "ranges cannot be formed with hardware expressions";
+"range.maxWidthExceeded" = "range exceeds the maximum width available";
+
 "access.errorValue" = "could not access based on expression error";
 "access.runTimeValue" = "array accessing not allowed based on hardware expressions";
 "access.maxWidthExceeded" = "access exceeds the maximum width available";
+
+"fixedNumber.usedVerilogH" = "phi uses x to denote hexadecimal numbers, not h";
+"specialNumber.decimalNotAllowed" = "don't care literals not allowed for decimals";
+
+"driven.alreadyDriven" = "left hand side already driven";
 "driven.rangeAccessIsFinal" = "property not found";
-"driven.usedBeforeInitializing" = "driven values are not usable before initializing";
-"arg.hardwareExpressions" = "hardware expressions cannot be used as an argument to a system call";
-"range.runTimeValue" = "ranges cannot be formed with hardware expressions";
-"range.maxWidthExceeded" = "range exceeds the maximum width available";
-"driven.rangeError" = "out of range";
+"driven.usedBeforeInitializing" = "driven values are not usable before they are given a value";
+"driven.rangeError" = "out of range access";
+
 "function.unexpectedParameterCount" = "parameter count is incorrect";
 "function.invalidParameters" = "parameters are invalid";
-"io.fileNotFound" = "no such file or directory";
-"interpretFromFile.notANumber" = "imported value is not a number";
-"fromFile.invalidEndianness" = "invalid value for endianness";
+"function.hardwareExpressions" = "hardware expressions cannot be used as an argument to a system call";
+"function.fileNotFound" = "no such file or directory";
+"function.notANumber" = "imported value is not a number";
+"function.invalidEndianness" = "invalid value for endianness";
+
 "symbol.redefinition" = "redefined symbol";
 "symbol.dne" = "symbol not found";
 "symbol.notADriven" = "invalid expression";
@@ -31,12 +45,15 @@
 "symbol.outOfRangeAccess" = "out of range";
 "symbol.accessIsFinal" = "property not found";
 "symbol.notIndexable" = "symbol is not indexable";
+
 "container.clockUndriven" = "register clock not set";
 "container.resetUndriven" = "register reset not set";
 "container.resetValueUndriven" = "register reset value not set";
 "container.dataUndriven" = "register/latch data lines not driven";
 "container.conditionUndriven" = "latch condition not set";
+
 "module.portNotFound" = "port not found in module";
-"output.undriven" = "modules are to drive all outputs";
+"module.outputUndriven" = "outputs cannot be left undriven";
+
 "compliance.interfacesOnly" = "modules may not comply with other modules' port interfaces";
 "compliance.conflictingPortDefinitions" = "port definitions are mismatched with an interface being complied to";

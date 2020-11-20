@@ -551,25 +551,40 @@ void RepeatConcatenation::MACRO_ELAB_SIG_IMP {
 }
 
 void Multiplexer::MACRO_ELAB_SIG_IMP {
+    // TODO: Multiplexer runtime vs compiletime: Probably requires Selection Algorithm
+    // TODO: Exhaustivity guarantees
     tryElaborate(left, context);
-
-
     tryElaborate(right, context);
-    // TODO: Multiplexer runtime vs compiletime
-        // Selection algorithm
     type = Type::runTime;
     inComb = context->table->findNearest(Space::Type::comb) != nullptr;
-    
-    // Limitation: Cannot verify integrity
 
     // PII
-    auto nextEP = std::static_pointer_cast<ExpressionPair>(right);
-    numBits = nextEP->result->numBits;
+    // Width checks on EPs
+    std::optional<AccessWidth> labelNumbits = nullopt;
+    std::optional<AccessWidth> resultNumbits = nullopt;
+    auto c = std::static_pointer_cast<ExpressionPair>(right);
+    while (c) {
+        auto currentNumbits = c->specialNumber ? c->specialNumber->numBits : c->label->numBits;
+        if (labelNumbits.has_value() && labelNumbits.value() != currentNumbits) {
+            throw "expr.widthMismatch.conditions";
+            return;
+        } else {
+            labelNumbits = currentNumbits;
+        }
+        auto currentResultNumbits = c->result->numBits;
+        if (resultNumbits.has_value() && resultNumbits.value() != currentResultNumbits) {
+            throw "expr.widthMismatch.results";
+            return;
+        } else {
+            resultNumbits = currentResultNumbits;
+        }
+        c = std::static_pointer_cast<ExpressionPair>(c->next);
+    }
+    numBits = resultNumbits.value();        
 }
 
 void ExpressionPair::MACRO_ELAB_SIG_IMP {
     tryElaborate(label, context);
-
     tryElaborate(specialNumber, context);
     tryElaborate(result, context);
     
