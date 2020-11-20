@@ -560,8 +560,8 @@ void Multiplexer::MACRO_ELAB_SIG_IMP {
 
     // PII
     // Width checks on EPs
-    std::optional<AccessWidth> labelNumbits = nullopt;
-    std::optional<AccessWidth> resultNumbits = nullopt;
+    optional<AccessWidth> labelNumbits = nullopt;
+    optional<AccessWidth> resultNumbits = nullopt;
     auto c = std::static_pointer_cast<ExpressionPair>(right);
     while (c) {
         auto currentNumbits = c->specialNumber ? c->specialNumber->numBits : c->label->numBits;
@@ -587,25 +587,6 @@ void ExpressionPair::MACRO_ELAB_SIG_IMP {
     tryElaborate(label, context);
     tryElaborate(specialNumber, context);
     tryElaborate(result, context);
-    
-    return;
-
-    // PII
-    if (next) {
-        auto nextEP = std::static_pointer_cast<ExpressionPair>(next);
-        if (nextEP->result->numBits != result->numBits) {
-            throw "expr.widthMismatch";
-        }
-        if (nextEP->label || nextEP->specialNumber) { // We don't need to check the current node because if it has a right, it must not be default
-            auto numBitsHere = specialNumber ? specialNumber->numBits : label->numBits;
-            auto numBitsThere = nextEP->specialNumber ?
-                nextEP->specialNumber->numBits:
-                nextEP->label->numBits;
-            if (numBitsHere != numBitsThere) {
-                throw "expr.widthMismatch";
-            }
-        }
-    }
 }
 
 void ExpressionArgument::MACRO_ELAB_SIG_IMP {
@@ -624,7 +605,7 @@ void ProceduralCall::MACRO_ELAB_SIG_IMP {
 
     tryElaborate(right, context);
 
-    //PII
+    // PII
     std::vector<Phi::Argument> args;
     auto head = std::static_pointer_cast<Argument>(right);
     while (head) {

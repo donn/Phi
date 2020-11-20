@@ -257,23 +257,21 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
         }
         switch (array->type) {
         case Expression::Type::parameterSensitive:
-            context->addError(location, "phi.parametersUnsupported");
-            return;
+            throw "phi.parametersUnsupported";
             break;
         case Expression::Type::compileTime:
             if (!Utils::apIntCheck(&array->value.value(), maxAccessWidth)) {
-                context->addError(location, "array.maximumExceeded");
+                throw "array.maximumExceeded";
                 return; 
             }
             size = array->value.value().getLimitedValue();
             if (size == 0) {
-                context->addError(location, "array.cannotBeZero");
-                return;
+                throw "array.cannotBeZero";
             }
             break;
         case Expression::Type::runTime:
-            context->addError(location, "array.hardwareExpression");
-            [[fallthrough]];
+            throw "array.hardwareExpression";
+            break;
         case Expression::Type::error:
             return;
         }
@@ -312,7 +310,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
                 bool selfAsDLI = false,
                 bool fullWidth = false,
                 bool mandatory = true,
-                std::optional< std::function<void()> > ifDriven = nullopt
+                optional< std::function<void()> > ifDriven = nullopt
             ) {
                 auto dli = selfAsDLI ?
                     shared_from_this() :
@@ -390,8 +388,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
     
     std::shared_ptr<Space> comb;
     if ((comb = context->table->findNearest(Space::Type::comb))) {
-        context->addError(location, "comb.declarationNotAllowed");
-        return;
+        throw "comb.declarationNotAllowed";
     } 
     
     if (array) {
@@ -406,12 +403,10 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
     context->table->add(identifier->idString, symbol);
 }
 
-
-
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
     elaborationAssistant(context);
 
-    //PII
+    // PII
     if (next) {
         auto nextDLI = std::static_pointer_cast<DeclarationListItem>(next);
         nextDLI->type = type;
@@ -420,15 +415,16 @@ void DeclarationListItem::MACRO_ELAB_SIG_IMP {
 }
 
 void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
-
     if (array) {
         tryElaborate(array, context);
         if (array->type == Expression::Type::parameterSensitive) {
-            //Translate to assert and generate
+            // TODO
+            // Might be a good idea to use SystemVerilog assert
+            throw "phi.parametersUnsupported";
         } else if (array->type == Expression::Type::runTime) {
-            context->addError(location, "elaboration.softwareExpr");
+            throw "elaboration.softwareExpr";
         } else {
-            //unroll
+            throw "phi.arraysUnsupported";
         }
     }
     tryElaborate(module, context);
@@ -437,40 +433,28 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
     auto accesses = std::get<0>(module->accessList());
     auto symbolOptional = std::get<0>(context->table->find(&accesses));
 
-    if (symbolOptional.has_value()) {
-        auto symbol = symbolOptional.value();
-        if (auto symSpace = std::dynamic_pointer_cast<Space>(symbol)) {
-            if (symSpace->type == Space::Type::module) {
-                if (context->table->findNearest(Space::Type::module) != symSpace) {
-                    if (!context->table->findNearest(Space::Type::comb)) {
-                        context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, shared_from_this()));
-
-                        this->symSpace = std::static_pointer_cast<SpaceWithPorts>(symSpace);
-
-                        if (ports) {
-                            elaboratePorts(context);
-                        }
-
-                    } else {
-                        this->symSpace = nullopt;
-                        context->addError(location, "comb.declarationNotAllowed");
-                    }
-                } else {
-                    this->symSpace = nullopt;
-                    context->addError(location, "module.recursion");
-                }
-            } else {
-                this->symSpace = nullopt;
-                context->addError(location, "symbol.notAModule");
-            }
-        } else {
-            this->symSpace = nullopt;
-            context->addError(location, "symbol.notAModuleOrSpace");
-        }
-    } else {
-        context->addError(location, "symbol.dne");
+    if (!symbolOptional.has_value()) {
+        throw "symbol.dne";
     }
-    // I profusely apologize for what you just saw.
+    auto symbol = symbolOptional.value();
+    auto symSpace = std::dynamic_pointer_cast<Space>(symbol);
+    if (!symSpace || symSpace->type != Space::Type::module) {
+        throw "symbol.notAModule";
+    }
+    if (context->table->findNearest(Space::Type::module) == symSpace) {
+        throw "module.recursion";
+    }
+    if (context->table->findNearest(Space::Type::comb)) {
+        throw "comb.declarationNotAllowed";
+    }
+
+    context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, shared_from_this()));
+
+    this->symSpace = std::static_pointer_cast<SpaceWithPorts>(symSpace);
+
+    if (ports) {
+        elaboratePorts(context);
+    }
 }
 
 void InstanceDeclaration::elaboratePorts(Context* context) {
@@ -489,7 +473,7 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
         }
     }
 
-    //PII
+    // PII
     auto seeker = ports;
     while (seeker) {
         auto name = seeker->identifier->idString;

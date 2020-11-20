@@ -13,9 +13,9 @@ void Phi::Node::tryElaborate(std::shared_ptr<Phi::Node::Node> node, MACRO_ELAB_P
         } catch (const char* e) {
             context->addError(node->location, e);
         }
-        auto asStatement = std::dynamic_pointer_cast<Statement>(node);
-        if (asStatement) {
-            node = asStatement->next;
+        auto asStmt = std::dynamic_pointer_cast<Statement>(node);
+        if (asStmt) {
+            node = asStmt->next;
         } else {
             node = nullptr;
         }
@@ -31,9 +31,9 @@ void Phi::Node::tryTranslate(std::shared_ptr<Phi::Node::Node> node, MACRO_TRANS_
         } else {
             node->translate(stream, namespaceSoFar, indent);
         }
-        auto asStatement = std::dynamic_pointer_cast<Statement>(node);
-        if (asStatement) {
-            node = asStatement->next;
+        auto asStmt = std::dynamic_pointer_cast<Statement>(node);
+        if (asStmt) {
+            node = asStmt->next;
         } else {
             node = nullptr;
         }

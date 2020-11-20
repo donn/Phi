@@ -28,11 +28,11 @@ int main(int argc, char* argv[]) {
 
     // CLI Option parsing
     SSCO::Options getOpt({
-        {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(stdoutStream); exit(0); }},
+        {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(stdoutStream); exit(EX_OK); }},
         {"version", 'V', "Show the current version of Phi.", false, [&](){   
             stdoutStream << "Phi " << Phi::BuildInfo::versionString() << std::endl;
             stdoutStream << "All rights reserved. Licensed under the Apache License 2.0." << std::endl;
-            exit(0);
+            exit(EX_OK);
         }},
         {"metadataJSON", nullopt, "Data to output JSON information about processed modules.", true, nullopt},
         {"outFile", 'o', "Output file.", true, nullopt},
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
     } catch (const char* error) {
         stderrStream << "[CRITICAL] Unhandled parse issue: " << error << std::endl;
         stderrStream << "Please report this issue." << std::endl;
-        exit(EX_SOFTWARE);
+        return EX_SOFTWARE;
     }
 
     if (context.error()) {

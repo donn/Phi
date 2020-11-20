@@ -10,7 +10,7 @@ using namespace Phi::Node;
 
 static void expandSpecialNumberEquivalence(std::shared_ptr<Expression> lhs, std::shared_ptr<SpecialNumber> specialNumber, MACRO_TRANS_PARAMS) {
     // We need to account for all possibilities...
-    // The problem is, "inside", which is a part SystemVerilog doesn't work in iverilog
+    // The problem is "inside", which is a part SystemVerilog, doesn't work in iverilog
     // Thus, for expressions with less than 256 possibilities, we will MANUALLY expand them
     // Else, we will just give up and use inside. Use a better SV compiler. Or something.
     // PII
@@ -181,7 +181,7 @@ void Binary::MACRO_TRANS_SIG_IMP {
     } else if (operation == Binary::Operation::shiftLeftLogical) {
         *stream << "<<";
     } else if (operation == Binary::Operation::shiftRightLogical) {
-        *stream << ">>>";
+        *stream << ">>";
     } else if (operation == Binary::Operation::shiftRightArithmetic) {
         *stream << ">>";
     }

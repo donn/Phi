@@ -4,8 +4,8 @@
 #include <string>
 #include <optional>
 
-using std::nullopt;
 using std::optional;
+using std::nullopt;
 
 #ifndef uint
     typedef unsigned int uint;

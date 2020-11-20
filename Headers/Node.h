@@ -121,7 +121,7 @@ namespace Phi {
             MACRO_DEBUGLABEL_SIG_HDR
             MACRO_GRAPHPRINT_SIG_HDR
 
-            Port(Location location, std::shared_ptr<Identifier> identifier, bool polarity, std::shared_ptr<Range> bus, std::optional<std::string> annotation):  Declaration(location, identifier, annotation), polarity(polarity ? PortObject::Polarity::output : PortObject::Polarity::input), bus(bus) {}
+            Port(Location location, std::shared_ptr<Identifier> identifier, bool polarity, std::shared_ptr<Range> bus, optional<std::string> annotation):  Declaration(location, identifier, annotation), polarity(polarity ? PortObject::Polarity::output : PortObject::Polarity::input), bus(bus) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
@@ -307,9 +307,6 @@ namespace Phi {
 
         struct ExpressionIDPair;
         struct InstanceDeclaration: public Declaration {
-            // For elaborative use
-            std::optional< std::weak_ptr<SpaceWithPorts> > symSpace;
-
             std::shared_ptr<LHExpression> module;
             std::shared_ptr<ExpressionIDPair> parameters;
 
@@ -322,6 +319,9 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR
 
             void elaboratePorts(Context* context);
+            
+            // For elaborative use
+            optional< std::weak_ptr<SpaceWithPorts> > symSpace;
         };
 
         struct ExpressionIDPair: public Declaration {
@@ -454,14 +454,15 @@ namespace Phi {
         };
 
         struct ArrayAccess: public LHExpression {
-            bool index = true; // If false, translation should treat this as a namespace array access
-
             ArrayAccess(Location location, std::shared_ptr<LHExpression> object, std::shared_ptr<Expression> width): LHExpression(location) {
                 this->left = object; this->right = width;
             }
 
             // Inherits elaboration.
             MACRO_TRANS_SIG_HDR
+
+            // For elaborative use
+            bool index = true; // If false, translation should treat this as a namespace array access
         };
         
         struct RangeAccess: public LHExpression {
