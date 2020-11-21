@@ -3,10 +3,6 @@
 #include <regex>
 using namespace Phi::Node;
 
-Identifier::Identifier(Location location, std::string identifier): Node(location) {
-    idString = std::regex_replace(identifier, std::regex("_"), "__");
-}
-
 void Range::MACRO_ELAB_SIG_IMP {
     tryElaborate(from, context);
     tryElaborate(to, context);

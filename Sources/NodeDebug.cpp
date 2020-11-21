@@ -24,12 +24,12 @@ std::string Port::debugLabel() {
         default:
             polarityString = "Unknown";
     }
-    return Node::debugLabel() + "\\n" + polarityString + "\\n" + identifier->idString;
+    return Node::debugLabel() + "\\n" + polarityString + "\\n" + *identifier;
     
 }
 
 std::string TopLevelNamespace::debugLabel() {
-    return Node::debugLabel() + "\\n" + identifier->idString;
+    return Node::debugLabel() + "\\n" + *identifier;
 }
 
 std::string TopLevelDeclaration::debugLabel() {
@@ -45,7 +45,7 @@ std::string TopLevelDeclaration::debugLabel() {
         default:
             typeString = "Unknown";
     }
-    return Node::debugLabel() + "\\n" + typeString + "\\n" + identifier->idString;
+    return Node::debugLabel() + "\\n" + typeString + "\\n" + *identifier;
 }
 
 std::string VariableLengthDeclaration::debugLabel() {
@@ -77,11 +77,11 @@ std::string DeclarationListItem::debugLabel() {
         default:
             typeString = "Unknown";
     }
-    return Node::debugLabel() + "\\n" + typeString + "\\n" + identifier->idString;
+    return Node::debugLabel() + "\\n" + typeString + "\\n" + *identifier;
 }
 
 std::string Identifier::debugLabel() {
-    return Node::debugLabel() + "\\n" + idString;
+    return Node::debugLabel() + "\\n" + *this;
 }
 
 int Node::MACRO_GRAPHPRINT_SIG_IMP {

@@ -62,7 +62,7 @@ void Namespace::MACRO_ELAB_SIG_IMP {
     if (auto comb = context->table->findNearest(Space::Type::comb)) {
        throw "comb.declarationNotAllowed";
     }
-    context->table->stepIntoAndCreate(identifier->idString, shared_from_this());
+    context->table->stepIntoAndCreate(*identifier, shared_from_this());
     tryElaborate(contents, context);
     context->table->stepOut();
 }

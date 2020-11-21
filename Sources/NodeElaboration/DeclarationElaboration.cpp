@@ -6,7 +6,7 @@ using namespace Phi::Node;
 
 std::vector<Phi::SymbolTable::Access> Declaration::immediateAccessList() {
     return {
-        Phi::SymbolTable::Access::ID(&identifier->idString)
+        Phi::SymbolTable::Access::ID(*identifier)
     };
 }
 
@@ -41,9 +41,9 @@ void Port::addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck) {
         from = to = 0;
     }
 
-    auto pointer = std::make_shared<Driven>(identifier->idString, shared_from_this(), from.value(), to.value(), msbFirst);
+    auto pointer = std::make_shared<Driven>(*identifier, shared_from_this(), from.value(), to.value(), msbFirst);
 
-    context->table->add(identifier->idString, pointer); // This will fail and go up in case of redefinition, so its better to do it earlier than possible.
+    context->table->add(*identifier, pointer); // This will fail and go up in case of redefinition, so its better to do it earlier than possible.
 
     // Add check if output
     if (addOutputCheck && polarity ==PortObject::Polarity::output) {
@@ -80,7 +80,7 @@ void Port::addInCurrentContext(MACRO_ELAB_PARAMS, bool addOutputCheck) {
 
 bool Port::operator==(const Port& rhs) {
     return
-        identifier->idString == rhs.identifier->idString &&
+        *identifier == *rhs.identifier &&
         polarity == rhs.polarity &&
         (bus ? bus->getValues() == rhs.bus->getValues() : true)
         ;
@@ -90,10 +90,10 @@ bool Port::operator!=(const Port& rhs) {
 }
 
 void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
-    if (identifier->idString == "Phi") {
+    if (*identifier == "Phi") {
         throw "namespace.reserved";
     } else {
-        context->table->stepIntoAndCreate(identifier->idString, shared_from_this());
+        context->table->stepIntoAndCreate(*identifier, shared_from_this());
         tryElaborate(contents, context);
         context->table->stepOut();
     }
@@ -101,7 +101,7 @@ void TopLevelNamespace::MACRO_ELAB_SIG_IMP {
 
 void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     auto deducedType = declTypeMap[(int)type];
-    space = std::static_pointer_cast<SpaceWithPorts>(context->table->stepIntoAndCreate(identifier->idString, shared_from_this(), deducedType));
+    space = std::static_pointer_cast<SpaceWithPorts>(context->table->stepIntoAndCreate(*identifier, shared_from_this(), deducedType));
 
     auto addOutputCheck = type == TopLevelDeclaration::Type::module;
 
@@ -300,7 +300,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
 
     auto generatedSymbols = std::vector< std::pair< std::string, std::shared_ptr<Symbol> > >();
     for (AccessWidth it = 0; it < size; it += 1) {
-        auto id = array ? identifier->idString + "[" + std::to_string(it) + "]" : identifier->idString;
+        auto id = array ? *identifier + "[" + std::to_string(it) + "]" : *identifier;
         if (type == VLD::Type::reg || type == VLD::Type::latch) {
             auto container = std::make_shared<Container>(id, shared_from_this(), from.value(), to.value(), msbFirst);
 
@@ -328,7 +328,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
                 context->checks.push_back(Context::DriveCheck(driven, nullopt, nullopt, [=]() {
                     if (annotation != declarativeModule->annotations.end()) {
                         auto port = std::static_pointer_cast<Port>(annotation->second);
-                        tld->propertyAssignment(context, id, name, port->identifier->idString);
+                        tld->propertyAssignment(context, id, name, *port->identifier);
                         if (ifDriven.has_value()) {
                             ifDriven.value()();
                         }
@@ -392,7 +392,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
     } 
     
     if (array) {
-        auto as = std::make_shared<SymbolArray>(identifier->idString, shared_from_this(), size);
+        auto as = std::make_shared<SymbolArray>(*identifier, shared_from_this(), size);
         for (auto& s: generatedSymbols) {
             as->space[s.first] = s.second;
         }
@@ -400,7 +400,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
     } else {
         symbol = generatedSymbols[0].second;
     }
-    context->table->add(identifier->idString, symbol);
+    context->table->add(*identifier, symbol);
 }
 
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
@@ -448,7 +448,7 @@ void InstanceDeclaration::MACRO_ELAB_SIG_IMP {
         throw "comb.declarationNotAllowed";
     }
 
-    context->table->add(identifier->idString, std::make_shared<Symbol>(identifier->idString, shared_from_this()));
+    context->table->add(*identifier, std::make_shared<Symbol>(*identifier, shared_from_this()));
 
     this->symSpace = std::static_pointer_cast<SpaceWithPorts>(symSpace);
 
@@ -476,7 +476,7 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
     // PII
     auto seeker = ports;
     while (seeker) {
-        auto name = seeker->identifier->idString;
+        auto name = *seeker->identifier;
         auto relevantExpr = seeker->expression;
         auto inputIterator = inputs.find(name);
         auto outputIterator = outputs.find(name);

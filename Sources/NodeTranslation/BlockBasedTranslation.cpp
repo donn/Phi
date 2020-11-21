@@ -47,8 +47,8 @@ void ForLoop::MACRO_TRANS_SIG_IMP {} // Notto Yetto
 void Namespace::MACRO_TRANS_SIG_IMP {
     //adjust namespace
     namespaceSoFar = namespaceSoFar.length() == 0 ?
-        identifier->idString :
-        namespaceSoFar + "." + identifier->idString
+        *identifier :
+        namespaceSoFar + "." + *identifier
     ;
     tryTranslate(contents, stream, namespaceSoFar, indent);
 }

@@ -7,7 +7,7 @@ using namespace Phi::Node;
 
 void Identifier::MACRO_TRANS_SIG_IMP {
     std::string namespacePrefix = (namespaceSoFar.length() == 0) ? "" : namespaceSoFar + ".";
-    *stream << "\\" << namespacePrefix << idString << " ";
+    *stream << "\\" << namespacePrefix << *this << " ";
 }
 
 void ErrorNode::MACRO_TRANS_SIG_IMP {

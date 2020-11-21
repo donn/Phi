@@ -79,12 +79,10 @@ namespace Phi {
         };
 
         // Molecular
-        struct Identifier: public Node {
-            std::string idString;
-
+        struct Identifier: public Node, std::string {
             MACRO_DEBUGLABEL_SIG_HDR
 
-            Identifier(Location location, std::string identifier);
+            Identifier(Location location, std::string identifier): Node(location), std::string(identifier) {}
 
             // No elaboration needed.
             MACRO_TRANS_SIG_HDR

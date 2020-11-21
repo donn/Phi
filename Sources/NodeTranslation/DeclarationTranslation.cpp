@@ -36,7 +36,7 @@ void Port::MACRO_TRANS_SIG_IMP {
 
 void TopLevelNamespace::MACRO_TRANS_SIG_IMP {
     //adjust namespaceSoFar
-    namespaceSoFar = adjustNamespace(namespaceSoFar, identifier->idString);
+    namespaceSoFar = adjustNamespace(namespaceSoFar, *identifier);
     tryTranslate(contents, stream, namespaceSoFar, indent);
 }
 
@@ -118,7 +118,7 @@ void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     }
 
     //add wires,regs, always @ block, inside always @ block
-    auto nsfLocal = adjustNamespace(namespaceSoFar, identifier->idString);
+    auto nsfLocal = adjustNamespace(namespaceSoFar, *identifier);
     if (type == VLD::Type::reg || type == VLD::Type::latch) {
         *stream << ";" << MACRO_EOL;
         *stream << MACRO_EOL;

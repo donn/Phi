@@ -119,7 +119,7 @@ std::tuple< std::vector<Phi::SymbolTable::Access>, optional<AccessWidth>, option
         }
         assert(!top->left && !top->right);
         if (auto pointer = std::dynamic_pointer_cast<IdentifierExpression>(top)) {
-            vector.push_back(PSA::ID(&pointer->identifier->idString));
+            vector.push_back(PSA::ID(*pointer->identifier));
         } else if (auto pointer = std::dynamic_pointer_cast<Range>(top)) {
             // Elaborating on a range should have checked a number of errors by now
             auto pair = pointer->getValues();
