@@ -178,7 +178,9 @@ SymbolTable::SymbolTable() {
             default:
                 throw "FATAL";
         }
-        auto ref = llvm::StringRef(match[3]);
+
+        auto numeric = std::string(match[3]);
+        auto ref = llvm::StringRef(numeric);
         auto value = llvm::APInt(prospectiveWidth, ref, radix);
         
         return std::pair(value, prospectiveWidth);

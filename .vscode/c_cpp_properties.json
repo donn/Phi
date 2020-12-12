@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Phi",
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ],
+            "intelliSenseMode": "clang-x64",
+            "compilerPath": "/usr/local/bin/gcc-9",
+            "cStandard": "gnu17",
+            "cppStandard": "c++17",
+            "includePath": [
+                "/usr/include",
+                "/usr/local/include",
+                "/usr/local/Cellar/llvm/11.0.0/include", 
+                "Headers",
+                "Submodules/SSCO/include",
+                "Submodules/RE-flex/include",
+                "Intermediates/Metadata",
+                "Intermediates/Grammar"
+            ]
+        }
+    ],
+    "version": 4
+}

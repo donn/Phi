@@ -16,6 +16,7 @@ SOURCE_DIR = Sources
 BUILD_DIR = Intermediates
 GRAMMAR_DIR = Grammar
 HEADER_DIR = Headers
+META_DIR = Metadata
 
 # Compiling RE-flex
 REFLEX_DIR = Submodules/RE-flex
@@ -60,7 +61,7 @@ CPP_FLAGS = -Wall -pedantic $(CPP_LY_FLAGS)
 
 CPP_LY_SOURCES = $(YACC_OUT) $(LEX_OUT)
 CPP_SOURCES = $(shell find Sources | grep .cpp) $(BUILD_DIR)/Localization.cpp
-CPP_HEADERS = $(shell find Headers | grep .h) $(BUILD_DIR)/git_version.h $(BUILD_DIR)/sv_primitives.h $(LEX_HEADER)
+CPP_HEADERS = $(shell find Headers | grep .h) $(BUILD_DIR)/$(META_DIR)/git_version.h $(BUILD_DIR)/$(META_DIR)/sv_primitives.h $(LEX_HEADER)
 CPP_LIBRARY_SOURCES =
 
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
@@ -82,7 +83,7 @@ release: CPP_LY_FLAGS += -O3
 release: C_FLAGS += -O3
 release: $(BINARY)
 
-$(BUILD_DIR)/git_version.h:
+$(BUILD_DIR)/$(META_DIR)/git_version.h:
 	mkdir -p $(@D)
 	echo "#ifndef _AUTO_git_version_h" > $@
 	echo "#define _AUTO_git_version_h" >> $@
@@ -94,7 +95,7 @@ $(BUILD_DIR)/git_version.h:
 	echo "}" >> $@
 	echo "#endif // _AUT0_git_version_h" >> $@
 
-$(BUILD_DIR)/sv_primitives.h: Sources/SystemVerilog/Primitives.sv
+$(BUILD_DIR)/$(META_DIR)/sv_primitives.h: Sources/SystemVerilog/Primitives.sv
 	mkdir -p $(@D)
 	echo "#ifndef _AUTO_git_version_h" > $@
 	echo "#define _AUTO_git_version_h" >> $@
@@ -152,7 +153,7 @@ $(CPP_LY_OBJECTS): %.o : %.cc $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $(HEADERS)
 	mkdir -p $(@D)
 	@echo "$(PRESET)>> Compiling $< $(RESET)"
-	$(CXX) $(CPP_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
+	$(CXX) $(CPP_FLAGS) -I$(HEADER_DIR) -I$(BUILD_DIR)/$(META_DIR) -I$(BUILD_DIR)/$(GRAMMAR_DIR) $(LIBRARY_HEADER_PATHS) -c -o $@ $<
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(REFLEX_UNICODE_OBJECTS)
 	mkdir -p $(@D)
