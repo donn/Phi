@@ -172,6 +172,7 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR
             
             // For elaborative use
+            std::shared_ptr<LHExpression> lhx(Context* context, std::string container, std::string PropertyAccess);
             std::shared_ptr<DeclarationListItem> propertyDeclaration(Context* context, std::string container, std::string property, std::shared_ptr<Range> bus); 
             void propertyAssignment(Context* context, std::string container, std::string property, std::string rightHandSide);
             std::shared_ptr<Declaration> preambles = nullptr;

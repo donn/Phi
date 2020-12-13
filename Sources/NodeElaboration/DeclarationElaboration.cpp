@@ -182,15 +182,26 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     context->table->stepOut();
 }
 
-std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Context* context, std::string container, std::string property, std::shared_ptr<Range> range) {
-    auto containerID = std::make_shared<Identifier>(context->noLocation(), container.c_str());
-    auto containerNode = std::make_shared<IdentifierExpression>(context->noLocation(), containerID);
-    auto propertyNode = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), property.c_str()));
+#define MAKE_ID(identifier) std::make_shared<Identifier>(context->noLocation(), identifier.c_str())
+#define MAKE_IDE(identifier) std::make_shared<IdentifierExpression>(\
+    context->noLocation(),\
+    std::make_shared<Identifier>(context->noLocation(), identifier.c_str())\
+)
+
+std::shared_ptr<LHExpression> TopLevelDeclaration::lhx(Context* context, std::string container, std::string property) {
+    auto containerNode = MAKE_IDE(container);
+    auto propertyNode = MAKE_IDE(property);
     auto left = std::make_shared<PropertyAccess>(context->noLocation(), containerNode, propertyNode);
 
-    auto dli = std::make_shared<DeclarationListItem>(context->noLocation(), containerID, nullptr, nullptr);
+    return left;    
+}
+
+std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Context* context, std::string container, std::string property, std::shared_ptr<Range> bus) {
+    auto left = lhx(context, container, property);
+
+    auto dli = std::make_shared<DeclarationListItem>(context->noLocation(), MAKE_ID(container), nullptr, nullptr);
     dli->trueIdentifier = left;
-    dli->bus = range;
+    dli->bus = bus;
     dli->type = VariableLengthDeclaration::Type::wire;
 
     auto placement = &preambles;
@@ -204,13 +215,8 @@ std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Co
 }
 
 void TopLevelDeclaration::propertyAssignment(Context* context, std::string container, std::string property, std::string rightHandSide) {
-    auto containerID = std::make_shared<Identifier>(context->noLocation(), container.c_str());
-    auto containerNode = std::make_shared<IdentifierExpression>(context->noLocation(), containerID);
-    auto propertyNode = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), property.c_str()));
-    auto left = std::make_shared<PropertyAccess>(context->noLocation(), containerNode, propertyNode);
-
-    auto right = std::make_shared<IdentifierExpression>(context->noLocation(), std::make_shared<Identifier>(context->noLocation(), rightHandSide.c_str()));
-
+    auto left = lhx(context, container, property);
+    auto right = MAKE_IDE(rightHandSide);
     auto nda = std::make_shared<NondeclarativeAssignment>(context->noLocation(), left, right);
 
     auto placement = &addenda;
