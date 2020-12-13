@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
 
     Phi::SymbolTable table;
     context.elaborate(&table);
-    context.driveChecks();
+    context.driveChecks(&table);
     if (context.error()) {
         context.prettyPrintErrors(&stderrStream);
         if (options.find("ignoreErrors") == options.end()) {

@@ -163,7 +163,7 @@ $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(R
 
 .PHONY: clean test
 
-test: $(BINARY)
+test: all
 	@ruby ./run_tests.rb
 
 clean_tests:

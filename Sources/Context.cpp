@@ -84,7 +84,8 @@ void Context::elaborate(SymbolTable* tablePtr) {
     table = nullptr;
 }
 
-void Context::driveChecks() {
+void Context::driveChecks(SymbolTable* tablePtr) {
+    table = tablePtr;
     for (auto& check: checks) {
         auto from = check.from.has_value() ? check.from.value() : check.target->from;
         auto to = check.to.has_value() ? check.to.value() : check.target->to;
@@ -97,6 +98,7 @@ void Context::driveChecks() {
             check.ifDriven.value()();
         }
     }
+    table = nullptr;
 }
 
 void Context::translate(std::ostream* stream) {

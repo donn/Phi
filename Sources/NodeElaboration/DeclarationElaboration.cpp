@@ -182,22 +182,39 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
     context->table->stepOut();
 }
 
+
 #define MAKE_ID(identifier) std::make_shared<Identifier>(context->noLocation(), identifier.c_str())
 #define MAKE_IDE(identifier) std::make_shared<IdentifierExpression>(\
     context->noLocation(),\
     std::make_shared<Identifier>(context->noLocation(), identifier.c_str())\
 )
+#define MAKE_PA(id1, id2) std::make_shared<PropertyAccess>(\
+    context->noLocation(),\
+    id1, id2\
+)
 
-std::shared_ptr<LHExpression> TopLevelDeclaration::lhx(Context* context, std::string container, std::string property) {
-    auto containerNode = MAKE_IDE(container);
-    auto propertyNode = MAKE_IDE(property);
-    auto left = std::make_shared<PropertyAccess>(context->noLocation(), containerNode, propertyNode);
+std::shared_ptr<LHExpression> TopLevelDeclaration::lhx(Context* context, std::string property) {
+    auto accesses = context->table->whereAmI(Space::Type::module);
+    for (auto& e: accesses) {
+        std::cout << e << ".";
+    }
+    std::cout << property << std::endl;
 
-    return left;    
+    if (accesses.size() == 0) {
+        return MAKE_IDE(property);
+    }
+    auto rAccesses = accesses;
+    std::reverse(std::begin(rAccesses), std::end(rAccesses));
+
+    std::shared_ptr<LHExpression> current = MAKE_PA(MAKE_IDE(rAccesses[0]), MAKE_IDE(property));
+    for (auto i = 1; i < rAccesses.size(); i += 1) {
+        current = MAKE_PA(MAKE_IDE(rAccesses[i]), current);
+    }
+    return current;
 }
 
 std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Context* context, std::string container, std::string property, std::shared_ptr<Range> bus) {
-    auto left = lhx(context, container, property);
+    auto left = lhx(context, property);
 
     auto dli = std::make_shared<DeclarationListItem>(context->noLocation(), MAKE_ID(container), nullptr, nullptr);
     dli->trueIdentifier = left;
@@ -214,8 +231,8 @@ std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Co
     return dli;
 }
 
-void TopLevelDeclaration::propertyAssignment(Context* context, std::string container, std::string property, std::string rightHandSide) {
-    auto left = lhx(context, container, property);
+void TopLevelDeclaration::propertyAssignment(Context* context, std::shared_ptr<DeclarationListItem> dli, std::string rightHandSide) {
+    auto left = dli->trueIdentifier;
     auto right = MAKE_IDE(rightHandSide);
     auto nda = std::make_shared<NondeclarativeAssignment>(context->noLocation(), left, right);
 
@@ -226,6 +243,10 @@ void TopLevelDeclaration::propertyAssignment(Context* context, std::string conta
 
     *placement = nda;
 }
+
+#undef MAKE_ID
+#undef MAKE_IDE
+#undef MAKE_PA
 
 void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
     tryElaborate(bus, context);
@@ -240,14 +261,6 @@ void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
 void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
     using VLD = VariableLengthDeclaration;
 
-    AccessWidth size = 1;
-    AccessWidth width = 1;
-
-    bool msbFirst = true;
-
-    optional<AccessWidth> from = nullopt;
-    optional<AccessWidth> to = nullopt;
-
     tryElaborate(array, context);
 
     auto declarativeModule = std::static_pointer_cast<SpaceWithPorts>(context->table->findNearest(Space::Type::module));
@@ -256,6 +269,8 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
     assert(declarativeModule);
 
     std::shared_ptr<Symbol> symbol = nullptr;
+
+    AccessWidth size = 1;
 
     if (array) {
         if (optionalAssignment) {
@@ -283,7 +298,9 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
         }
     }
 
-    from = to = 0;
+    AccessWidth width = 1;
+    AccessWidth from = 0, to = 0;
+    bool msbFirst = true;
 
     std::shared_ptr<Range> busShared = nullptr;
     if (bus.has_value()) {
@@ -298,7 +315,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
 
             msbFirst = from > to;
 
-            width = (msbFirst ? (from.value() - to.value()) : (from.value() + to.value())) + 1;
+            width = (msbFirst ? (from - to) : (from + to)) + 1;
         }
     }
 
@@ -308,7 +325,9 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
     for (AccessWidth it = 0; it < size; it += 1) {
         auto id = array ? *identifier + "[" + std::to_string(it) + "]" : *identifier;
         if (type == VLD::Type::reg || type == VLD::Type::latch) {
-            auto container = std::make_shared<Container>(id, shared_from_this(), from.value(), to.value(), msbFirst);
+            auto container = std::make_shared<Container>(id, shared_from_this(), from, to, msbFirst);
+            context->table->add(id, std::static_pointer_cast<Space>(container));
+            context->table->stepInto(id);
 
             auto declProp = [&](
                 std::string name,
@@ -319,11 +338,11 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
                 optional< std::function<void()> > ifDriven = nullopt
             ) {
                 auto dli = selfAsDLI ?
-                    shared_from_this() :
+                    std::static_pointer_cast<DeclarationListItem>(shared_from_this()) :
                     tld->propertyDeclaration(context, id, name, fullWidth ? busShared : nullptr)
                     ;
                 auto driven = fullWidth ?
-                    std::make_shared<Driven>(name, dli, from.value(), to.value(), msbFirst) :
+                    std::make_shared<Driven>(name, dli, from, to, msbFirst) :
                     std::make_shared<Driven>(name, dli)
                     ;
 
@@ -334,7 +353,7 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
                 context->checks.push_back(Context::DriveCheck(driven, nullopt, nullopt, [=]() {
                     if (annotation != declarativeModule->annotations.end()) {
                         auto port = std::static_pointer_cast<Port>(annotation->second);
-                        tld->propertyAssignment(context, id, name, *port->identifier);
+                        tld->propertyAssignment(context, dli, *port->identifier);
                         if (ifDriven.has_value()) {
                             ifDriven.value()();
                         }
@@ -371,13 +390,14 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
                 this->hasEnable = true;
             });
 
+            context->table->stepOut();
             generatedSymbols.push_back(std::pair(std::to_string(it), std::static_pointer_cast<Symbol>(std::static_pointer_cast<Driven>(container))));
         } else {
-            auto driven = std::make_shared<Driven>(id, shared_from_this(), from.value(), to.value(), msbFirst);
+            auto driven = std::make_shared<Driven>(id, shared_from_this(), from, to, msbFirst);
             if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
                 driven->drive(optionalAssignment);
             }
-            generatedSymbols.push_back(std::pair(std::to_string(it), std::static_pointer_cast<Symbol>(driven)));
+            context->table->add(id, std::static_pointer_cast<Symbol>(driven));
         }
         
         if (optionalAssignment) { // Already reported error if it's an array
@@ -397,16 +417,16 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
         throw "comb.declarationNotAllowed";
     } 
     
-    if (array) {
-        auto as = std::make_shared<SymbolArray>(*identifier, shared_from_this(), size);
-        for (auto& s: generatedSymbols) {
-            as->space[s.first] = s.second;
-        }
-        symbol = as;
-    } else {
-        symbol = generatedSymbols[0].second;
-    }
-    context->table->add(*identifier, symbol);
+    // if (array) {
+    //     auto as = std::make_shared<SymbolArray>(*identifier, shared_from_this(), size);
+    //     for (auto& s: generatedSymbols) {
+    //         as->space[s.first] = s.second;
+    //     }
+    //     symbol = as;
+    // } else {
+    //     symbol = generatedSymbols[0].second;
+    // }
+    // context->table->add(*identifier, symbol);
 }
 
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {

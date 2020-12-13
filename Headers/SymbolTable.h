@@ -174,6 +174,8 @@ namespace Phi {
         std::shared_ptr<Space> stepIntoAndCreate(std::string id, std::shared_ptr<Node::Node> declarator, Space::Type type = Space::Type::other);
         void stepOut();
         
+
+        std::vector<std::string> whereAmI(optional<Space::Type> until=nullopt);
         std::shared_ptr<Space> findNearest(Space::Type type);
         std::string moduleMetadata();
 

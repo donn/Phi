@@ -64,7 +64,7 @@ namespace Phi {
         void prettyPrintErrors(std::ostream* out);
 
         void elaborate(SymbolTable* table);
-        void driveChecks();
+        void driveChecks(SymbolTable* tablePtr); // Must use same table as elaboration or you can happily risk a segfault.
         void translate(std::ostream* stream);
 
 #if YYDEBUG

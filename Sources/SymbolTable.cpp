@@ -477,6 +477,20 @@ std::shared_ptr<Space> SymbolTable::findNearest(Space::Type type) {
     return nullptr;
 } 
 
+std::vector<std::string> SymbolTable::whereAmI(optional<Space::Type> until) {
+    std::vector<std::string> elements; 
+    for (auto iterator = stack.rbegin(); iterator != stack.rend(); iterator++) {
+        auto& el = *iterator;
+        if (el->type == until) {
+            break;
+        }
+        elements.push_back(el->id);
+    }
+    std::reverse(std::begin(elements), std::end(elements));
+    return elements;
+}
+
+
 void Space::moduleMetadata(std::stringstream* ssptr) {
     auto& ss = *ssptr;
     if (id != "") {
@@ -536,7 +550,6 @@ std::string SymbolTable::moduleMetadata() {
     ss << "}";
     return ss.str();
 }
-
 
 #if YYDEBUG
 void SymbolTable::represent(std::ostream* stream) {
