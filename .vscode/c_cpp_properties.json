@@ -7,18 +7,26 @@
                 "/Library/Frameworks"
             ],
             "intelliSenseMode": "clang-x64",
-            "compilerPath": "/usr/local/bin/gcc-9",
-            "cStandard": "gnu17",
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
             "cppStandard": "c++17",
             "includePath": [
                 "/usr/include",
+                "/usr/include/llvm-c-10",
+                "/usr/include/llvm-10",
+                "/usr/include/llvm-11",
+                "/usr/include/llvm-c-11",
                 "/usr/local/include",
+                "/usr/local/Cellar/llvm/10.0.0/include", 
                 "/usr/local/Cellar/llvm/11.0.0/include", 
                 "Headers",
                 "Submodules/SSCO/include",
                 "Submodules/RE-flex/include",
                 "Intermediates/Metadata",
                 "Intermediates/Grammar"
+            ],
+            "defines": [
+                "YYDEBUG"
             ]
         }
     ],

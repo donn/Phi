@@ -423,20 +423,22 @@ std::tuple< optional< std::shared_ptr<Symbol> >, optional<AccessWidth>, optional
                 }
                 pointer = next->second;
             } else if (access.type == Access::Type::index) {
-                if (auto pointerAsArray = std::dynamic_pointer_cast<SymbolArray>(pointer)) {
-                    *access.trueIndex = false;
-                    
-                    if (access.index >= pointerAsArray->size || access.index < 0) {
-                        throw "symbol.outOfRangeAccess";
-                    }
-
+                auto pointerAsSpace = std::dynamic_pointer_cast<Space>(pointer);
+                if (pointerAsSpace && pointerAsSpace->type == Space::Type::array) {
+                    *access.arrayIndex = true;
                     auto indexString = std::to_string(access.index);
 
-                    if (std::next(j) == accesses.end()) {
-                        return { pointerAsArray->space[indexString], from, to };
+                    auto& sp = pointerAsSpace->space;
+
+                    if (sp.find(indexString) == sp.end()) {
+                        throw "array.outOfRangeAccess";
                     }
 
-                    pointer = pointerAsArray->space[indexString];
+                    if (std::next(j) == accesses.end()) {
+                        return { pointerAsSpace->space[indexString], from, to };
+                    }
+
+                    pointer = pointerAsSpace->space[indexString];
                 } else if (auto pointerAsDriven = std::dynamic_pointer_cast<Driven>(pointer)) {
                     if (
                     (pointerAsDriven->msbFirst && (access.index > pointerAsDriven->from || access.index < pointerAsDriven->to))

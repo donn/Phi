@@ -106,8 +106,11 @@ std::tuple< std::vector<Phi::SymbolTable::Access>, optional<AccessWidth>, option
     while (!lhStack.empty()) {
         auto topWithParent = lhStack.top();
         auto top = std::static_pointer_cast<LHExpression>(topWithParent.first);
+        if (auto evaluator = std::dynamic_pointer_cast<LHExpressionEvaluator>(top)) {
+            top = evaluator->lhxe;
+        }
         if (auto encapsulator = std::dynamic_pointer_cast<LHExpressionEncapsulator>(top)) {
-            top = encapsulator->lhExpression;
+            top = encapsulator->lhx;
         }
         auto parent = topWithParent.second;
         lhStack.pop();
@@ -142,8 +145,8 @@ std::tuple< std::vector<Phi::SymbolTable::Access>, optional<AccessWidth>, option
             if (value > maxAccessWidth) {
                 throw "access.maxWidthExceeded";
             }
-            auto parentAsArrayAccess = std::static_pointer_cast<ArrayAccess>(parent);
-            vector.push_back(PSA::Index(value, &parentAsArrayAccess->index));
+            auto parentAsIndexAccess = std::static_pointer_cast<IndexAccess>(parent);
+            vector.push_back(PSA::Index(value, &parentAsIndexAccess->array));
         }
     }
 
@@ -155,10 +158,14 @@ void LHExpression::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
 }
 
-// This is for LHExpressions that are about to be USED AS EXPRESSIONS
 void LHExpressionEncapsulator::MACRO_ELAB_SIG_IMP {
-    tryElaborate(lhExpression, context);
-    auto potential = lhExpression;
+    tryElaborate(lhx, context);
+}
+
+// This is for LHExpressions that are about to be USED AS EXPRESSIONS
+void LHExpressionEvaluator::MACRO_ELAB_SIG_IMP {
+    tryElaborate(lhxe, context);
+    auto potential = lhxe->lhx;
     std::vector< std::shared_ptr<LHExpression> > expressions;
 
     AccessWidth widthSum = 0;
@@ -325,6 +332,8 @@ void LHExpressionEncapsulator::MACRO_ELAB_SIG_IMP {
     type = potential->type;
     value = potential->value;
 }
+
+
 
 void Unary::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);

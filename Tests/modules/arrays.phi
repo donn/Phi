@@ -1,0 +1,13 @@
+module Test(
+    clk: @clock Input,
+    rst: @reset Input,
+    co: Output[63..0]
+) {
+    Register[31..0] k[2];
+    k[0] = 0;
+    k[1] = 1;
+    k[0].data = 40;
+    k[1].data = 20;
+
+    co = {k[1], k[0]};
+}

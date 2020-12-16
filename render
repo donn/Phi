@@ -14,4 +14,8 @@ echo "File missing."
 exit 66
 fi
 
-dot -Tpng -Gdpi=256 -Ecolor=$edgecolor -Nfontname=SpaceMono-Regular -Nstyle=filled -Nfillcolor="#ffffff" -Gbgcolor="#ffffff00" $2 -o /dev/stdout
+if [ -t 1 ]; then
+    echo "Stubbornly refusing to output PNG file to terminal. Please redirect your output."
+else
+    dot -Tpng -Gdpi=256 -Ecolor=$edgecolor -Nfontname=SpaceMono-Regular -Nstyle=filled -Nfillcolor="#ffffff" -Gbgcolor="#ffffff00" $2 -o /dev/stdout
+fi

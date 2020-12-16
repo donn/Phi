@@ -30,7 +30,7 @@ for test in tests
     test_name = test_pathname.relative_path_from(test_folder_pathname)
     file_sv = file + ".sv"
 
-    phi_results = `cd #{cwd}; '#{absolute_phic}' -o '#{file_sv}' '#{file}' 2>&1`
+    phi_results = `cd #{cwd}; timeout 5s '#{absolute_phic}' -o '#{file_sv}' '#{file}' 2>&1`
     phi_exit = $?.exitstatus
     iv_exit = nil
     iv_warning = false
@@ -46,7 +46,7 @@ for test in tests
         end
     end
 
-    puts output_format_str % [test_name, phi_exit == 0 ? '⭕' : '❌', iv_exit.nil? ? '⛔' : iv_exit == 0 ? iv_warning ? '⚠' : '⭕' : '❌']
+    puts output_format_str % [test_name, phi_exit == 0 ? '⭕' : phi_exit == 124 ? '⏳' : '❌', iv_exit.nil? ? '⛔' : iv_exit == 0 ? iv_warning ? '⚠' : '⭕' : '❌']
 end
 puts "---"
 puts "#{valid_phi}/#{tests.count} passed Phi."

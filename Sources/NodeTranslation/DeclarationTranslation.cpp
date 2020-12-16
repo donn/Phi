@@ -98,71 +98,94 @@ void VariableLengthDeclaration::MACRO_TRANS_SIG_IMP {
 void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     using VLD = VariableLengthDeclaration;
 
-    if (type == VLD::Type::wire && assignedInComb) {
-        *stream << "reg ";
-    } else if (type != VLD::Type::var) {
-        *stream << "wire ";
-    } else {
-        // Var is immutable and is handled at compile time.
-        return;
-    }
-
-    if (bus.has_value()) {
-        tryTranslate(bus.value().lock(), stream, namespaceSoFar, indent);
-    }
-
-    if (trueIdentifier) {
-        tryTranslate(trueIdentifier, stream, namespaceSoFar, indent);
-    } else {
-        tryTranslate(identifier, stream, namespaceSoFar, indent);
-    }
-
-    //add wires,regs, always @ block, inside always @ block
+    std::cout << "nsf" << namespaceSoFar << std::endl;
+    
     auto nsfLocal = adjustNamespace(namespaceSoFar, *identifier);
-    if (type == VLD::Type::reg || type == VLD::Type::latch) {
-        *stream << ";" << MACRO_EOL;
-        *stream << MACRO_EOL;
+    for (auto i = 0; i < size; i += 1) {
+        auto nsfIndexed = array ? adjustNamespace(nsfLocal, std::to_string(i)) : nsfLocal;
 
-        auto verilogPrimitive = type == VLD::Type::reg ? "\\Phi.Common.Register " : "\\Phi.Common.Latch";
+        if (type == VLD::Type::wire && assignedInComb) {
+            *stream << "reg ";
+        } else if (type != VLD::Type::var) {
+            *stream << "wire ";
+        } else {
+            // Var is immutable and is handled at compile time.
+            return;
+        }
 
-        *stream << verilogPrimitive << " ";
         if (bus.has_value()) {
-            auto busStrong = bus.value().lock();
-            if (busStrong) {
-                *stream << "#(.from(";
-                tryTranslate(busStrong->from, stream, namespaceSoFar, indent);
-                *stream << "), .to(";
-                tryTranslate(busStrong->to, stream, namespaceSoFar, indent);
-                *stream << ")) ";
-            }
-        }
-        *stream <<  ("\\" + nsfLocal + ".module ");
-        
-        *stream << "(";
-        MACRO_INDENT;
-            *stream << ".data(" << ("\\" + nsfLocal + ".data ") << ")," << MACRO_EOL;
-            *stream << ".out("; tryTranslate(identifier, stream, namespaceSoFar, indent); *stream << ")," << MACRO_EOL;
-            if (type == VLD::Type::reg) {
-                *stream << ".resetValue("; tryTranslate(optionalAssignment, stream, nsfLocal, indent); *stream << "), " << MACRO_EOL;
-                *stream << ".reset(" << ("\\" + nsfLocal + ".reset ") << ")," << MACRO_EOL;
-                *stream << ".clock(" << ("\\" + nsfLocal + ".clock ") << ")," << MACRO_EOL;
-            } else {
-                *stream << ".condition(" << ("\\" + nsfLocal + ".condition ") << ")," << MACRO_EOL; 
-            }
-            *stream << ".enable(" << (hasEnable ? "\\" + nsfLocal + ".enable " : "1'b1") << ")";
-        MACRO_DEDENT;
-        *stream << "); " << MACRO_EOL << MACRO_EOL;
-    } else {
-        if (optionalAssignment) {
-            *stream << " ";
-            *stream << "=";
-            *stream << " ";
-            *stream << "(";
-            tryTranslate(optionalAssignment, stream, namespaceSoFar, indent);
-            *stream << ")";
+            tryTranslate(bus.value().lock(), stream, namespaceSoFar, indent);
         }
 
-        *stream << ";" << MACRO_EOL;
+        auto finalAccessor = accessor;
+        if (array) {
+            // Oh dear god. What the hell is this.
+            finalAccessor = std::make_shared<LHExpressionEncapsulator>(
+                accessor->location,
+                std::make_shared<PropertyAccess>(
+                    accessor->location,
+                    accessor,
+                    std::make_shared<IdentifierExpression>(
+                        accessor->location,
+                        std::make_shared<Identifier>(
+                            accessor->location,
+                            std::to_string(i)
+                        )
+                    )
+                )
+            );
+        }
+
+        tryTranslate(finalAccessor, stream, namespaceSoFar, indent);
+        // *stream << ("\\" + nsfIndexed + " ") << MACRO_EOL;
+
+        //add wires,regs, always @ block, inside always @ block
+        if (type == VLD::Type::reg || type == VLD::Type::latch) {
+            *stream << ";" << MACRO_EOL;
+            *stream << MACRO_EOL;
+
+            auto verilogPrimitive = type == VLD::Type::reg ? "\\Phi.Common.Register " : "\\Phi.Common.Latch";
+
+            *stream << verilogPrimitive << " ";
+            if (bus.has_value()) {
+                auto busStrong = bus.value().lock();
+                if (busStrong) {
+                    *stream << "#(.from(";
+                    tryTranslate(busStrong->from, stream, namespaceSoFar, indent);
+                    *stream << "), .to(";
+                    tryTranslate(busStrong->to, stream, namespaceSoFar, indent);
+                    *stream << ")) ";
+                }
+            }
+            *stream <<  ("\\" + nsfIndexed + ".module ");
+            
+            *stream << "(";
+            MACRO_INDENT;
+                *stream << ".data(" << ("\\" + nsfIndexed + ".data ") << ")," << MACRO_EOL;
+                *stream << ".out(" << ("\\" + nsfIndexed + " ") << ")," << MACRO_EOL;
+                if (type == VLD::Type::reg) {
+                    *stream << ".resetValue("; tryTranslate(optionalAssignment, stream, nsfIndexed, indent); *stream << "), " << MACRO_EOL;
+                    *stream << ".reset(" << ("\\" + nsfIndexed + ".reset ") << ")," << MACRO_EOL;
+                    *stream << ".clock(" << ("\\" + nsfIndexed + ".clock ") << ")," << MACRO_EOL;
+                } else {
+                    *stream << ".condition(" << ("\\" + nsfIndexed + ".condition ") << ")," << MACRO_EOL; 
+                }
+                *stream << ".enable(" << (hasEnable ? "\\" + nsfIndexed + ".enable " : "1'b1") << ")";
+            MACRO_DEDENT;
+            *stream << "); " << MACRO_EOL << MACRO_EOL;
+            
+        } else {
+            if (optionalAssignment) {
+                *stream << " ";
+                *stream << "=";
+                *stream << " ";
+                *stream << "(";
+                tryTranslate(optionalAssignment, stream, namespaceSoFar, indent);
+                *stream << ")";
+            }
+
+            *stream << ";" << MACRO_EOL;
+        }
     }
 }
 

@@ -157,8 +157,8 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
 
         auto currentInheritance = tld->inheritance;
         while (currentInheritance) {
-            auto lhExpression = currentInheritance->lhExpression;
-            auto accesses = std::get<0>(lhExpression->accessList());
+            auto lhx = currentInheritance->lhx;
+            auto accesses = std::get<0>(lhx->accessList());
             auto inheritedSymbolOptional = std::get<0>(context->table->find(&accesses));
             if (!inheritedSymbolOptional.has_value()) {
                 throw "symbol.dne";
@@ -186,19 +186,18 @@ void TopLevelDeclaration::MACRO_ELAB_SIG_IMP {
 #define MAKE_ID(identifier) std::make_shared<Identifier>(context->noLocation(), identifier.c_str())
 #define MAKE_IDE(identifier) std::make_shared<IdentifierExpression>(\
     context->noLocation(),\
-    std::make_shared<Identifier>(context->noLocation(), identifier.c_str())\
+    MAKE_ID(identifier)\
 )
 #define MAKE_PA(id1, id2) std::make_shared<PropertyAccess>(\
     context->noLocation(),\
     id1, id2\
 )
-
 std::shared_ptr<LHExpression> TopLevelDeclaration::lhx(Context* context, std::string property) {
     auto accesses = context->table->whereAmI(Space::Type::module);
-    for (auto& e: accesses) {
-        std::cout << e << ".";
-    }
-    std::cout << property << std::endl;
+    // for (auto& e: accesses) {
+    //     std::cerr << e << ".";
+    // }
+    // std::cerr << property << std::endl;
 
     if (accesses.size() == 0) {
         return MAKE_IDE(property);
@@ -217,7 +216,7 @@ std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Co
     auto left = lhx(context, property);
 
     auto dli = std::make_shared<DeclarationListItem>(context->noLocation(), MAKE_ID(container), nullptr, nullptr);
-    dli->trueIdentifier = left;
+    dli->accessor = std::make_shared<LHExpressionEncapsulator>(context->noLocation(), left);
     dli->bus = bus;
     dli->type = VariableLengthDeclaration::Type::wire;
 
@@ -232,9 +231,10 @@ std::shared_ptr<DeclarationListItem> TopLevelDeclaration::propertyDeclaration(Co
 }
 
 void TopLevelDeclaration::propertyAssignment(Context* context, std::shared_ptr<DeclarationListItem> dli, std::string rightHandSide) {
-    auto left = dli->trueIdentifier;
+    auto left = dli->accessor;
+    auto leftEncapsulated = std::make_shared<LHExpressionEncapsulator>(left->location, left);
     auto right = MAKE_IDE(rightHandSide);
-    auto nda = std::make_shared<NondeclarativeAssignment>(context->noLocation(), left, right);
+    auto nda = std::make_shared<NondeclarativeAssignment>(context->noLocation(), leftEncapsulated, right);
 
     auto placement = &addenda;
     while (*placement != nullptr) {
@@ -243,10 +243,6 @@ void TopLevelDeclaration::propertyAssignment(Context* context, std::shared_ptr<D
 
     *placement = nda;
 }
-
-#undef MAKE_ID
-#undef MAKE_IDE
-#undef MAKE_PA
 
 void VariableLengthDeclaration::MACRO_ELAB_SIG_IMP {
     tryElaborate(bus, context);
@@ -266,11 +262,17 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
     auto declarativeModule = std::static_pointer_cast<SpaceWithPorts>(context->table->findNearest(Space::Type::module));
     auto tld = std::static_pointer_cast<TopLevelDeclaration>(declarativeModule->declarator);
 
+    accessor = std::make_shared<LHExpressionEncapsulator>(
+        identifier->location,
+        TopLevelDeclaration::lhx(
+            context,
+            *identifier
+        )
+    );
+
     assert(declarativeModule);
 
     std::shared_ptr<Symbol> symbol = nullptr;
-
-    AccessWidth size = 1;
 
     if (array) {
         if (optionalAssignment) {
@@ -321,15 +323,17 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
 
     tryElaborate(optionalAssignment, context);
 
-    auto generatedSymbols = std::vector< std::pair< std::string, std::shared_ptr<Symbol> > >();
+    if (array) {
+        context->table->stepIntoAndCreate(*identifier, shared_from_this(), Space::Type::array);
+    }
     for (AccessWidth it = 0; it < size; it += 1) {
-        auto id = array ? *identifier + "[" + std::to_string(it) + "]" : *identifier;
+        auto id = array ? std::to_string(it) : *identifier;
         if (type == VLD::Type::reg || type == VLD::Type::latch) {
             auto container = std::make_shared<Container>(id, shared_from_this(), from, to, msbFirst);
             context->table->add(id, std::static_pointer_cast<Space>(container));
             context->table->stepInto(id);
 
-            auto declProp = [&](
+            auto declareProperty = [&](
                 std::string name,
                 std::string annotationStr = "",
                 bool selfAsDLI = false,
@@ -368,16 +372,16 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
 
             if (type == VLD::Type::reg) {
                 // Register properties
-                declProp("clock", "@clock");
-                declProp("reset", "@reset");
+                declareProperty("clock", "@clock");
+                declareProperty("reset", "@reset");
 
-                auto resetValueDriven = declProp("resetValue", "", true, true);
+                auto resetValueDriven = declareProperty("resetValue", "", true, true);
                 if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
                     resetValueDriven->drive(optionalAssignment);
                 }
             } else {
                 // Latch properties
-                declProp("condition", "@condition");
+                declareProperty("condition", "@condition");
 
                 if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
                     context->addError(location, "driving.latchNoReset");
@@ -385,13 +389,12 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
             }
 
             // Common properties
-            declProp("data", "", false, true);
-            declProp("enable", "@enable", false, false, false, [=]() {
+            declareProperty("data", "", false, true);
+            declareProperty("enable", "@enable", false, false, false, [=]() {
                 this->hasEnable = true;
             });
 
             context->table->stepOut();
-            generatedSymbols.push_back(std::pair(std::to_string(it), std::static_pointer_cast<Symbol>(std::static_pointer_cast<Driven>(container))));
         } else {
             auto driven = std::make_shared<Driven>(id, shared_from_this(), from, to, msbFirst);
             if (optionalAssignment && optionalAssignment->type != Expression::Type::error) {
@@ -411,22 +414,13 @@ void DeclarationListItem::elaborationAssistant(MACRO_ELAB_PARAMS) {
             }
         } 
     }
-    
+    if (array) {
+        context->table->stepOut();
+    }
     std::shared_ptr<Space> comb;
     if ((comb = context->table->findNearest(Space::Type::comb))) {
         throw "comb.declarationNotAllowed";
-    } 
-    
-    // if (array) {
-    //     auto as = std::make_shared<SymbolArray>(*identifier, shared_from_this(), size);
-    //     for (auto& s: generatedSymbols) {
-    //         as->space[s.first] = s.second;
-    //     }
-    //     symbol = as;
-    // } else {
-    //     symbol = generatedSymbols[0].second;
-    // }
-    // context->table->add(*identifier, symbol);
+    }
 }
 
 void DeclarationListItem::MACRO_ELAB_SIG_IMP {
@@ -524,13 +518,19 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
             if (outputIterator->second.second) {
                 context->addError(location, "module.portAlreadyDriven");
             } else {
-                if (auto lhs = std::dynamic_pointer_cast<LHExpression>(relevantExpr)) {
+                std::cout << relevantExpr->debugLabel();
+                // This should be a simple LHExpressionEncapsulator
+                // but the fact is an evaluator is used because
+                // that's what the expression production yields.
+                if (auto lhxev = std::dynamic_pointer_cast<LHExpressionEvaluator>(relevantExpr)) {
+                    auto lhxe = lhxev->lhxe;
                     auto relevantPort = outputIterator->second.first;
 
                     auto width = relevantPort->getWidth();
                     bool trash = false;
                     try {
-                        NondeclarativeAssignment::drivingAssignment(context, lhs, Expression::abstract(Expression::Type::runTime, width), &trash, &trash);
+                        // Fake dA to prevent reassignment.
+                        NondeclarativeAssignment::drivingAssignment(context, lhxe, Expression::abstract(Expression::Type::runTime, width), &trash, &trash);
                         outputIterator->second.second = true;
                     } catch (const char* e) {
                         context->addError(location, e);

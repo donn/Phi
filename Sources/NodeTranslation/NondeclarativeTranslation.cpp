@@ -28,7 +28,7 @@ void NondeclarativeAssignment::MACRO_TRANS_SIG_IMP {
             *stream << "assign ";
         }
 
-        tryTranslate(lhs, stream, namespaceSoFar, indent); 
+        tryTranslate(lhxe, stream, namespaceSoFar, indent); 
         *stream << " = ";
         tryTranslate(expression, stream, namespaceSoFar, indent); 
         *stream << ";";

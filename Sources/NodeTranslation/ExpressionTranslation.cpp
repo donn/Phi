@@ -10,9 +10,16 @@ using namespace Phi::Node;
 
 static void expandSpecialNumberEquivalence(std::shared_ptr<Expression> lhs, std::shared_ptr<SpecialNumber> specialNumber, MACRO_TRANS_PARAMS) {
     // We need to account for all possibilities...
-    // The problem is "inside", which is a part SystemVerilog, doesn't work in iverilog
-    // Thus, for expressions with less than 256 possibilities, we will MANUALLY expand them
-    // Else, we will just give up and use inside. Use a better SV compiler. Or something.
+    // The problem is "inside", which is a part of canon SystemVerilog
+    // doesn't work in iverilog, the defacto standard OS Verilog compiler.
+
+    // Thus, for expressions with less than 256 possibilities,
+    // we will MANUALLY expand them.
+
+    // Else, we will just give up and use inside.
+    
+    // Use a better SV compiler. Or something.
+
     // PII
     auto number = specialNumber->number;
     auto radix = specialNumber->radix;
@@ -68,7 +75,7 @@ static void expandSpecialNumberEquivalence(std::shared_ptr<Expression> lhs, std:
 void Literal::MACRO_TRANS_SIG_IMP {
     // examples: 0, 21, 32b1010010101.., 32d3, ...
 
-    //assume: all literals will be represented in hexadecimal
+    // all literals will be represented in hexadecimal.
     *stream << numBits << "'h" <<  value.value().toString(16, false);
 }
 
@@ -77,8 +84,50 @@ void IdentifierExpression::MACRO_TRANS_SIG_IMP {
 }
 
 void LHExpressionEncapsulator::MACRO_TRANS_SIG_IMP {
-    tryTranslate(lhExpression, stream, namespaceSoFar, indent);
+    // PII
+    auto accessTuple = lhx->accessList();
+    auto accesses = std::get<0>(accessTuple);
+    auto accessFrom = std::get<1>(accessTuple);
+    auto accessTo = std::get<2>(accessTuple);
+
+    std::stringstream tempStream;
+    tempStream << "\\";
+    
+    for (auto it = accesses.begin(); it != accesses.end(); it++) {
+        auto& access= *it;
+        if (access.type == SymbolTable::Access::Type::index) {
+            if (*access.arrayIndex) {
+                tempStream << ".";
+                tempStream << access.index;
+            } else {
+                tempStream << " ";
+                tempStream << "[";
+                tempStream << access.index;
+                tempStream << "]";
+            }
+        }
+        if (access.type == SymbolTable::Access::Type::id) {
+            if (it != accesses.begin()) {
+                tempStream << ".";
+            }
+            tempStream << access.id;
+        }
+    }
+  
+    tempStream << " ";
+    if (accessFrom.has_value()) {
+        tempStream << "[" << accessFrom.value() << ":" << accessTo.value() << "]";
+    tempStream << " ";
+    }
+
+    *stream << tempStream.str();
 }
+
+void LHExpressionEvaluator::MACRO_TRANS_SIG_IMP {
+    tryTranslate(lhxe, stream, namespaceSoFar, indent);
+}
+
+// Next section can be aptly described as "what is hashmap \:"
 
 void Unary::MACRO_TRANS_SIG_IMP {
     if (operation == Unary::Operation::negate) {

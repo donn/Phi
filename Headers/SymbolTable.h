@@ -94,6 +94,10 @@ namespace Phi {
 
             // Blocks
             comb = 10,
+
+            // Array
+            array = 20,
+
             other
         };
 
@@ -132,15 +136,6 @@ namespace Phi {
         Container(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): Space(id, declarator), Driven(id, declarator, from, to, msbFirst) {} 
     };
 
-    struct SymbolArray: public Space {
-        AccessWidth size;
-
-        SymbolArray(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth size = 1): Space(id, declarator), size(size) {}
-#if YYDEBUG
-        //int represent(std::ostream* stream, int* node);
-#endif
-    };
-
     class SymbolTable {
         std::shared_ptr<Space> head = nullptr;
         std::vector< std::shared_ptr<Space> > stack;
@@ -156,10 +151,10 @@ namespace Phi {
             std::string id;
 
             AccessWidth index;
-            bool* trueIndex;
+            bool* arrayIndex; // A pointer to the boolean, indicating whether this is an array access (false)
 
             inline static Access ID(std::string id) { return {Type::id, id, 0, nullptr}; }
-            inline static Access Index(AccessWidth access, bool* trueIndex) { return {Type::index, "", access, trueIndex}; }
+            inline static Access Index(AccessWidth access, bool* arrayIndex) { return {Type::index, "", access, arrayIndex}; }
 #if YYDEBUG
             static void representList(std::ostream* ostream, std::vector<Access>* list);
 #endif

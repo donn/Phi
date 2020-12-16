@@ -172,7 +172,7 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR
             
             // For elaborative use
-            std::shared_ptr<LHExpression> lhx(Context* context, std::string property);
+            static std::shared_ptr<LHExpression> lhx(Context* context, std::string property);
             std::shared_ptr<DeclarationListItem> propertyDeclaration(Context* context, std::string container, std::string property, std::shared_ptr<Range> bus); 
             void propertyAssignment(Context* context, std::shared_ptr<DeclarationListItem> dli, std::string rightHandSide);
             std::shared_ptr<Declaration> preambles = nullptr;
@@ -278,6 +278,7 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR
         };
 
+        struct LHExpressionEncapsulator;
         struct DeclarationListItem: public Declaration {
 
             VariableLengthDeclaration::Type type;
@@ -293,9 +294,8 @@ namespace Phi {
             void elaborationAssistant(MACRO_ELAB_PARAMS);
             
             // For elaborative use
-            // CHECK IF THIS EXISTS FIRST: IF IT DOES, THEN TRANSLATE *THIS* INSTEAD OF IDENTIFIER
-            // THIS HAS BEEN A HACKY PSA
-            std::shared_ptr<LHExpression> trueIdentifier = nullptr;
+            std::shared_ptr<LHExpressionEncapsulator> accessor = nullptr; 
+            AccessWidth size = 1;
 
             bool hasEnable = false;
             bool assignedInComb = false;
@@ -334,21 +334,21 @@ namespace Phi {
 
         // Nondeclarative Statements
         struct Nondeclarative: public Statement { // Abstract
-            std::shared_ptr<LHExpression> lhs;
+            std::shared_ptr<LHExpressionEncapsulator> lhxe;
 
-            Nondeclarative(Location location, std::shared_ptr<LHExpression> lhs):  Statement(location),  lhs(lhs) {}
+            Nondeclarative(Location location, std::shared_ptr<LHExpressionEncapsulator> lhxe):  Statement(location),  lhxe(lhxe) {}
         };
 
         struct NondeclarativeAssignment: public Nondeclarative {
             std::shared_ptr<Expression> expression;
             MACRO_GRAPHPRINT_SIG_HDR
 
-            NondeclarativeAssignment(Location location, std::shared_ptr<LHExpression> lhs, std::shared_ptr<Expression> expression): Nondeclarative(location,  lhs), expression(expression) {}
+            NondeclarativeAssignment(Location location, std::shared_ptr<LHExpressionEncapsulator> lhxe, std::shared_ptr<Expression> expression): Nondeclarative(location,  lhxe), expression(expression) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
 
-            static void drivingAssignment(Context* context, std::shared_ptr<LHExpression> lhs, std::shared_ptr<Expression> expression, bool* skipTranslation, bool* inComb);
+            static void drivingAssignment(Context* context, std::shared_ptr<LHExpressionEncapsulator> lhxe, std::shared_ptr<Expression> expression, bool* skipTranslation, bool* inComb);
 
             // For elaborative use
             bool inComb = false;
@@ -358,7 +358,7 @@ namespace Phi {
         struct NondeclarativePorts: public Nondeclarative {
             std::shared_ptr<ExpressionIDPair> ports;
 
-            NondeclarativePorts(Location location, std::shared_ptr<LHExpression> lhs, std::shared_ptr<ExpressionIDPair> ports): Nondeclarative(location,  lhs), ports(ports) {}
+            NondeclarativePorts(Location location, std::shared_ptr<LHExpressionEncapsulator> lhxe, std::shared_ptr<ExpressionIDPair> ports): Nondeclarative(location,  lhxe), ports(ports) {}
 
             MACRO_ELAB_SIG_HDR
             // No translation needed.
@@ -417,20 +417,28 @@ namespace Phi {
         };      
 
         struct InheritanceListItem: public Statement {
-            std::shared_ptr<LHExpression> lhExpression;
+            std::shared_ptr<LHExpression> lhx;
 
-            InheritanceListItem(Location location, std::shared_ptr<LHExpression> contained): Statement(location), lhExpression(contained) { }
+            InheritanceListItem(Location location, std::shared_ptr<LHExpression> contained): Statement(location), lhx(contained) { }
         };
 
         struct LHExpressionEncapsulator: public LHExpression {
-            std::shared_ptr<LHExpression> lhExpression;
+            std::shared_ptr<LHExpression> lhx;
 
-            LHExpressionEncapsulator(Location location, std::shared_ptr<LHExpression> lhExpression):  LHExpression(location),  lhExpression(lhExpression) {}
+            LHExpressionEncapsulator(Location location, std::shared_ptr<LHExpression> lhx):  LHExpression(location),  lhx(lhx) {}
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
         };
 
+        struct LHExpressionEvaluator: public Expression {
+            std::shared_ptr<LHExpressionEncapsulator> lhxe;
+
+            LHExpressionEvaluator(Location location, std::shared_ptr<LHExpressionEncapsulator> lhxe): Expression(location),  lhxe(lhxe) {}
+
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
+        };
         
         struct IdentifierExpression: public LHExpression {
             std::shared_ptr<Identifier> identifier;
@@ -448,20 +456,20 @@ namespace Phi {
                 this->left = object; this->right = property;
             }
 
-            // No elaboration needed.
-            MACRO_TRANS_SIG_HDR
+            // Inherits elaboration.
+            // Translated via PII.
         };
 
-        struct ArrayAccess: public LHExpression {
-            ArrayAccess(Location location, std::shared_ptr<LHExpression> object, std::shared_ptr<Expression> width): LHExpression(location) {
+        struct IndexAccess: public LHExpression {
+            IndexAccess(Location location, std::shared_ptr<LHExpression> object, std::shared_ptr<Expression> width): LHExpression(location) {
                 this->left = object; this->right = width;
             }
 
             // Inherits elaboration.
-            MACRO_TRANS_SIG_HDR
+            // Translated via PII.
 
             // For elaborative use
-            bool index = true; // If false, translation should treat this as a namespace array access
+            bool array = false; // If true, translation should treat this as an array access
         };
         
         struct RangeAccess: public LHExpression {
@@ -470,11 +478,11 @@ namespace Phi {
             }
 
             // Inherits elaboration.
-            MACRO_TRANS_SIG_HDR
+            // No translation necessary.
         };
 
         struct LHConcatenation: public LHExpression {
-            LHConcatenation(Location location, std::shared_ptr<LHExpression> of, std::shared_ptr<LHExpression> with): LHExpression(location) {
+            LHConcatenation(Location location, std::shared_ptr<LHExpressionEncapsulator> of, std::shared_ptr<LHExpressionEncapsulator> with): LHExpression(location) {
                 this->left = of; this->right = with;
             }
 

@@ -116,7 +116,7 @@ int Statement::MACRO_GRAPHPRINT_SIG_IMP {
 }
 
 int Port::MACRO_GRAPHPRINT_SIG_IMP {
-    auto current = Node::graphPrint(stream, node);
+    auto current = Statement::graphPrint(stream, node);
     if (bus) {
         auto nodeID = bus->graphPrint(stream, node);
         *stream << current << " -- " << nodeID << ";" << std::endl;
@@ -125,7 +125,7 @@ int Port::MACRO_GRAPHPRINT_SIG_IMP {
 }
 
 int TopLevelNamespace::MACRO_GRAPHPRINT_SIG_IMP {
-    auto current = Node::graphPrint(stream, node);
+    auto current = Statement::graphPrint(stream, node);
     if (contents) {
         auto nodeID = contents->graphPrint(stream, node);
         *stream << current << " -- " << nodeID << ";" << std::endl;
@@ -134,7 +134,7 @@ int TopLevelNamespace::MACRO_GRAPHPRINT_SIG_IMP {
 }
 
 int TopLevelDeclaration::MACRO_GRAPHPRINT_SIG_IMP {
-    auto current = Node::graphPrint(stream, node);
+    auto current = Statement::graphPrint(stream, node);
     if (ports) {
         auto nodeID = ports->graphPrint(stream, node);
         *stream << current << " -- " << nodeID << ";" << std::endl;
@@ -155,7 +155,7 @@ int TopLevelDeclaration::MACRO_GRAPHPRINT_SIG_IMP {
 }
 
 int VariableLengthDeclaration::MACRO_GRAPHPRINT_SIG_IMP {
-    auto current = Node::graphPrint(stream, node);
+    auto current = Statement::graphPrint(stream, node);
     if (bus) {
         auto nodeID = bus->graphPrint(stream, node);
         *stream << current << " -- " << nodeID << ";" << std::endl;
@@ -166,8 +166,8 @@ int VariableLengthDeclaration::MACRO_GRAPHPRINT_SIG_IMP {
 }
 
 int NondeclarativeAssignment::MACRO_GRAPHPRINT_SIG_IMP {
-    auto current = Node::graphPrint(stream, node);
-    auto lhsID = lhs->graphPrint(stream, node);
+    auto current = Statement::graphPrint(stream, node);
+    auto lhsID = lhxe->lhx->graphPrint(stream, node);
     *stream << current << " -- " << lhsID << ";" << std::endl;
     auto exprID = expression->graphPrint(stream, node);
     *stream << current << " -- " << exprID << ";" << std::endl;

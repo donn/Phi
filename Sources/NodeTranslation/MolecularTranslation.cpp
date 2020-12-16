@@ -10,8 +10,7 @@ void Identifier::MACRO_TRANS_SIG_IMP {
     *stream << "\\" << namespacePrefix << *this << " ";
 }
 
-void ErrorNode::MACRO_TRANS_SIG_IMP {
-}
+void ErrorNode::MACRO_TRANS_SIG_IMP {}
 
 void SpecialNumber::MACRO_TRANS_SIG_IMP {
     //why it called SpecialNumber?

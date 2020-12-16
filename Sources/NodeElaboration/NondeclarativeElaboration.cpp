@@ -1,7 +1,7 @@
 #include "Node.h"
 using namespace Phi::Node;
 
-void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_ptr<LHExpression> lhs, std::shared_ptr<Expression> expression, bool* skipTranslation, bool* inComb) {
+void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_ptr<LHExpressionEncapsulator> lhxe, std::shared_ptr<Expression> expression, bool* skipTranslation, bool* inComb) {
     using VLD = VariableLengthDeclaration;
 
     std::shared_ptr<Symbol> symbol;
@@ -12,6 +12,8 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
     std::shared_ptr<Combinational> combDeclarator;
     std::shared_ptr<DeclarationListItem> dliAttache;
     std::shared_ptr<Port> portAttache;
+
+    auto lhs = lhxe->lhx;
 
     AccessWidth width;
 
@@ -114,16 +116,16 @@ void NondeclarativeAssignment::drivingAssignment(Context* context, std::shared_p
 }
 
 void NondeclarativeAssignment::MACRO_ELAB_SIG_IMP {
-    tryElaborate(lhs, context);
+    tryElaborate(lhxe, context);
     tryElaborate(expression, context);
 
-    drivingAssignment(context, lhs, expression, &skipTranslation, &inComb);
+    drivingAssignment(context, lhxe, expression, &skipTranslation, &inComb);
 }
 
 void NondeclarativePorts::MACRO_ELAB_SIG_IMP {
-    tryElaborate(lhs, context);
+    tryElaborate(lhxe, context);
     
-    auto accesses = std::get<0>(lhs->accessList());
+    auto accesses = std::get<0>(lhxe->lhx->accessList());
     auto symbolOptional = std::get<0>(context->table->find(&accesses));
     if (!symbolOptional.has_value()) {
         throw "symbol.dne";
