@@ -1,6 +1,7 @@
 {
     "name": "phi",
     "displayName": "Phi",
+    "publisher": "cloudv",
     "description": "Phi Hardware Description Language Support",
     "version": "0.0.7",
     "license": "Apache-2.0",

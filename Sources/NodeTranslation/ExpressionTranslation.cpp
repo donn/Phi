@@ -127,7 +127,6 @@ void LHExpressionEvaluator::MACRO_TRANS_SIG_IMP {
     tryTranslate(lhxe, stream, namespaceSoFar, indent);
 }
 
-// Next section can be aptly described as "what is hashmap \:"
 
 void Unary::MACRO_TRANS_SIG_IMP {
     if (operation == Unary::Operation::negate) {
@@ -158,8 +157,9 @@ void Unary::MACRO_TRANS_SIG_IMP {
 }
 
 void Binary::MACRO_TRANS_SIG_IMP {
+    using O = Operation;
 
-    if (operation == Operation::equal) {
+    if (operation == O::equal) {
         auto specialNumber = std::dynamic_pointer_cast<SpecialNumber>(right);
         if (specialNumber != nullptr) {
             expandSpecialNumberEquivalence(std::static_pointer_cast<Expression>(left), specialNumber, stream, namespaceSoFar, indent);
@@ -171,14 +171,17 @@ void Binary::MACRO_TRANS_SIG_IMP {
     //     $Signed in :
     //     1- signed shift: shiftRightArithmetic
     //     2- signed comparsions: greaterThan, lessThan, greaterThanOrEqual, lessThanOrEqual
+    std::set<O> signedOperations = {
+        O::shiftRightArithmetic,
+        O::greaterThan,
+        O::lessThan,
+        O::greaterThanOrEqual,
+        O::lessThanOrEqual
+    };
 
-    if ( 
-        (operation == Binary::Operation::shiftRightArithmetic) || 
-        (operation == Binary::Operation::greaterThan) || 
-        (operation == Binary::Operation::lessThan) ||
-        (operation == Binary::Operation::greaterThanOrEqual) ||
-        (operation == Binary::Operation::lessThanOrEqual) 
-    ) {
+    auto signedOperation = signedOperations.find(operation) != signedOperations.end();
+
+    if (signedOperation) {
         //handle if the operation is for signed numbers
         *stream << "$signed(";
         tryTranslate(left, stream, namespaceSoFar, indent);
@@ -187,62 +190,37 @@ void Binary::MACRO_TRANS_SIG_IMP {
         tryTranslate(left, stream, namespaceSoFar, indent);
     }
 
-    if (operation == Binary::Operation::equal) {
-        *stream << "==";
-    } else if (operation == Binary::Operation::notEqual) {
-        *stream << "!=";
-    } else if (operation == Binary::Operation::greaterThan) {
-        *stream << ">";
-    } else if (operation == Binary::Operation::lessThan) {
-        *stream << "<";
-    } else if (operation == Binary::Operation::greaterThanOrEqual) {
-        *stream << ">=";
-    } else if (operation == Binary::Operation::lessThanOrEqual) {
-        *stream << "<=";
-    } else if (operation == Binary::Operation::unsignedLessThan) {
-        *stream << "<";
-    } else if (operation == Binary::Operation::unsignedGreaterThan) {
-        *stream << ">";
-    } else if (operation == Binary::Operation::unsignedLessThanOrEqual) {
-        *stream << "<=";
-    } else if (operation == Binary::Operation::unsignedGreaterThanOrEqual) {
-        *stream << ">=";
-    } else if (operation == Binary::Operation::plus) {
-        *stream << "+";
-    } else if (operation == Binary::Operation::minus) {
-        *stream << "-";
-    } else if (operation == Binary::Operation::unsignedPlus) {
-        *stream << "+";
-    } else if (operation == Binary::Operation::unsignedMinus) {
-        *stream << "-";
-    } else if (operation == Binary::Operation::mul) {
-        *stream << "*";
-    } else if (operation == Binary::Operation::div) {
-        *stream << "/";
-    } else if (operation == Binary::Operation::modulo) {
-        *stream << "%";
-    } else if (operation == Binary::Operation::bitwiseOr) {
-        *stream << "|";
-    } else if (operation == Binary::Operation::bitwiseAnd) {
-        *stream << "&";
-    } else if (operation == Binary::Operation::bitwiseXor) {
-        *stream << "^";
-    } else if (operation == Binary::Operation::shiftLeftLogical) {
-        *stream << "<<";
-    } else if (operation == Binary::Operation::shiftRightLogical) {
-        *stream << ">>";
-    } else if (operation == Binary::Operation::shiftRightArithmetic) {
-        *stream << ">>";
-    }
+    std::unordered_map<
+        O,
+        std::string
+    > verilogOperator = {
+        {O::equal, "=="},
+        {O::notEqual, "!="},
+        {O::greaterThan, ">"},
+        {O::lessThan, "<"},
+        {O::greaterThanOrEqual, ">="},
+        {O::lessThanOrEqual, "<="},
+        {O::unsignedLessThan, "<"},
+        {O::unsignedGreaterThan, ">"},
+        {O::unsignedLessThanOrEqual, "<="},
+        {O::unsignedGreaterThanOrEqual, ">="},
+        {O::plus, "+"},
+        {O::minus, "-"},
+        {O::unsignedPlus, "+"},
+        {O::unsignedMinus, "-"},
+        {O::mul, "*"},
+        {O::div, "/"},
+        {O::modulo, "%"},
+        {O::bitwiseAnd, "&"},
+        {O::bitwiseOr, "|"},
+        {O::bitwiseXor, "^"},
+        {O::shiftLeftLogical, "<<"},
+        {O::shiftRightLogical, ">>"},
+        {O::shiftRightArithmetic, ">>"}
+    };
+    *stream << verilogOperator[operation];
 
-
-    if ( 
-        (operation == Binary::Operation::shiftRightArithmetic) || 
-        (operation == Binary::Operation::greaterThan) || 
-        (operation == Binary::Operation::lessThan) ||
-        (operation == Binary::Operation::greaterThanOrEqual) ||
-        (operation == Binary::Operation::lessThanOrEqual) 
-    ) {
+    if (signedOperation) {
         //handle if the operation is for signed numbers
         *stream << "$signed(";
         tryTranslate(right, stream, namespaceSoFar, indent);

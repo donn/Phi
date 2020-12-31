@@ -151,7 +151,15 @@ namespace Phi {
             std::string id;
 
             AccessWidth index;
-            bool* arrayIndex; // A pointer to the boolean, indicating whether this is an array access (false)
+            
+            // A pointer to a Boolean in the AST.
+
+            // Upon processing the access, if it's determined that it's an array
+            // access and not a bit access, the "message" is sent back to the
+            // AST.
+
+            // This helps with translation.
+            bool* arrayIndex;
 
             inline static Access ID(std::string id) { return {Type::id, id, 0, nullptr}; }
             inline static Access Index(AccessWidth access, bool* arrayIndex) { return {Type::index, "", access, arrayIndex}; }

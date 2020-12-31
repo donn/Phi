@@ -35,12 +35,15 @@
 			}, {
 				"name": "keyword.tld.phi",
 				"match": "\\b(module|namespace)\\b"
+			}, {
+				"name": "keyword.fn.phi",
+				"match": "\\b(mux|dec)\\b"
 			}]
 		},
 		"types": {
 			"patterns": [{
 				"name": "meta.attribute.phi",
-				"match": "@[_A-Za-z][_A-Za-z0-9]*"
+				"match": "\\@[_A-Za-z][_A-Za-z0-9]*"
 			},
 			{
 				"name": "storage.type.phi",
