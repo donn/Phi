@@ -159,7 +159,7 @@ $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(R
 	mkdir -p $(@D)
 	@echo "$(PRESET)>> Linking $(BINARY) $(RESET)"
 	@echo "$(PRESET)>> Using LLVM LD Flags $(LLVM_LD_FLAGS) $(RESET)"
-	$(CXX) -o $@ $^ $(LLVM_LD_FLAGS)
+	$(CXX) $(LLVM_LD_FLAGS) -o $@ $^ 
 	@echo "$(PRESET)>> Build complete.$(RESET)"
 
 .PHONY: clean test
