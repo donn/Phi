@@ -1,4 +1,7 @@
-# Φ Phi
+# Φ Phi (Alpha)
+![macOS CI](https://github.com/donn/Phi/actions/workflows/mac.yml/badge.svg)
+![Linux CI](https://github.com/donn/Phi/actions/workflows/linux.yml/badge.svg)
+
 Phi is a pure-ish RTL hardware description language based on Verilog that aims to be safer and more explicit.
 
 Phi aims to have:

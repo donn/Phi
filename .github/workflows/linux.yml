@@ -1,0 +1,21 @@
+on:
+  - push
+  
+name: Linux CI
+jobs:
+  build:
+    name: Build (Ubuntu)
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Get LLVM and Bison
+        run: |
+          sudo apt-get install llvm-11-dev bison
+          echo "LLVM_CONFIG=llvm-config-11" >> $GITHUB_ENV
+          echo "NPROC=$(nproc)" >> $GITHUB_ENV
+      - name: Make
+        run: |
+          ${{ env.LLVM_CONFIG }} --link-static # Is this imperative?
+          make -j${{ env.NPROC }} release

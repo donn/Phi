@@ -67,7 +67,7 @@ CPP_LIBRARY_SOURCES =
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
 CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_LIBRARY_SOURCES)))
 
-LD_FLAGS = $(shell $(LLVM_CONFIG) --ldflags --system-libs) $(shell $(LLVM_CONFIG) --libfiles support demangle)
+LLVM_LD_FLAGS = $(shell $(LLVM_CONFIG) --ignore-libllvm --ldflags --system-libs) $(shell $(LLVM_CONFIG) --ignore-libllvm --libfiles support demangle)
 
 # Final binary
 BINARY = phic
@@ -158,7 +158,8 @@ $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(REFLEX_UNICODE_OBJECTS)
 	mkdir -p $(@D)
 	@echo "$(PRESET)>> Linking $(BINARY) $(RESET)"
-	$(CXX) -o $@ $^ $(LD_FLAGS)
+	@echo "$(PRESET)>> Using LLVM LD Flags $(LLVM_LD_FLAGS) $(RESET)"
+	$(CXX) -o $@ $^ $(LLVM_LD_FLAGS)
 	@echo "$(PRESET)>> Build complete.$(RESET)"
 
 .PHONY: clean test

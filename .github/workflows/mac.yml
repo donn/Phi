@@ -1,0 +1,22 @@
+on:
+  - push
+  
+name: macOS CI
+jobs:
+  build:
+    name: Build (macOS)
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Get LLVM and Bison
+        run: |
+          brew install llvm bison
+          echo "LLVM_CONFIG=$(brew --prefix llvm)/bin/llvm-config" >> $GITHUB_ENV
+          echo "BISON=$(brew --prefix bison)/bin/bison" >> $GITHUB_ENV
+          echo "NPROC=$(sysctl -n hw.ncpu)" >> $GITHUB_ENV
+      - name: Make
+        run: |
+          ${{ env.LLVM_CONFIG }} --link-static # Is this imperative?
+          make -j${{ env.NPROC }} release

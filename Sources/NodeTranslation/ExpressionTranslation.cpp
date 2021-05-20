@@ -5,6 +5,7 @@
 #include <ios>
 #include <sstream>
 #include <cmath>
+#include <unordered_map>
 
 using namespace Phi::Node;
 
