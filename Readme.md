@@ -45,6 +45,7 @@ module Counter(
 * GNU Bison 3.0.4+
 * LLVM 6.0+
 * Ruby 2.3+
+* zlib
 
 ### macOS
 Install Xcode 9.0 or higher from the App Store.
@@ -80,13 +81,18 @@ Phi has been tested and is working on Ubuntu 18.04, 19.04 and their derivatives.
 Using apt...
 
 ```sh
-    sudo apt-get install git build-essential bison llvm ruby-dev
+    sudo apt-get install -y build-essential git make llvm-11-dev zlib1g-dev bison ruby
 ```
 
 If you're into clang...
 
 ```sh
     sudo apt-get install clang lldb
+```
+
+Do note you'll need to expose LLVM Config to the compiler- it is suggested to add this to your shell's profile.
+```sh
+export LLVM_CONFIG="llvm-config-11"
 ```
 
 ### Windows with MSYS2

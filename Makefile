@@ -67,7 +67,10 @@ CPP_LIBRARY_SOURCES =
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
 CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_LIBRARY_SOURCES)))
 
-LLVM_LD_FLAGS = $(shell $(LLVM_CONFIG) --ignore-libllvm --ldflags --system-libs) $(shell $(LLVM_CONFIG) --ignore-libllvm --libfiles support demangle)
+# We're linking statically, if we just leave the "-L" in it will link against the llvm install's libc++ which will not be found on other systems
+LLVM_SYS_LIBS = $(shell $(LLVM_CONFIG) --ignore-libllvm --ldflags --system-libs | tr ' ' '\n' | grep -v '\-L' | tr '\n' ' ') 
+LLVM_LIBS = $(shell $(LLVM_CONFIG) --ignore-libllvm --libfiles support demangle)
+LD_FLAGS ?=
 
 # Final binary
 BINARY = phic
@@ -157,9 +160,7 @@ $(CPP_OBJECTS): $(BUILD_DIR)/%.o : %.cpp $(YACC_OUT) $(LEX_OUT) $(CPP_HEADERS) $
 
 $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(REFLEX_UNICODE_OBJECTS)
 	mkdir -p $(@D)
-	@echo "$(PRESET)>> Linking $(BINARY) $(RESET)"
-	@echo "$(PRESET)>> Using LLVM LD Flags $(LLVM_LD_FLAGS) $(RESET)"
-	$(CXX) $(LLVM_LD_FLAGS) -o $@ $^ 
+	$(CXX) -o $@ $^ $(LLVM_LIBS) $(LLVM_SYS_LIBS)
 	@echo "$(PRESET)>> Build complete.$(RESET)"
 
 .PHONY: clean test
