@@ -97,9 +97,6 @@ void VariableLengthDeclaration::MACRO_TRANS_SIG_IMP {
 
 void DeclarationListItem::MACRO_TRANS_SIG_IMP {
     using VLD = VariableLengthDeclaration;
-
-    std::cout << "nsf" << namespaceSoFar << std::endl;
-    
     auto nsfLocal = adjustNamespace(namespaceSoFar, *identifier);
     for (auto i = 0; i < size; i += 1) {
         auto nsfIndexed = array ? adjustNamespace(nsfLocal, std::to_string(i)) : nsfLocal;

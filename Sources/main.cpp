@@ -31,13 +31,13 @@ int main(int argc, char* argv[]) {
         {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(stdoutStream); exit(EX_OK); }},
         {"version", 'V', "Show the current version of Phi.", false, [&](){   
             stdoutStream << "Phi " << Phi::BuildInfo::versionString() << std::endl;
-            stdoutStream << "All rights reserved. Licensed under the Apache License 2.0." << std::endl;
+            stdoutStream << "©2019-2021 The Phi Authors. Licensed under the Apache License 2.0." << std::endl;
             exit(EX_OK);
         }},
         {"metadataJSON", nullopt, "Data to output JSON information about processed modules.", true, nullopt},
         {"outFile", 'o', "Output file.", true, nullopt},
-        {"ignoreErrors", nullopt, "Attempt best translation despite errors.", false, nullopt},
 #if YYDEBUG
+        {"ignoreErrors", nullopt, "Attempt best translation despite errors. (Debug builds only.)", false, nullopt},
         {"trace", 'T', "Trace GNU Bison/Phi semantic analysis operation. (Debug builds only.)", false, nullopt},
         {"astGraph", nullopt, "Filename to output graphviz of syntax tree. (Debug builds only.)", true, nullopt},
         {"elabGraph", nullopt, "Filename to output graphviz of post-elaboration tree. (Debug builds only.)", true, nullopt},

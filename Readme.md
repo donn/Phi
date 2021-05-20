@@ -30,19 +30,18 @@ module Counter(
 
 # Dependencies
 ## Running
-* LLVM 6.0-8.0
-* Ruby 2.3+
+* A reasonably recent libstdc++.
 
 ## Building
-All running dependencies, plus:
-
 * A POSIX environment
 * A C++17 compiler that supports **standard** C++17
     * No GCC or Clang specific extensions are used. Any used by accident are a bug we are interested in fixing.
     * We still recommend Clang + LLDB for debugging.
-* Git
+* Git (for submodules)
 * GNU Make 3.8.1+
 * GNU Bison 3.0.4+
+* LLVM 6.0+
+* Ruby 2.3+
 
 ### macOS
 Install Xcode 9.0 or higher from the App Store.
@@ -110,18 +109,12 @@ We use open source libraries for various functions, and they're all imported usi
 You can then invoke either `make` or `make release`. The former produces a debug binary, which is slower but packs more features. It is more suitable for doing dev work on the actual compiler. If you intend on using the Phi compiler itself, we recommend `make release`.
 
 # Usage Instructions
-There are two invocation options here: `./phic` and `./phi`.
+`./phic` can be used to invoke Phi. It's a plain binary. You can write `./phi --help` for more information, but the short story is, to invoke it write `./phi <phi source file>`. Currently just the one is supported. If there are no errors returned, it creates a file with the same name as the filename given with ".sv" appended.
 
-`./phic` is the actual compiler for Phi. It's a plain binary. You can write `./phi --help` for more information, but the short story is, to invoke it write `./phi <phi file name>`. If there are no errors returned, it creates a file with the same name as the filename given with ".sv" appended.
+# ⚖️ Copyright & Licensing
+©2019-2021 The Phi Authors. Phi is available under the Apache 2.0 license, available at the root of this project as 'License'.
 
-The former is a ruby script with certain capabilities including the ability to load .sv files and simulate them instantly: bypassing the .out file as a middle step. It also processes a special extension to SystemVerilog, ``` `phi ```. Tick phi allows you to include Phi files from SystemVerilog files, where the script will automatically invoke the Phi compiler on them.
-
-To invoke it, simply write `./phi <.phi or .sv file>`. In case of a phi file, it acts like the compiler itself, but some options (primarily the debug only ones) are not available.
-
-Both executables comply with BSD-style system exits, and you can write `./phi(c) --help` for more info.
-
-# ⚖️ License
-Phi is available under the Apache 2.0 license, available at the root of this project as 'License'.
+Phi was partially developed as part of senior project coursework at the American University in Cairo.
 
 # Special Thanks
 * [Prof. Shalan](https://github.com/shalan) for consistent input and encouragement.

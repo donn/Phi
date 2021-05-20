@@ -518,7 +518,6 @@ void InstanceDeclaration::elaboratePorts(Context* context) {
             if (outputIterator->second.second) {
                 context->addError(location, "module.portAlreadyDriven");
             } else {
-                std::cout << relevantExpr->debugLabel();
                 // This should be a simple LHExpressionEncapsulator
                 // but the fact is an evaluator is used because
                 // that's what the expression production yields.

@@ -67,7 +67,7 @@ CPP_LIBRARY_SOURCES =
 CPP_LY_OBJECTS = $(patsubst %.cc,%.o,$(CPP_LY_SOURCES))
 CPP_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_SOURCES))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp,%.o,$(CPP_LIBRARY_SOURCES)))
 
-LD_FLAGS = $(shell $(LLVM_CONFIG) --ldflags --libs --system-libs)
+LD_FLAGS = $(shell $(LLVM_CONFIG) --ldflags --system-libs) $(shell $(LLVM_CONFIG) --libfiles support demangle)
 
 # Final binary
 BINARY = phic
@@ -93,7 +93,7 @@ $(BUILD_DIR)/$(META_DIR)/git_version.h:
 	echo "const char* GIT_VER_STRING = \"$(shell git describe --always --tags)\";" >> $@
 	echo "}" >> $@
 	echo "}" >> $@
-	echo "#endif // _AUT0_git_version_h" >> $@
+	echo "#endif // _AUTO_git_version_h" >> $@
 
 $(BUILD_DIR)/$(META_DIR)/sv_primitives.h: Sources/SystemVerilog/Primitives.sv
 	mkdir -p $(@D)

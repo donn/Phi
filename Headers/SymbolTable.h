@@ -26,43 +26,45 @@ namespace Phi {
         virtual ~Symbol() = default;
     };
 
-    struct Argument {
-        typedef std::pair<llvm::APInt, AccessWidth> FunctionValue;
-        typedef std::vector<Argument> List;
-        enum class Type {
-            string = 0,
-            expression
-        };
-
-        Type type;
-        optional<std::string> string;
-        optional<FunctionValue> expression; // pair<value, numBits>
-    };
-
     struct Function: public Symbol {
-    private:
-        std::function<Argument::FunctionValue(Argument::List*)> behavior;
-    public:
-        std::vector<Argument::Type> parameterList;
+        // A native, callable function.
+        public:
+            typedef std::pair<llvm::APInt, AccessWidth> Value;
+            struct Argument {
+                typedef std::vector<Argument> List;
+                enum class Type {
+                    string = 0,
+                    expression
+                };
 
-        Argument::FunctionValue call(Argument::List* list);
+                Type type;
+                optional<std::string> string;
+                optional<Value> expression; // pair<value, numBits>
+            };
 
-        Function(std::string id,
-                std::vector<Argument::Type> parameterList,
-                std::function<Argument::FunctionValue(Argument::List*)> behavior
-        ): Symbol(id, nullptr), behavior(behavior), parameterList(parameterList) {}
+        private:
+            std::function<Value(Argument::List*)> behavior; 
+            std::vector<Argument::Type> parameterList;
+
+        public:
+            Value call(Argument::List* list);
+
+            Function(std::string id,
+                    std::vector<Argument::Type> parameterList,
+                    std::function<Value(Argument::List*)> behavior
+            ): Symbol(id, nullptr), behavior(behavior), parameterList(parameterList) {}
     };
 
-    struct DriveRange {
+    struct Driver {
         std::shared_ptr<Node::Expression> expression;
 
         // Relative to expression being driven
         AccessWidth from;
         AccessWidth to;
 
-        DriveRange(std::shared_ptr<Node::Expression> expression, AccessWidth from, AccessWidth to): expression(expression), from(from), to(to) {}
+        Driver(std::shared_ptr<Node::Expression> expression, AccessWidth from, AccessWidth to): expression(expression), from(from), to(to) {}
 
-        bool operator<(const DriveRange& rhs) const {
+        bool operator<(const Driver& rhs) const {
             if (to > from) {
                 return from < rhs.from;
             } else {
@@ -72,7 +74,8 @@ namespace Phi {
     };
 
     struct Driven: public Symbol {
-        std::multiset<DriveRange> driveRanges;
+        // A driven is a value that can be assigned to.
+        std::multiset<Driver> driveRanges;
 
         AccessWidth from;
         AccessWidth to;
@@ -81,12 +84,16 @@ namespace Phi {
 
         Driven(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): Symbol(id, declarator), from(from), to(to), msbFirst(msbFirst) {}
 
-        std::vector<DriveRange> checkRangeCoverage(AccessWidth from, AccessWidth to);
-        optional<DriveRange> checkRangeCoverage(AccessWidth unit);
+        std::vector<Driver> checkRangeCoverage(AccessWidth from, AccessWidth to);
+        optional<Driver> checkRangeCoverage(AccessWidth unit);
+
         bool drive(std::shared_ptr<Node::Expression> expression, optional<AccessWidth> from = nullopt, optional<AccessWidth> to = nullopt, bool dry = false);
     };
 
     struct Space: public Symbol {
+        // A namespace. It's named "space" because it's not just the Namespace
+        // node that's a space: modules are also spaces, for example, as are
+        // interfaces, combinational blocks, arrays…
         enum class Type {
             // Port-havers
             module = 0,
@@ -124,6 +131,7 @@ namespace Phi {
     };
 
     struct SpaceWithPorts: public Space {
+        // A space that has ports: i.e. Interfaces & Modules
         SpaceWithPorts(std::string id, std::shared_ptr<Node::Node> declarator, Type type = Type::module): Space(id, declarator, type) {}
 
         std::vector< std::shared_ptr<PortObject> > ports = {};
@@ -133,6 +141,8 @@ namespace Phi {
     };
 
     struct Container: public Space, public Driven {
+        // A container is a namespace that can also be driven itself.
+        // i.e. Registers & Latches
         Container(std::string id, std::shared_ptr<Node::Node> declarator, AccessWidth from = 0, AccessWidth to = 0, bool msbFirst = true): Space(id, declarator), Driven(id, declarator, from, to, msbFirst) {} 
     };
 

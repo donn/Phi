@@ -615,11 +615,11 @@ void ProceduralCall::MACRO_ELAB_SIG_IMP {
     tryElaborate(right, context);
 
     // PII
-    std::vector<Phi::Argument> args;
+    std::vector<Phi::Function::Argument> args;
     auto head = std::static_pointer_cast<Argument>(right);
     while (head) {
         if (auto stringArgument = std::dynamic_pointer_cast<StringArgument>(head)) {
-            args.push_back({Phi::Argument::Type::string, stringArgument->argument, nullopt});
+            args.push_back({Phi::Function::Argument::Type::string, stringArgument->argument, nullopt});
         } else {
             auto expressionArgument = std::static_pointer_cast<ExpressionArgument>(head);
             auto expression = expressionArgument->argument;
@@ -630,7 +630,7 @@ void ProceduralCall::MACRO_ELAB_SIG_IMP {
                 return;
             }
             
-            args.push_back({Phi::Argument::Type::expression, nullopt, std::pair(expression->value.value(), expression->numBits)});
+            args.push_back({Phi::Function::Argument::Type::expression, nullopt, std::pair(expression->value.value(), expression->numBits)});
         }
         head = std::static_pointer_cast<Argument>(head->next);
     }

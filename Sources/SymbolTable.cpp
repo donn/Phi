@@ -10,7 +10,7 @@ using namespace Phi;
 
 #define tableTop stack.back()
 
-Argument::FunctionValue Function::call(Argument::List* listPtr) {
+Function::Value Function::call(Argument::List* listPtr) {
     // First: Check
     auto& list = *listPtr;
     if (list.size() != parameterList.size()){
@@ -32,9 +32,9 @@ SymbolTable::SymbolTable() {
     // Create functions
     stepIntoAndCreate("Phi", NULL);
     stepIntoAndCreate("Sys", NULL);
-    using Parameter = Argument::Type;
+    using Parameter = Function::Argument::Type;
 
-    auto sysAbs= std::shared_ptr<Function>(new Function("abs", {Parameter::expression}, [](Argument::List* argList) {
+    auto sysAbs= std::shared_ptr<Function>(new Function("abs", {Parameter::expression}, [](Function::Argument::List* argList) {
         auto& list = *argList;
 
         // Check list
@@ -45,7 +45,7 @@ SymbolTable::SymbolTable() {
     add("abs", sysAbs);
 
 
-    auto sysLog= std::shared_ptr<Function>(new Function("log", {Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
+    auto sysLog= std::shared_ptr<Function>(new Function("log", {Parameter::expression, Parameter::expression}, [](Function::Argument::List* argList) {
         auto& list = *argList;
 
         // Check list
@@ -70,7 +70,7 @@ SymbolTable::SymbolTable() {
     add("log", sysLog);
 
 
-    auto sysPow = std::shared_ptr<Function>(new Function("pow", {Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
+    auto sysPow = std::shared_ptr<Function>(new Function("pow", {Parameter::expression, Parameter::expression}, [](Function::Argument::List* argList) {
         auto& list = *argList;
 
         // Check list
@@ -108,7 +108,7 @@ SymbolTable::SymbolTable() {
     add("pow", sysPow);
 
 
-    auto sysinterpretFromFile = std::shared_ptr<Function>(new Function("interpretFromFile", {Parameter::string, Parameter::expression}, [](Argument::List* argList) {
+    auto sysinterpretFromFile = std::shared_ptr<Function>(new Function("interpretFromFile", {Parameter::string, Parameter::expression}, [](Function::Argument::List* argList) {
         auto& list = *argList;
 
         // Check list
@@ -187,7 +187,7 @@ SymbolTable::SymbolTable() {
     }));
     add("interpretFromFile", sysinterpretFromFile);
 
-    auto sysfromFile = std::shared_ptr<Function>(new Function("fromFile", {Parameter::string, Parameter::expression, Parameter::expression, Parameter::expression}, [](Argument::List* argList) {
+    auto sysfromFile = std::shared_ptr<Function>(new Function("fromFile", {Parameter::string, Parameter::expression, Parameter::expression, Parameter::expression}, [](Function::Argument::List* argList) {
         auto& list = *argList;
 
 
@@ -291,8 +291,8 @@ std::shared_ptr<Space> SymbolTable::stepIntoAndCreate(std::string space, std::sh
     return createdSpace;
 }
 
-std::vector<DriveRange> Driven::checkRangeCoverage(AccessWidth from, AccessWidth to) {
-    std::vector<DriveRange> returnValues;
+std::vector<Driver> Driven::checkRangeCoverage(AccessWidth from, AccessWidth to) {
+    std::vector<Driver> returnValues;
 
     bool covered = false;
     
@@ -328,10 +328,10 @@ std::vector<DriveRange> Driven::checkRangeCoverage(AccessWidth from, AccessWidth
             }
         }
     }
-    return covered ? returnValues : std::vector<DriveRange>();
+    return covered ? returnValues : std::vector<Driver>();
 }
 
-optional<DriveRange> Driven::checkRangeCoverage(AccessWidth unit) {
+optional<Driver> Driven::checkRangeCoverage(AccessWidth unit) {
     if (msbFirst) {
         for (auto& range: driveRanges) {
             if (unit <= range.from && unit >= range.to) {
@@ -373,7 +373,7 @@ bool Driven::drive(
     }
 
     if (!dry) {
-        driveRanges.emplace(DriveRange(expression, from, to));
+        driveRanges.emplace(Driver(expression, from, to));
     }
     return true;
 }
