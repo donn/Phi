@@ -244,6 +244,11 @@ void RepeatConcatenation::MACRO_TRANS_SIG_IMP {
     *stream << "}";
 }
 
+void Decoder::MACRO_TRANS_SIG_IMP{
+    auto rightExpr = std::static_pointer_cast<Expression>(right);
+    *stream << "\\Phi.Common.Decoder " << " #(.width(" << right->numBits << ")) " << TO_BE_CONTINUED
+}
+
 void Multiplexer::MACRO_TRANS_SIG_IMP{
     /*
     Multiplexer(Expression* selection, ExpressionPair* options) {

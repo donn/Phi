@@ -54,6 +54,7 @@
 %token KEYWORD_WHEN
 %token KEYWORD_SWITCH
 %token KEYWORD_MUX
+%token KEYWORD_DEC
 %token KEYWORD_CASE
 %token KEYWORD_DEFAULT
 %token KEYWORD_SW_VAR
@@ -88,15 +89,15 @@
 
 %token LEFT_REPEAT_CAT
 
-%right '=' ':' 
-
-%right '.' '['
 %left OP_RANGE
-%left OP_EQ OP_NEQ OP_GTE OP_LTE '<' '>' OP_UNSIGNED_LT OP_UNSIGNED_LTE OP_UNSIGNED_GT OP_UNSIGNED_GTE
+%left OP_EQ OP_NEQ OP_GTE OP_LTE OP_UNSIGNED_LT OP_UNSIGNED_LTE OP_UNSIGNED_GT OP_UNSIGNED_GTE '<' '>'
 %left OP_UNSIGNED_ADD OP_UNSIGNED_SUB '+' '-' '|' '&' '^'
 %left '*' '/' '%'
 %left OP_SRL OP_SRA OP_SLL
-%left '~' UNARY
+%left UNARY
+
+%right '=' ':' 
+%right '.' '['
 
 %initial-action {
     @$.begin.filename = @$.end.filename = &context->files.back();
@@ -612,6 +613,9 @@ expression:
     | '~' expression %prec UNARY {
         $$ = mk<Unary>(@$, Unary::Operation::bitwiseNot, c<Expression>($2));
     }
+    | KEYWORD_DEC expression %prec UNARY {
+        $$ = mk<Decoder>(@$, c<Expression>($2));
+    }
     | '{' concatenation '}' {
         $$ = $2;
     }
@@ -667,10 +671,10 @@ concatenatable:
 
 mux:
     KEYWORD_MUX expression mux_block {
-        $$ = mk<Multiplexer>(@$, c<Expression>($2), c<ExpressionPair>($3));
+        $$ = mk<Multiplexer>(@$, $2, $3);
     }
-    | KEYWORD_MUX special_number mux_block {
-        $$ = mk<Multiplexer>(@$, c<Expression>($2), c<ExpressionPair>($3));
+    | KEYWORD_MUX expression lhexpression {
+        // $$ = mk<Multiplexer>(@$, $2, $3)
     }
     ;
 

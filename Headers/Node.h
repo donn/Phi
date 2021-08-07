@@ -508,6 +508,13 @@ namespace Phi {
             MACRO_TRANS_SIG_HDR
         };
 
+        struct Decoder: public Expression {
+            Decoder(Location location, std::shared_ptr<Expression> decodable): Expression(location) { this->right = decodable; }
+
+            MACRO_ELAB_SIG_HDR
+            MACRO_TRANS_SIG_HDR
+        };
+
         struct Unary: public Expression {
             enum class Operation {
                 negate = 0,
@@ -624,15 +631,17 @@ namespace Phi {
         };
 
         struct Multiplexer: public Expression {
-            // std::shared_ptr<Node> selection could either be specialNumber or expression!!
-            bool inComb = false;
-
-            Multiplexer(Location location, std::shared_ptr<Node> selection, std::shared_ptr<ExpressionPair> options): Expression(location) {
-                this->left = selection; this->right = options;
+            // Left: Selection expression
+            // Right: Something multiplexable: either a list of expression pairs or an lhexpression of an array
+            Multiplexer(Location location, std::shared_ptr<Node> selection, std::shared_ptr<Node> multiplexable): Expression(location) {
+                this->left = selection; this->right = multiplexable;
             }
 
             MACRO_ELAB_SIG_HDR
             MACRO_TRANS_SIG_HDR
+
+            // For elaborative use
+            bool inComb = false;
         };
     }
 }

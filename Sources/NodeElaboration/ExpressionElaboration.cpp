@@ -559,8 +559,37 @@ void RepeatConcatenation::MACRO_ELAB_SIG_IMP {
     numBits = leftExpr->value.value().getLimitedValue() * rightExpr->numBits;
 }
 
+void Decoder::MACRO_ELAB_SIG_IMP {
+    tryElaborate(right, context);
+
+    auto rightExpr = std::static_pointer_cast<Expression>(right);
+
+    if (rightExpr->type == Expression::Type::error) {
+        type = Expression::Type::error;
+        return;
+    }
+
+    auto reBits = rightExpr->numBits;
+    uint64 currentBits = pow(2, reBits);
+    if (currentBits > maxAccessWidth) {
+        type = Expression::Type::error;
+        throw "expr.maxWidthExceeded";
+    }
+
+    std::cout << currentBits << std::endl;
+
+    numBits = currentBits;
+
+    if (rightExpr->type == Expression::Type::runTime) {
+        type = Expression::Type::runTime;
+        return;
+    }
+
+    auto reValue = rightExpr->value.value();
+    value = llvm::APInt(numBits, 1) << reValue;
+}
+
 void Multiplexer::MACRO_ELAB_SIG_IMP {
-    // TODO: Multiplexer runtime vs compiletime: Probably requires Selection Algorithm
     // TODO: Exhaustivity guarantees
     tryElaborate(left, context);
     tryElaborate(right, context);

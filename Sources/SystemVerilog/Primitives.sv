@@ -54,3 +54,35 @@ module \Phi.Common.Latch (
     assign out = internal;
 
 endmodule
+
+module \Phi.Common.Eq (
+    a,
+    b,
+    y
+);
+    parameter width = 1;
+
+    input[width-1:0] a;
+    input[width-1:0] b;
+
+    output y;
+
+    assign y = (a == b);
+endmodule
+
+module \Phi.Common.Decoder (
+    in,
+    out
+);
+    parameter width = 1;
+    localparam n = 1 << width;
+
+    input[width-1:0] in;
+    output[n-1:0] out;
+
+    genvar i;
+    for (i = 0; i < n; i = i + 1) begin: genblock
+        wire[width-1:0] current = i;
+        \Phi.Common.Eq #(.width(width)) eq( .a(current), .b(in), .y(out[i]) );
+    end
+endmodule

@@ -51,8 +51,23 @@ starter _A-Za-z\u{00A8}\u{00AA}\u{00AD}\u{00AF}\u{00B2}-\u{00B5}\u{00B7}-\u{00BA
     yylval = token;
     return token::IDENTIFIER;
 }
-(module) {
-    return token::KEYWORD_MODULE;
+(Register) {
+    return token::KEYWORD_REGISTER;
+}
+(Latch) {
+    return token::KEYWORD_LATCH;
+}
+(Output) {
+    return token::KEYWORD_OUTPUT;
+}
+(Input) {
+    return token::KEYWORD_INPUT;
+}
+(Wire) {
+    return token::KEYWORD_WIRE;
+}
+(Var) {
+    return token::KEYWORD_SW_VAR;
 }
 (interface) {
     return token::KEYWORD_INTERFACE;
@@ -60,53 +75,41 @@ starter _A-Za-z\u{00A8}\u{00AA}\u{00AD}\u{00AF}\u{00B2}-\u{00B5}\u{00B7}-\u{00BA
 (namespace) {
     return token::KEYWORD_NAMESPACE;
 }
-(if) {
-    return token::KEYWORD_IF;
-}
-(else) {
-    return token::KEYWORD_ELSE;
-}
-(while) {
-    return token::KEYWORD_WHILE;
-}
-(for) {
-    return token::KEYWORD_FOR;
-}
-(in) {
-    return token::KEYWORD_IN;
+(default) {
+    return token::KEYWORD_DEFAULT;
 }
 (switch) {
     return token::KEYWORD_SWITCH;
 }
-(mux) {
-    return token::KEYWORD_MUX;
+(module) {
+    return token::KEYWORD_MODULE;
+}
+(while) {
+    return token::KEYWORD_WHILE;
 }
 (case) {
     return token::KEYWORD_CASE;
 }
-(default) {
-    return token::KEYWORD_DEFAULT;
-}
-(Var) {
-    return token::KEYWORD_SW_VAR;
-}
-(Wire) {
-    return token::KEYWORD_WIRE;
-}
-(Register) {
-    return token::KEYWORD_REGISTER;
-}
-(Latch) {
-    return token::KEYWORD_LATCH;
-}
 (comb) {
     return token::KEYWORD_COMB;
 }
-(Input) {
-    return token::KEYWORD_INPUT;
+(else) {
+    return token::KEYWORD_ELSE;
 }
-(Output) {
-    return token::KEYWORD_OUTPUT;
+(for) {
+    return token::KEYWORD_FOR;
+}
+(dec) {
+    return token::KEYWORD_DEC;
+}
+(mux) {
+    return token::KEYWORD_MUX;
+}
+(if) {
+    return token::KEYWORD_IF;
+}
+(in) {
+    return token::KEYWORD_IN;
 }
 
 \@[_A-Za-z][_A-Za-z0-9]* {

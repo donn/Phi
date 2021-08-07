@@ -1,0 +1,29 @@
+module RegisterFile(
+    clock: Input,
+    reset: @reset Input,
+    readAddressA: Input[4..0],
+    readAddressB: Input[4..0]
+    writeAddress: Input[4..0],
+    readDataA: Output[31..0],
+    readDataB: Output[31..0],
+    writeData: Input[31..0],
+    write: Input
+) {
+    Register[31..0] bank[32]
+    Wire[31..0] enable = dec writeAddress
+    
+    bank[0] = 0
+    bank[0].clock = 1b0
+    bank[0].enable = 1b0
+    bank[0].data = 0
+    
+    for i in 1..31 {
+        bank[i] = 0
+        bank[i].clock = ~clock
+        bank[i].enable = enable[i] & write
+        bank[i].data = writeData
+    }
+
+    readDataA = mux readAddressA bank
+    readDataB = mux readAddressB bank
+}
