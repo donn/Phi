@@ -2,7 +2,7 @@
 ![macOS CI](https://github.com/donn/Phi/actions/workflows/mac.yml/badge.svg)
 ![Linux CI](https://github.com/donn/Phi/actions/workflows/linux.yml/badge.svg)
 
-Phi is a pure-ish RTL hardware description language based on Verilog that aims to be safer and more explicit.
+Phi is a pure-ish RTL hardware description language based on Verilog that aims to be safer and more explicit. It was my undergrad thesis project.
 
 Phi aims to have:
 * No behavioral ambiguity
@@ -43,7 +43,7 @@ module Counter(
 * Git (for submodules)
 * GNU Make 3.8.1+
 * GNU Bison 3.0.4+
-* LLVM 6.0+
+* LLVM 14.0+
 * Ruby 2.3+
 * zlib
 

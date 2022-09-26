@@ -206,7 +206,7 @@ std::shared_ptr<LHExpression> TopLevelDeclaration::lhx(Context* context, std::st
     std::reverse(std::begin(rAccesses), std::end(rAccesses));
 
     std::shared_ptr<LHExpression> current = MAKE_PA(MAKE_IDE(rAccesses[0]), MAKE_IDE(property));
-    for (auto i = 1; i < rAccesses.size(); i += 1) {
+    for (size_t i = 1; i < rAccesses.size(); i += 1) {
         current = MAKE_PA(MAKE_IDE(rAccesses[i]), current);
     }
     return current;

@@ -7,6 +7,8 @@
 #include <cmath>
 #include <unordered_map>
 
+#include <llvm/ADT/StringExtras.h>
+
 using namespace Phi::Node;
 
 static void expandSpecialNumberEquivalence(std::shared_ptr<Expression> lhs, std::shared_ptr<SpecialNumber> specialNumber, MACRO_TRANS_PARAMS) {
@@ -51,7 +53,7 @@ static void expandSpecialNumberEquivalence(std::shared_ptr<Expression> lhs, std:
         size_t possibilities = possibilitiesF;
         
         for (size_t i = 0; i < possibilities; i += 1) {
-            auto currentPossibility = llvm::APInt(log2(radix), i).toString(radix, false);
+            auto currentPossibility = llvm::toString(llvm::APInt(log2(radix), i), radix, false);
             if (currentPossibility.length() < count) {
                 currentPossibility = std::string(count - currentPossibility.length(), '0') + currentPossibility;
             }
@@ -77,7 +79,7 @@ void Literal::MACRO_TRANS_SIG_IMP {
     // examples: 0, 21, 32b1010010101.., 32d3, ...
 
     // all literals will be represented in hexadecimal.
-    *stream << numBits << "'h" <<  value.value().toString(16, false);
+    *stream << numBits << "'h" <<  llvm::toString(value.value(), 16, false);
 }
 
 void IdentifierExpression::MACRO_TRANS_SIG_IMP {

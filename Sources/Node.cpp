@@ -1,6 +1,8 @@
 #include "Node.h"
 #include "Context.h"
 
+#include <llvm/ADT/StringExtras.h>
+
 using namespace Phi::Node;
 
 void Node::MACRO_ELAB_SIG_IMP {}
@@ -26,7 +28,7 @@ void Phi::Node::tryTranslate(std::shared_ptr<Phi::Node::Node> node, MACRO_TRANS_
     while (node) {
         auto asExpr = std::dynamic_pointer_cast<Expression>(node);
         if (asExpr && asExpr->type == Expression::Type::compileTime) {
-            auto str = asExpr->value.value().toString(16, false);
+            auto str = llvm::toString(asExpr->value.value(), 16, false);
             *stream << asExpr->numBits << "'h" << str;
         } else {
             node->translate(stream, namespaceSoFar, indent);

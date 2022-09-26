@@ -7,8 +7,8 @@ LLVM_CONFIG ?= llvm-config
 # Detect Terminal Color Support
 COLORS = $(shell tput colors || echo 0)
 ifeq ($(COLORS),256)
-    PRESET = \033[1;32m
-    RESET = \033[0m
+    PRESET =
+    RESET =
 endif
 
 # Directory Setup
@@ -88,32 +88,32 @@ release: $(BINARY)
 
 $(BUILD_DIR)/$(META_DIR)/git_version.h:
 	mkdir -p $(@D)
-	echo "#ifndef _AUTO_git_version_h" > $@
-	echo "#define _AUTO_git_version_h" >> $@
-	echo "namespace Phi {" >> $@
-	echo "namespace BuildInfo {" >> $@
-	echo "const char* GIT_TAG = \"$(shell git tag | tail -n 1)\";" >> $@
-	echo "const char* GIT_VER_STRING = \"$(shell git describe --always --tags)\";" >> $@
-	echo "}" >> $@
-	echo "}" >> $@
-	echo "#endif // _AUTO_git_version_h" >> $@
+	@echo "#ifndef _AUTO_git_version_h" > $@
+	@echo "#define _AUTO_git_version_h" >> $@
+	@echo "namespace Phi {" >> $@
+	@echo "namespace BuildInfo {" >> $@
+	@echo "const char* GIT_TAG = \"$(shell git tag | tail -n 1)\";" >> $@
+	@echo "const char* GIT_VER_STRING = \"$(shell git describe --always --tags)\";" >> $@
+	@echo "}" >> $@
+	@echo "}" >> $@
+	@echo "#endif // _AUTO_git_version_h" >> $@
 
 $(BUILD_DIR)/$(META_DIR)/sv_primitives.h: Sources/SystemVerilog/Primitives.sv
 	mkdir -p $(@D)
-	echo "#ifndef _AUTO_git_version_h" > $@
-	echo "#define _AUTO_git_version_h" >> $@
-	echo "namespace Phi {" >> $@
-	echo "namespace Common {" >> $@
-	echo "const char* primitives = R\"EOF( " >> $@
-	cat $< >> $@
-	echo ")EOF\";" >> $@
-	echo "}" >> $@
-	echo "}" >> $@
-	echo "#endif // _AUT0_git_version_h" >> $@
+	@echo "#ifndef _AUTO_git_version_h" > $@
+	@echo "#define _AUTO_git_version_h" >> $@
+	@echo "namespace Phi {" >> $@
+	@echo "namespace Common {" >> $@
+	@echo "const char* primitives = R\"EOF( " >> $@
+	@cat $< >> $@
+	@echo ")EOF\";" >> $@
+	@echo "}" >> $@
+	@echo "}" >> $@
+	@echo "#endif // _AUT0_git_version_h" >> $@
 
 $(BUILD_DIR)/Localization.cpp: $(LOC_FILES)
 	mkdir -p $(@D)
-	ruby localization_into_cpp.rb > $@
+	./Localization/to_cpp > $@
 
 $(YACC_OUT): $(YACC)
 	mkdir -p $(@D)
@@ -166,7 +166,7 @@ $(BINARY): $(OBJECTS) $(CPP_OBJECTS) $(CPP_LY_OBJECTS) $(REFLEX_LIB_OBJECTS) $(R
 .PHONY: clean test
 
 test: all
-	@ruby ./run_tests.rb
+	@./Tests/run
 
 clean_tests:
 	rm -rf ./Tests/**/*.phi.sv
