@@ -6,7 +6,7 @@
 #include <phi.yy.hh>
 #include <phi.l.hh>
 
-#include <SSCO/StupidSimpleCPPOpts.h>
+#include <ssco.hpp>
 
 #include <iomanip>
 #include <fstream>
@@ -25,23 +25,23 @@ int main(int argc, char* argv[]) {
     auto stdoutStream = std::ofstream("/dev/stdout");
     auto stderrStream = std::ofstream("/dev/stderr");
 #endif
-
+    using O = SSCO::Option;
     // CLI Option parsing
     SSCO::Options getOpt({
-        {"help", 'h', "Show this message and exit.", false, [&](){ getOpt.printHelp(stdoutStream); exit(EX_OK); }},
-        {"version", 'V', "Show the current version of Phi.", false, [&](){   
+        O{"help", 'h', "Show this message and exit.", false, [&](SSCO::Result &_){ getOpt.printHelp(stdoutStream); exit(EX_OK); }},
+        O{"version", 'V', "Show the current version of Phi.", false, [&](SSCO::Result &){   
             stdoutStream << "Phi " << Phi::BuildInfo::versionString() << std::endl;
             stdoutStream << "©2019-2021 The Phi Authors. Licensed under the Apache License 2.0." << std::endl;
             exit(EX_OK);
         }},
-        {"metadataJSON", nullopt, "Data to output JSON information about processed modules.", true, nullopt},
-        {"outFile", 'o', "Output file.", true, nullopt},
+        O{"metadataJSON", nullopt, "Data to output JSON information about processed modules.", true},
+        O{"outFile", 'o', "Output file.", true, nullopt},
 #if YYDEBUG
-        {"ignoreErrors", nullopt, "Attempt best translation despite errors. (Debug builds only.)", false, nullopt},
-        {"trace", 'T', "Trace GNU Bison/Phi semantic analysis operation. (Debug builds only.)", false, nullopt},
-        {"astGraph", nullopt, "Filename to output graphviz of syntax tree. (Debug builds only.)", true, nullopt},
-        {"elabGraph", nullopt, "Filename to output graphviz of post-elaboration tree. (Debug builds only.)", true, nullopt},
-        {"symGraph", nullopt, "Filename to output graphviz of symbol table. (Debug builds only.)", true, nullopt}
+        O{"ignoreErrors", nullopt, "Attempt best translation despite errors. (Debug builds only.)", false},
+        O{"trace", 'T', "Trace GNU Bison/Phi semantic analysis operation. (Debug builds only.)", false},
+        O{"astGraph", nullopt, "Filename to output graphviz of syntax tree. (Debug builds only.)", true},
+        O{"elabGraph", nullopt, "Filename to output graphviz of post-elaboration tree. (Debug builds only.)", true},
+        O{"symGraph", nullopt, "Filename to output graphviz of symbol table. (Debug builds only.)", true}
 #endif
     });
     auto opts = getOpt.process(argc, argv);

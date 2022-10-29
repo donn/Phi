@@ -60,7 +60,7 @@ CPP_LY_FLAGS = -std=c++17 $(LLVM_INCLUDES)
 CPP_FLAGS = -Wall -pedantic $(CPP_LY_FLAGS)
 
 CPP_LY_SOURCES = $(YACC_OUT) $(LEX_OUT)
-CPP_SOURCES = $(shell find Sources | grep .cpp) $(BUILD_DIR)/Localization.cpp
+CPP_SOURCES = $(shell find Sources | grep .cpp) $(BUILD_DIR)/Localization.cpp Submodules/SSCO/lib/ssco.cpp
 CPP_HEADERS = $(shell find Headers | grep .h) $(BUILD_DIR)/$(META_DIR)/git_version.h $(BUILD_DIR)/$(META_DIR)/sv_primitives.h $(LEX_HEADER)
 CPP_LIBRARY_SOURCES =
 
